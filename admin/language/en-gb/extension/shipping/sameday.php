@@ -8,6 +8,7 @@ $_['heading_title_add_awb'] = 'Add Awb';
 // Text
 $_['text_shipping'] = 'Shipping';
 $_['text_success'] = 'Success: You have modified the settings!';
+$_['estimated_cost_success_message'] = 'Estimated cost for this transport : %s %s';
 $_['text_edit'] = 'Edit Sameday Courier settings';
 $_['text_edit_service'] = 'Edit service "%s"';
 $_['text_services'] = 'Services';
@@ -39,6 +40,9 @@ $_['text_awb_sync'] = 'Wait for the data to be synchronized...';
 $_['text_summary'] = 'Summary';
 $_['text_history'] = 'History';
 
+$_['text_lockers'] = 'Lockers';
+$_['text_lockers_refresh'] = 'Refresh lockers';
+
 $_['estimate_cost'] = 'Estimate cost';
 
 // Entry
@@ -47,6 +51,7 @@ $_['entry_username'] = 'Username';
 $_['entry_password'] = 'Password';
 $_['entry_testing'] = 'Testing mode';
 $_['entry_status'] = 'Status';
+$_['entry_estimated_cost'] = 'Estimated cost';
 $_['entry_sort_order'] = 'Sort Order';
 $_['entry_name'] = 'Display name';
 $_['entry_price'] = 'Price';
@@ -68,10 +73,12 @@ $_['entry_width'] = 'Width';
 $_['entry_length'] = 'Length';
 $_['entry_height'] = 'Height';
 $_['entry_observation'] = 'Observation';
+$_['entry_ramburs'] = 'Ramburs';
 $_['entry_pickup_point'] = 'Pickup point';
 $_['entry_pickup_point_title'] = 'Choose from your pickup point list';
 $_['entry_third_party_pickup_title'] = 'Choose if you want to pickup from third party';
 $_['entry_observation_title'] = 'This will apear on awb ';
+$_['entry_ramburs_title'] = 'Ramburs value (initial value is based on the total amout of order)';
 $_['entry_package_type'] = 'Package Type';
 $_['entry_package_type_title'] = 'Choose the package type';
 $_['entry_awb_payment'] = 'Awb payment';
@@ -133,6 +140,17 @@ $_['expedition_status'] = 'Expedition Status';
 $_['heading_title_awb_history'] = 'Awb History';
 $_['awb_history_title'] = 'Awb History';
 
+// Column Lockers
+$_['column_locker_name'] = 'Name';
+$_['column_locker_county'] = 'County';
+$_['column_locker_city'] = 'City';
+$_['column_locker_address'] = 'Address';
+$_['column_locker_lat'] = 'Latitude';
+$_['column_locker_lng'] = 'Longitude';
+$_['column_locker_postal_code'] = 'Postal code';
+
+$_['text_lockers_empty'] = 'No lockers. Please login and press reload button.';
+
 $_['from'] = 'From';
 $_['to'] = 'To';
 
@@ -149,7 +167,9 @@ $_['sunday'] = 'Sunday';
 $_['error_permission'] = 'Warning: You do not have permission to modify these settings!';
 $_['error_username_password'] = 'Invalid username/password combination provided!';
 $_['error_weight'] = 'This package must have a weight greater than 0';
+$_['error_weight_cost'] = 'Each package you create must have a weight greater than 0';
 
 $_['error_insured_value'] = 'Mandatory field (if you don\'t want to ensure the package, leave 0 as value)';
+$_['error_insured_value_cost'] = 'Complete insured value (if you don\'t want to ensure the package, leave 0 as value)';
 $_['error_third_party_pickup_mandatory_fields'] = 'If you choose to pick-up your package from third-party pick-up point field <strong style="color: #9d1e15"> %s </strong> becomes mandatory';
 $_['error_third_party_person_mandatory_fields'] = 'If you choose person type as a business field <strong style="color: #9d1e15"> %s </strong> becomes mandatory';

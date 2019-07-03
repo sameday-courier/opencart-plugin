@@ -97,6 +97,7 @@ class ControllerExtensionShippingSameday extends Controller
         $this->model_extension_shipping_sameday->install();
         $this->load->model('setting/setting');
         $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", array("{$this->getPrefix()}sameday_sync_until_ts" => time()));
+        $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", array("{$this->getPrefix()}sameday_sync_lockers_ts" => 0));
     }
 
     public function uninstall()
@@ -113,6 +114,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $this->request->post["{$this->getPrefix()}sameday_sync_until_ts"] = $this->getConfig('sameday_sync_until_ts');
+            $this->request->post["{$this->getPrefix()}sameday_sync_lockers_ts"] = $this->getConfig('sameday_sync_lockers_ts');
             $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $this->request->post);
 
             $this->session->data['error_success'] = $this->language->get('text_success');
@@ -132,7 +134,10 @@ class ControllerExtensionShippingSameday extends Controller
             'text_edit',
             'text_services',
             'text_services_refresh',
+            'text_lockers',
+            'text_lockers_refresh',
             'text_services_empty',
+            'text_lockers_empty',
             'text_enabled',
             'text_disabled',
             'text_pickup_points',
@@ -148,6 +153,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_tax_class',
             'entry_geo_zone',
             'entry_status',
+            'entry_estimated_cost',
             'entry_sort_order',
 
             'column_internal_id',
@@ -156,6 +162,14 @@ class ControllerExtensionShippingSameday extends Controller
             'column_price',
             'column_price_free',
             'column_status',
+
+            'column_locker_name',
+            'column_locker_county',
+            'column_locker_city',
+            'column_locker_address',
+            'column_locker_lat',
+            'column_locker_lng',
+            'column_locker_postal_code',
 
             'column_pickupPoint_samedayId',
             'column_pickupPoint_alias',
@@ -188,7 +202,9 @@ class ControllerExtensionShippingSameday extends Controller
         $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
+        $data['lockers'] = $this->model_extension_shipping_sameday->getLockers($this->getConfig('sameday_testing'));
         $data['pickupPoint_refresh'] = $this->url->link('extension/shipping/sameday/pickupPointRefresh', $this->addToken(), true);
+        $data['lockers_refresh'] = $this->url->link('extension/shipping/sameday/lockersRefresh', $this->addToken(), true);
         $data['tax_classes'] = $this->model_localisation_tax_class->getTaxClasses();
         $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
         $data['service_links'] = array_map(
@@ -205,6 +221,7 @@ class ControllerExtensionShippingSameday extends Controller
             'tax_class_id',
             'geo_zone_id',
             'status',
+            'estimated_cost',
             'sort_order'
         )));
 
@@ -216,14 +233,25 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
+     * @return mixed
+     */
+    private function isTesting()
+    {
+        return $this->getConfig('sameday_testing');
+    }
+
+    /**
      * Refresh services.
      */
     public function serviceRefresh()
     {
         $this->load->model('extension/shipping/sameday');
+        $this->model_extension_shipping_sameday->install();
+
         $sameday = new \Sameday\Sameday($this->initClient());
 
-        $testing = $this->getConfig('sameday_testing');
+        $this->model_extension_shipping_sameday->ensureSamedayServiceCodeColumn();
+
         $remoteServices = [];
         $page = 1;
         do {
@@ -231,15 +259,17 @@ class ControllerExtensionShippingSameday extends Controller
             $request->setPage($page++);
             try {
                 $services = $sameday->getServices($request);
-            } catch (\Sameday\Exceptions\SamedayAuthenticationException $e) {
+            } catch (\Exception $e) {
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
             foreach ($services->getServices() as $serviceObject) {
-                $service = $this->model_extension_shipping_sameday->getServiceSameday($serviceObject->getId(), $testing);
+                $service = $this->model_extension_shipping_sameday->getServiceSameday($serviceObject->getId(), $this->isTesting());
                 if (!$service) {
                     // Service not found, add it.
-                    $this->model_extension_shipping_sameday->addService($serviceObject, $testing);
+                    $this->model_extension_shipping_sameday->addService($serviceObject, $this->isTesting());
+                } elseif ($service['sameday_code'] != $serviceObject->getCode()) {
+                    $this->model_extension_shipping_sameday->updateServiceCode($service['id'], $serviceObject->getCode());
                 }
 
                 // Save as current sameday service.
@@ -255,7 +285,7 @@ class ControllerExtensionShippingSameday extends Controller
                     'sameday_id' => $service['sameday_id']
                 );
             },
-            $this->model_extension_shipping_sameday->getServices($testing)
+            $this->model_extension_shipping_sameday->getServices($this->isTesting())
         );
 
         // Delete local services that aren't present in remote services anymore.
@@ -274,9 +304,9 @@ class ControllerExtensionShippingSameday extends Controller
     public function pickupPointRefresh()
     {
         $this->load->model('extension/shipping/sameday');
-        $sameday = new \Sameday\Sameday($this->initClient());
+        $this->model_extension_shipping_sameday->install();
 
-        $testing = $this->getConfig('sameday_testing');
+        $sameday = new \Sameday\Sameday($this->initClient());
 
         $remotePickupPoints = [];
         $page = 1;
@@ -285,17 +315,17 @@ class ControllerExtensionShippingSameday extends Controller
             $request->setPage($page++);
             try {
                 $pickUpPoints = $sameday->getPickupPoints($request);
-            } catch (\Sameday\Exceptions\SamedayAuthenticationException $e) {
+            } catch (\Exception $e) {
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
             foreach ($pickUpPoints->getPickupPoints() as $pickupPointObject) {
-                $pickupPoint = $this->model_extension_shipping_sameday->getPickupPointSameday($pickupPointObject->getId(), $testing);
+                $pickupPoint = $this->model_extension_shipping_sameday->getPickupPointSameday($pickupPointObject->getId(), $this->isTesting());
                 if (!$pickupPoint) {
                     // Pickup point not found, add it.
-                    $this->model_extension_shipping_sameday->addPickupPoint($pickupPointObject, $testing);
+                    $this->model_extension_shipping_sameday->addPickupPoint($pickupPointObject, $this->isTesting());
                 } else {
-                    $this->model_extension_shipping_sameday->updatePickupPoint($pickupPointObject, $testing);
+                    $this->model_extension_shipping_sameday->updatePickupPoint($pickupPointObject, $pickupPoint['id']);
                 }
 
                 // Save as current pickup points.
@@ -311,7 +341,7 @@ class ControllerExtensionShippingSameday extends Controller
                     'sameday_id' => $pickupPoint['sameday_id']
                 );
             },
-            $this->model_extension_shipping_sameday->getPickupPoints($testing)
+            $this->model_extension_shipping_sameday->getPickupPoints($this->isTesting())
         );
 
         // Delete local pickup points that aren't present in remote pickup points anymore.
@@ -322,6 +352,78 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+    }
+
+    public function lockersRefresh()
+    {
+        $this->load->model('extension/shipping/sameday');
+        $this->model_extension_shipping_sameday->install();
+
+        $sameday = new \Sameday\Sameday($this->initClient());
+
+        $request = new Sameday\Requests\SamedayGetLockersRequest();
+
+        try {
+            $lockers = $sameday->getLockers($request)->getLockers();
+        } catch (\Exception $exception) {
+            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        }
+
+        $remoteLockers = [];
+        foreach ($lockers as $lockerObject) {
+            $locker = $this->model_extension_shipping_sameday->getLockerSameday($lockerObject->getId(), $this->isTesting());
+            if (!$locker) {
+                $this->model_extension_shipping_sameday->addLocker($lockerObject, $this->isTesting());
+            } else {
+                $this->model_extension_shipping_sameday->updateLocker($lockerObject, $locker['id']);
+            }
+
+            $remoteLockers[] = $lockerObject->getId();
+        }
+
+        // Build array of local lockers.
+        $localLockers = array_map(
+            function ($locker) {
+                return array(
+                    'id' => $locker['id'],
+                    'sameday_id' => $locker['locker_id']
+                );
+            },
+            $this->model_extension_shipping_sameday->getLockers($this->isTesting())
+        );
+
+        // Delete local lockers that aren't present in remote lockers anymore.
+        foreach ($localLockers as $localLocker) {
+            if (!in_array($localLocker['sameday_id'], $remoteLockers)) {
+                $this->model_extension_shipping_sameday->deleteLocker($localLocker['id']);
+            }
+        }
+
+        $this->updateLastSyncTimestamp();
+
+        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+    }
+
+    /**
+     * @return void
+     */
+    private function updateLastSyncTimestamp()
+    {
+        $store_id = 0;
+        $code = $this->getConfig('sameday');
+        $key =  $this->getConfig('sameday_sync_lockers_ts');
+        $time = time();
+
+        $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
+
+        if ($lastTimeSynced === null) {
+            $value = $time;
+
+            $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+        }
+
+        $lastTs = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '" . (int)$store_id . "' AND `key` = '" .$this->db->escape($key) .  "'  AND `code` = '" . $this->db->escape($code) . "'")->row;
+        $this->db->query('UPDATE '. DB_PREFIX ."setting SET value='{$this->db->escape($time)}' WHERE setting_id='{$this->db->escape($lastTs['setting_id'])}'");
     }
 
     public function service()
@@ -559,9 +661,11 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_length',
             'entry_height',
             'entry_observation',
+            'entry_ramburs',
             'entry_pickup_point',
             'entry_pickup_point_title',
             'entry_observation_title',
+            'entry_ramburs_title',
             'entry_package_type',
             'entry_package_type_title',
             'entry_awb_payment',
@@ -593,12 +697,10 @@ class ControllerExtensionShippingSameday extends Controller
         )));
 
         if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateFormBeforeAwbGeneration()) {
-            try {
-                // No errors, post AWB.
-                $awb = $this->postAwb($orderInfo);
-            } catch (\Sameday\Exceptions\SamedayBadRequestException $e) {
-                $errors = $e->getErrors();
-            }
+            $postAwb = $this->postAwb($orderInfo);
+
+            $awb = $postAwb['awb'];
+            $errors = $postAwb['errors'];
 
             if (isset($awb)) {
                 $this->model_extension_shipping_sameday->saveAwb(array(
@@ -651,6 +753,7 @@ class ControllerExtensionShippingSameday extends Controller
             )
         );
 
+        $data['sameday_ramburs'] = round($orderInfo['total'], 2);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
         $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
@@ -681,6 +784,7 @@ class ControllerExtensionShippingSameday extends Controller
         /*
         * Actions
         */
+        $data['estimate_cost_href'] = $this->url->link('extension/shipping/sameday/estimateCost');
         $data['action'] = $this->url->link('extension/shipping/sameday/addAwb', $this->addToken(array('order_id' => $orderInfo['order_id'])), true);
         $data['cancel'] = $this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderInfo['order_id'])), true);
 
@@ -817,10 +921,9 @@ class ControllerExtensionShippingSameday extends Controller
 
     /**
      * @param $orderInfo
-     * @return \Sameday\Responses\SamedayPostAwbResponse
+     * @return array
      * @throws \Sameday\Exceptions\SamedayAuthenticationException
      * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayBadRequestException
      * @throws \Sameday\Exceptions\SamedayNotFoundException
      * @throws \Sameday\Exceptions\SamedayOtherException
      * @throws \Sameday\Exceptions\SamedaySDKException
@@ -829,8 +932,10 @@ class ControllerExtensionShippingSameday extends Controller
     private function postAwb($orderInfo)
     {
         $params = array_merge($this->request->post, $orderInfo);
-        $parts = explode('.', $orderInfo['shipping_code'], 3);
+        $parts = explode('.', $orderInfo['shipping_code'], 4);
+
         $params['service_id'] = $parts[2];
+        $params['locker_id'] = isset($parts[3]) ? $parts[3] : '';
 
         $parcelDimensions = [];
         foreach ($this->request->post['sameday_package_weight'] as $k => $weight) {
@@ -876,6 +981,14 @@ class ControllerExtensionShippingSameday extends Controller
             );
         }
 
+        if ($params['locker_id']) {
+            $locker = $this->model_extension_shipping_sameday->getLocker($params['locker_id'], $this->isTesting());
+        }
+
+        $city = $locker ? $locker['city'] : $params['shipping_city'];
+        $county = $locker ? $locker['county'] : $params['shipping_zone'];
+        $address = $locker ? $locker['address'] : trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
+
         $request = new \Sameday\Requests\SamedayPostAwbRequest(
             $params['sameday_pickup_point'],
             null,
@@ -884,27 +997,39 @@ class ControllerExtensionShippingSameday extends Controller
             $params['service_id'],
             new \Sameday\Objects\Types\AwbPaymentType($params['sameday_awb_payment']),
             new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
-                $params['shipping_city'],
-                $params['shipping_zone'],
-                trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']),
+                $city,
+                $county,
+                $address,
                 $params['shipping_firstname'] . ' ' . $params['shipping_lastname'],
                 $params['telephone'],
                 $params['email'],
                 $companyObject
             ),
             $params['sameday_insured_value'],
-            $params['total'],
+            $params['sameday_ramburs'],
             new \Sameday\Objects\Types\CodCollectorType(\Sameday\Objects\Types\CodCollectorType::CLIENT),
             $thirdPartyPickUp,
             array(),
             null,
             null,
-            $params['sameday_observation']
+            $params['sameday_observation'],
+            '',
+            '',
+            $locker ? $locker['locker_id'] : null
         );
 
         $sameday = new \Sameday\Sameday($this->initClient());
 
-        return $sameday->postAwb($request);
+        try{
+            $awb = $sameday->postAwb($request);
+        }  catch (\Sameday\Exceptions\SamedayBadRequestException $e) {
+            $errors = $e->getErrors();
+        }
+
+        return array(
+            'awb' => isset($awb) ? $awb : null,
+            'errors' => isset($errors) ? $errors : null
+        );
     }
 
     /**
@@ -921,6 +1046,92 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         return $totalWeight;
+    }
+
+    /**
+     * estimateCost
+     */
+    public function estimateCost()
+    {
+        $this->load->model('sale/order');
+        $this->load->language('extension/shipping/sameday');
+
+        $params = $this->request->post;
+        $order_id = $params['order_id'];
+
+        $orderInfo = $this->model_sale_order->getOrder($order_id);
+
+        if (!strlen($params['sameday_insured_value'])) {
+            $return['errors'][] = $this->language->get('error_insured_value_cost');
+        }
+
+        $parcelDimensions = [];
+        foreach ($params['sameday_package_weight'] as $k => $weight) {
+
+            if (!strlen($weight) || $weight < 1) {
+                $return['errors'][] = $this->language->get('error_weight_cost');
+            }
+
+            $parcelDimensions[] = new \Sameday\Objects\ParcelDimensionsObject(
+                $weight,
+                $params['sameday_package_width'][$k],
+                $params['sameday_package_length'][$k],
+                $params['sameday_package_height'][$k]
+            );
+        }
+
+        if (! isset($return['errors'])) {
+            $parts = explode('.', $orderInfo['shipping_code'], 3);
+            $params['service_id'] = $parts[2];
+
+            $estimateCostRequest = new Sameday\Requests\SamedayPostAwbEstimationRequest(
+                $params['sameday_pickup_point'],
+                null,
+                new Sameday\Objects\Types\PackageType(
+                    $params['sameday_package_type']
+                ),
+                $parcelDimensions,
+                $params['service_id'],
+                new Sameday\Objects\Types\AwbPaymentType(
+                    $params['sameday_awb_payment']
+                ),
+                new Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
+                    ucwords(strtolower($orderInfo['shipping_city'])) !== 'Bucuresti' ? $orderInfo['shipping_city'] : 'Sector 1',
+                    $orderInfo['shipping_zone'],
+                    $orderInfo['shipping_address_1'],
+                    null,
+                    null,
+                    null,
+                    null
+                ),
+                $params['sameday_insured_value'],
+                $params['sameday_ramburs'],
+                null,
+                array()
+            );
+
+            $sameday =  new Sameday\Sameday($this->initClient());
+
+            try {
+                $estimation = $sameday->postAwbEstimation($estimateCostRequest);
+                $cost = $estimation->getCost();
+                $currency = $estimation->getCurrency();
+
+                $return['success'] = sprintf($this->language->get('estimated_cost_success_message'), $cost, $currency);
+            } catch (\Sameday\Exceptions\SamedayBadRequestException $exception) {
+                $erros = $exception->getErrors();
+            }
+
+            if (isset($erros)) {
+                foreach ($erros as $error) {
+                    foreach ($error['errors'] as $message) {
+                        $return['errors'][] = implode('.', $error['key']) . ': ' . $message;
+                    }
+                }
+            }
+        }
+
+        $this->response->setOutput(json_encode($return));
     }
 
     /**
@@ -966,7 +1177,7 @@ class ControllerExtensionShippingSameday extends Controller
     {
         if (!strlen($this->request->post['sameday_insured_value']) ||
             $this->request->post['sameday_insured_value'] < 0 )  {
-            $this->error['error_insured_value'] = $this->language->get('error_insured_value');
+            $this->error['error_insured_val'] = $this->language->get('error_insured_value');
         }
 
         $packageWeights = $this->request->post['sameday_package_weight'];
@@ -1052,7 +1263,7 @@ class ControllerExtensionShippingSameday extends Controller
             $this->request->post["{$this->getPrefix()}sameday_password"] = $password;
         }
 
-        $testing = $this->getConfig('sameday_testing');
+        $testing = $this->isTesting();
         if ($this->request->post["{$this->getPrefix()}sameday_testing"] != $testing) {
             // Testing changed.
             $testing = $this->request->post["{$this->getPrefix()}sameday_testing"];

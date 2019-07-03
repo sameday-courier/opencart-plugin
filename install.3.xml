@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart</name>
     <code>ocmode-editor</code>
-    <version>1.0.2</version>
+    <version>1.0.4</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -12,6 +12,16 @@
             ]]></search>
             <add position="after"><![CDATA[
                 $data['shipping_method_sameday'] = $this->load->controller('extension/shipping/sameday/info', $order_info);
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/checkout/shipping_method.php">
+        <operation>
+            <search><![CDATA[
+                $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
+            ]]></search>
+            <add position="before"><![CDATA[
+                $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]]['code'] = $this->request->post['shipping_method'];
             ]]></add>
         </operation>
     </file>
@@ -33,6 +43,55 @@
                     {% endif %}
                     </tr><tr>
                 {% endif %}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/default/template/checkout/shipping_method.twig">
+        <operation>
+            <search><![CDATA[
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" />
+            ]]></search>
+            <add position="replace"><![CDATA[
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} disabled {% endif %} />
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                </label>
+            ]]></search>
+            <add position="after"><![CDATA[
+                {% if quote.lockers %}
+                    <div class="lockers">
+                        <div class="row">
+                            <ul>
+                                <div class="col-sm-4">
+                                    <div id="search" class="input-group">
+                                        <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
+                                            <option class="input-group" value=""> Alege Locker </option>
+                                            {% for locker in quote.lockers %}
+                                                <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+                <script>
+                jQuery(document).ready(function ($) {
+                    $(document).on("click", "#selectLocker", function(){
+                        lockerValue = $(this).val();
+                        $(this).closest(".radio").children()[0].childNodes[1].checked = false;
+
+                        if (lockerValue != "") {
+                            $(this).closest(".radio").children()[0].childNodes[1].checked = true;
+                        }
+
+                        $(this).closest(".radio").children()[0].childNodes[1].value = lockerValue;
+                    });
+                });
+                </script>
             ]]></add>
         </operation>
     </file>

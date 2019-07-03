@@ -83,6 +83,15 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_estimated_cost; ?></label>
+                        <div class="col-sm-10">
+                            <select name="sameday_estimated_cost" id="input-status" class="form-control">
+                                <option value="0" <?php if (!$sameday_estimated_cost) { ?>selected="selected"<?php } ?>><?php echo $text_disabled; ?></option>
+                                <option value="1" <?php if ($sameday_estimated_cost) { ?>selected="selected"<?php } ?>><?php echo $text_enabled; ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-sort-order"><?php echo $entry_sort_order; ?></label>
                         <div class="col-sm-10">
                             <input type="text" name="sameday_sort_order" value="<?php echo $sameday_sort_order; ?>" placeholder="<?php echo $entry_sort_order; ?>" id="input-sort-order" class="form-control" />
@@ -112,7 +121,7 @@
                         <tbody>
                             <?php if (empty($services)) { ?>
                             <tr>
-                                <td class="text-center" colspan="5"><?php echo $text_services_empty; ?></td>
+                                <td class="text-center" colspan="6"> <?php echo $text_services_empty; ?> </td>
                             </tr>
                             <?php } else { foreach ($services as $idx => $service) { ?>
                             <tr>
@@ -140,6 +149,7 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                         <tr>
+                            <td class="text-left"></td>
                             <td class="text-left"><?php echo $column_pickupPoint_samedayId; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_alias; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_city; ?></td>
@@ -150,15 +160,61 @@
                         <tbody>
                         <?php if (empty($pickupPoints)) { ?>
                         <tr>
-                            <td class="text-center" colspan="5"><?php echo $text_pickup_points_empty; ?></td>
+                            <td class="text-center" colspan="6"><?php echo $text_pickup_points_empty; ?></td>
                         </tr>
-                        <?php } else { foreach ($pickupPoints as $pickupPoint) { ?>
+                        <?php } else { $i=1;foreach ($pickupPoints as $pickupPoint) { ?>
                         <tr>
+                            <td><?php echo $i++;?></td>
                             <td><?php echo $pickupPoint['sameday_id']; ?></td>
                             <td><?php echo $pickupPoint['sameday_alias']; ?></td>
                             <td><?php echo $pickupPoint['city']; ?></td>
                             <td><?php echo $pickupPoint['county']; ?></td>
                             <td><?php echo $pickupPoint['address']; ?></td>
+                        </tr>
+                        <?php } } ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lockers -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_lockers; ?> </h3>
+                <a class="btn btn-primary" href="<?php echo $lockers_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_lockers_refresh; ?>"><i class="fa fa-refresh"></i></a>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <td></td>
+                            <td><?php echo $column_locker_name; ?></td>
+                            <td><?php echo $column_locker_county; ?></td>
+                            <td><?php echo $column_locker_city; ?></td>
+                            <td><?php echo $column_locker_address; ?></td>
+                            <td><?php echo $column_locker_lat; ?></td>
+                            <td><?php echo $column_locker_lng; ?></td>
+                            <td><?php echo $column_locker_postal_code; ?></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php if (empty($lockers)) { ?>
+                        <tr>
+                            <td class="text-center" colspan="8"> <?php echo $text_lockers_empty; ?> </td>
+                        </tr>
+                        <?php } else { ?>
+                        <?php $i=1; foreach($lockers as $locker) { ?>
+                        <tr>
+                            <td><?php echo $i++; ?></td>
+                            <td><?php echo $locker['name']; ?></td>
+                            <td><?php echo $locker['county']; ?></td>
+                            <td><?php echo $locker['city']; ?></td>
+                            <td><?php echo $locker['address']; ?></td>
+                            <td><?php echo $locker['lat']; ?></td>
+                            <td><?php echo $locker['lng']; ?></td>
+                            <td><?php echo $locker['postal_code']; ?></td>
                         </tr>
                         <?php } } ?>
                         </tbody>

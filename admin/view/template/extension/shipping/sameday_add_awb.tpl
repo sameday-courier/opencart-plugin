@@ -4,7 +4,7 @@
     <div class="page-header">
         <div class="container-fluid">
             <div class="pull-right">
-                <button type="button" form="form-shipping" id="estimateCostId" data-toggle="tooltip" title='<?php echo $estimate_cost; ?>' class="btn btn-info"><i class="fa fa-money"></i></button>
+                <button type="button" form="form-shipping" id="estimateCost" data-toggle="tooltip" data-link="<?php echo $estimate_cost_href; ?>" title='<?php echo $estimate_cost; ?>' class="btn btn-info"><i class="fa fa-money"></i></button>
                 <button type="submit" form="form-shipping" data-toggle="tooltip" title='<?php echo $text_create_awb; ?>' class="btn btn-primary"><i class="fa fa-save"></i></button>
                 <a href="<?php echo $cancel; ?>" data-toggle="tooltip" title="<?php echo $button_cancel; ?>" class="btn btn-default"><i class="fa fa-reply"></i></a>
             </div>
@@ -90,6 +90,14 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_observation_title; ?>"><?php echo $entry_observation; ?></span></label>
                             <div class="col-sm-10">
                                 <input type="text" name="sameday_observation" value="<?php echo $sameday_observation; ?>" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <!-- Ramburs //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>"><?php echo $entry_ramburs; ?></span></label>
+                            <div class="col-sm-10">
+                                <input type="number" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
                             </div>
                         </div>
 
@@ -278,6 +286,58 @@
 </div>
 
 <script>
+    $(document).on('click', '#estimateCost', function() {
+        // config vars.
+        link= $(this).data('link');
+        url = new URL(window.location.href);
+        token = url.searchParams.get("token");
+        order_id = url.searchParams.get("order_id");
+        formData = new FormData($('#form-shipping')[0]);
+        formData.append('order_id', order_id);
+
+        $.ajax({
+            url: link + "&token=" + token,
+            data: formData,
+            type: "POST",
+            dataType: "JSON",
+            processData: false,
+            contentType: false,
+            beforeSend: function(){
+                $('.appendEstimateCost').html('<div class="loader">  </div>');
+            },
+            success: function( data ) {
+                //console.log(data.errors);
+                $('.appendEstimateCost').html(createMsgCost( data ));
+            },
+            error: function () {
+                $('.appendEstimateCost').html("Something went wrong");
+            }
+        });
+
+    });
+
+    function createMsgCost( data ) {
+        _msg = "";
+        if (data.errors != null) {
+            alertType = "alert-danger";
+            data.errors.forEach(function(value) {
+                _msg += "<li>\n" +
+                    "<strong> " + value + "</strong>\n" +
+                    "</li>\n";
+            });
+        } else {
+            alertType = "alert-success";
+            _msg += "<li>\n" +
+                "<strong> " + data.success + "</strong>\n" +
+                "</li>\n";
+        }
+
+        return "<div class=\"alert " + alertType + " fade in\">\n" +
+            "<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a>\n" +
+            "<ul>\n" + _msg
+            "</ul>\n" +
+            "</div>";
+    }
 
     $('#qty_input').prop('disabled', true);
     $('#plus-btn').click(function(e){
@@ -388,5 +448,26 @@
 <style>
     .input-number {
         text-align: center;
+    }
+
+    .loader {
+        border: 3.2px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 3.2px solid #3498db;
+        width: 24px;
+        height: 24px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>

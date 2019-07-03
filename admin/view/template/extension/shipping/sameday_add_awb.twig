@@ -4,7 +4,7 @@
     <div class="page-header">
         <div class="container-fluid">
             <div class="pull-right">
-                <button type="button" form="form-shipping" id="estimateCostId" data-toggle="tooltip" title='{{ estimate_cost }}' class="btn btn-info"><i class="fa fa-money"></i></button>
+                <button type="button" form="form-shipping" id="estimateCost" data-link="{{ estimate_cost_href }}" data-toggle="tooltip" title='{{ estimate_cost }}' class="btn btn-info"><i class="fa fa-money"></i></button>
                 <button type="submit" form="form-shipping" data-toggle="tooltip" title='{{ text_create_awb }}' class="btn btn-primary"><i class="fa fa-save"></i></button>
                 <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a>
             </div>
@@ -48,9 +48,9 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_insured_value_title }}">{{ entry_insured_value }}</span></label>
                             <div class="col-sm-6">
-                                <input type="number" name="sameday_insured_value" value="{{ (sameday_insured_value != '') ? sameday_insured_value : 0 }}" min="0" class="form-control"/>
-                                {% if error_insured_value is not null %}
-                                    <div class="text-danger">{{ error_insured_value }}</div>
+                                <input type="number" name="sameday_insured_value" value="{{ sameday_insured_value }}" min="0" class="form-control"/>
+                                {% if error_insured_val is not null %}
+                                    <div class="text-danger">{{ error_insured_val }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -85,6 +85,14 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_observation_title }}">{{ entry_observation }}</span></label>
                             <div class="col-sm-10">
                                 <input type="text" name="sameday_observation" value="{{ sameday_observation }}" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <!-- Ramburs //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_ramburs_title }}">{{ entry_ramburs }}</span></label>
+                            <div class="col-sm-10">
+                                <input type="number" name="sameday_ramburs" value="{{ sameday_ramburs }}" class="form-control"/>
                             </div>
                         </div>
 
@@ -273,6 +281,57 @@
 </div>
 
 <script>
+    $(document).on('click', '#estimateCost', function() {
+        link = $(this).data('link');
+        url = new URL(window.location.href);
+        token = url.searchParams.get("user_token");
+        order_id = url.searchParams.get("order_id");
+
+        formData = new FormData($('#form-shipping')[0]);
+        formData.append('order_id', order_id);
+
+        $.ajax({
+            url: link + '&user_token=' + token,
+            data: formData,
+            type: "POST",
+            dataType: "JSON",
+            processData: false,
+            contentType: false,
+            beforeSend: function(){
+                $('.appendEstimateCost').html('<div class="loader">  </div>');
+            },
+            success: function( data ) {
+                //console.log(data.errors);
+                $('.appendEstimateCost').html(createMsgCost( data ));
+            },
+            error: function () {
+                $('.appendEstimateCost').html('<b> Something went wrong </b>');
+            }
+        });
+    });
+
+    function createMsgCost( data ) {
+        _msg = "";
+        if (data.errors != null) {
+            alertType = "alert-danger";
+            data.errors.forEach(function(value) {
+                _msg += "<li>\n" +
+                    "<strong> " + value + "</strong>\n" +
+                    "</li>\n";
+            });
+        } else {
+            alertType = "alert-success";
+            _msg += "<li>\n" +
+                "<strong> " + data.success + "</strong>\n" +
+                "</li>\n";
+        }
+
+        return "<div class=\"alert " + alertType + " fade in\">\n" +
+            "<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a>\n" +
+            "<ul>\n" + _msg
+        "</ul>\n" +
+        "</div>";
+    }
 
     $('#qty_input').prop('disabled', true);
     $('#plus-btn').click(function(e){
@@ -386,5 +445,26 @@
 <style>
     .input-number {
         text-align: center;
+    }
+
+    .loader {
+        border: 3.2px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 3.2px solid #3498db;
+        width: 24px;
+        height: 24px;
+        -webkit-animation: spin 2s linear infinite; /* Safari */
+        animation: spin 2s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>

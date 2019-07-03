@@ -10,6 +10,7 @@ class ModelExtensionShippingSameday extends Model
         $this->createServiceTable();
         $this->createPickUpPointTable();
         $this->createPackageTable();
+        $this->createLockerTable();
     }
 
     public function uninstall()
@@ -18,6 +19,7 @@ class ModelExtensionShippingSameday extends Model
         $this->dropServiceTable();
         $this->dropPickUpPointTable();
         $this->dropPackageTable();
+        $this->dropLockerTable();
     }
 
     /**
@@ -66,8 +68,15 @@ class ModelExtensionShippingSameday extends Model
     public function getServices($testing)
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service WHERE testing='{$this->db->escape($testing)}'";
+        $rows = $this->db->query($query)->rows;
 
-        return $this->db->query($query)->rows;
+        foreach ($rows as $k => $row) {
+            if (!array_key_exists('sameday_code', $row)) {
+                $rows[$k]['sameday_code'] = '';
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -78,8 +87,12 @@ class ModelExtensionShippingSameday extends Model
     public function getService($id)
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service WHERE id='{$this->db->escape($id)}'";
+        $row = $this->db->query($query)->row;
+        if ($row && !array_key_exists('sameday_code', $row)) {
+            $row['sameday_code'] = '';
+        }
 
-        return $this->db->query($query)->row;
+        return $row;
     }
 
     /**
@@ -91,8 +104,38 @@ class ModelExtensionShippingSameday extends Model
     public function getServiceSameday($samedayId, $testing)
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service WHERE sameday_id='{$this->db->escape($samedayId)}' AND testing='{$this->db->escape($testing)}'";
+        $row = $this->db->query($query)->row;
+        if ($row && !array_key_exists('sameday_code', $row)) {
+            $row['sameday_code'] = '';
+        }
 
-        return $this->db->query($query)->row;
+        return $row;
+    }
+
+    public function ensureSamedayServiceCodeColumn()
+    {
+        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service LIMIT 1";
+        $row = $this->db->query($query)->row;
+
+        if (array_key_exists('sameday_code', $row)) {
+            return;
+        }
+
+        $this->db->query('alter table '. DB_PREFIX .'sameday_service add sameday_code VARCHAR(255) default \'\' not null');
+    }
+
+    /**
+     * @param int $id
+     * @param string $samedayServiceCode
+     */
+    public function updateServiceCode($id, $samedayServiceCode)
+    {
+        $this->db->query('
+            UPDATE ' . DB_PREFIX . "sameday_service SET 
+                sameday_code='{$this->db->escape($samedayServiceCode)}'
+            WHERE 
+                id = '{$this->db->escape($id)}'
+        ");
     }
 
     /**
@@ -105,11 +148,13 @@ class ModelExtensionShippingSameday extends Model
             INSERT INTO ' . DB_PREFIX . "sameday_service (
                 sameday_id, 
                 sameday_name, 
+                sameday_code,
                 testing, 
                 status
             ) VALUES (
                 '{$this->db->escape($service->getId())}', 
                 '{$this->db->escape($service->getName())}', 
+                '{$this->db->escape($service->getCode())}', 
                 '{$this->db->escape($testing)}',
                 0
             )";
@@ -160,6 +205,18 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param bool $testing
+     *
+     * @return array
+     */
+    public function getLockers($testing)
+    {
+        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($testing)}'";
+
+        return $this->db->query($query)->rows;
+    }
+
+    /**
      * @param int $id
      *
      * @return array
@@ -180,6 +237,32 @@ class ModelExtensionShippingSameday extends Model
     public function getPickupPointSameday($samedayId, $testing)
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_pickup_point WHERE sameday_id='{$this->db->escape($samedayId)}' AND testing='{$this->db->escape($testing)}'";
+
+        return $this->db->query($query)->row;
+    }
+
+    /**
+     * @param int $lockerId
+     * @param bool $testing
+     *
+     * @return array
+     */
+    public function getLockerSameday($lockerId, $testing)
+    {
+        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE locker_id='{$this->db->escape($lockerId)}' AND testing='{$this->db->escape($testing)}'";
+
+        return $this->db->query($query)->row;
+    }
+
+    /**
+     * @param int $id
+     * @param bool $testing
+     *
+     * @return array
+     */
+    public function getLocker($id, $testing)
+    {
+        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE locker_id='{$this->db->escape($id)}' AND testing='{$this->db->escape($testing)}'";
 
         return $this->db->query($query)->row;
     }
@@ -213,10 +296,43 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param \Sameday\Objects\PickupPoint\PickupPointObject $pickupPointObject
+     * @param \Sameday\Objects\Locker\LockerObject $lockerObject
      * @param bool $testing
      */
-    public function updatePickupPoint($pickupPointObject, $testing)
+    public function addLocker(\Sameday\Objects\Locker\LockerObject $lockerObject, $testing)
+    {
+        $query = '
+            INSERT INTO ' . DB_PREFIX . "sameday_locker (
+                locker_id,
+                name,
+                county,
+                city,
+                address,
+                lat,
+                lng,
+                postal_code,
+                boxes,
+                testing
+            ) VALUES (
+                '{$this->db->escape($lockerObject->getId())}',
+                '{$this->db->escape($lockerObject->getName())}',
+                '{$this->db->escape($lockerObject->getCounty())}',
+                '{$this->db->escape($lockerObject->getCity())}',
+                '{$this->db->escape($lockerObject->getAddress())}',
+                '{$this->db->escape($lockerObject->getLat())}',
+                '{$this->db->escape($lockerObject->getLong())}',
+                '{$this->db->escape($lockerObject->getPostalCode())}',
+                '{$this->db->escape(serialize($lockerObject->getBoxes()))}',
+                '{$this->db->escape($testing)}')";
+
+        $this->db->query($query);
+    }
+
+    /**
+     * @param \Sameday\Objects\PickupPoint\PickupPointObject $pickupPointObject
+     * @param int $pickuppointId
+     */
+    public function updatePickupPoint(\Sameday\Objects\PickupPoint\PickupPointObject $pickupPointObject, $pickuppointId)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . "sameday_pickup_point SET 
@@ -225,7 +341,28 @@ class ModelExtensionShippingSameday extends Model
                 county='{$this->db->escape($pickupPointObject->getCounty()->getName())}',
                 address='{$this->db->escape($pickupPointObject->getAddress())}'
             WHERE 
-                sameday_id='{$this->db->escape($pickupPointObject->getId())}'
+                id='{$pickuppointId}'
+        ");
+    }
+
+    /**
+     * @param \Sameday\Objects\Locker\LockerObject $lockerObject
+     * @param int $lockerId
+     */
+    public function updateLocker(\Sameday\Objects\Locker\LockerObject $lockerObject, $lockerId)
+    {
+        $this->db->query(
+            'UPDATE ' . DB_PREFIX . "sameday_locker SET 
+                name='{$this->db->escape($lockerObject->getName())}',
+                city='{$this->db->escape($lockerObject->getCity())}', 
+                county='{$this->db->escape($lockerObject->getCounty())}',
+                address='{$this->db->escape($lockerObject->getAddress())}',
+                lat='{$this->db->escape($lockerObject->getLat())}',
+                lng='{$this->db->escape($lockerObject->getLong())}',
+                postal_code='{$this->db->escape($lockerObject->getPostalCode())}',
+                boxes='{$this->db->escape(serialize($lockerObject->getBoxes()))}'
+            WHERE 
+                id='{$lockerId}'
         ");
     }
 
@@ -235,6 +372,16 @@ class ModelExtensionShippingSameday extends Model
     public function deletePickupPoint($id)
     {
         $query = 'DELETE FROM ' . DB_PREFIX . "sameday_pickup_point WHERE id='{$this->db->escape($id)}'";
+
+        $this->db->query($query);
+    }
+
+    /**
+     * @param int $id
+     */
+    public function deleteLocker($id)
+    {
+        $query = 'DELETE FROM ' . DB_PREFIX . "sameday_locker WHERE id='{$this->db->escape($id)}'";
 
         $this->db->query($query);
     }
@@ -340,12 +487,35 @@ class ModelExtensionShippingSameday extends Model
                 id INT(11) NOT NULL AUTO_INCREMENT,
                 sameday_id INT(11) NOT NULL,
                 sameday_name VARCHAR(255),
+                sameday_code VARCHAR(255),
                 testing TINYINT(1),
                 name VARCHAR(255),
                 price DOUBLE(10, 2),
                 price_free DOUBLE(10, 2),
                 status INT(11),
                 working_days TEXT,
+                PRIMARY KEY (id)
+            ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
+        ';
+
+        $this->db->query($query);
+    }
+
+    private function createLockerTable()
+    {
+        $query = '
+            CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_locker (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                locker_id INT(11),
+                name VARCHAR(255),
+                county VARCHAR(255),
+                city VARCHAR(255),
+                address VARCHAR(255),
+                lat VARCHAR(255),
+                lng VARCHAR(255),
+                postal_code VARCHAR(255),
+                boxes TEXT,
+                testing TINYINT(1),
                 PRIMARY KEY (id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
         ';
@@ -414,6 +584,13 @@ class ModelExtensionShippingSameday extends Model
     private function dropPackageTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_package';
+
+        $this->db->query($query);
+    }
+
+    private function dropLockerTable()
+    {
+        $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_locker';
 
         $this->db->query($query);
     }

@@ -76,9 +76,18 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
                         <div class="col-sm-10">
-                            <select name="shipping_sameday_status" id="input-status" class="form-control">
+                            <select name="shipping_sameday_status" id="shipping_sameday_status" class="form-control">
                                 <option value="0" {% if sameday_status == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
                                 <option value="1" {% if sameday_status == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-status">{{ entry_estimated_cost }}</label>
+                        <div class="col-sm-10">
+                            <select name="shipping_sameday_estimated_cost" id="shipping_sameday_estimated_cost" class="form-control">
+                                <option value="0" {% if sameday_estimated_cost == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
+                                <option value="1" {% if sameday_estimated_cost == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
                             </select>
                         </div>
                     </div>
@@ -162,6 +171,50 @@
                                 <td>{{ pickupPoint.county }}</td>
                                 <td>{{ pickupPoint.address }}</td>
                             </tr>
+                            {% endfor %}
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lockers -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_lockers }} </h3>
+                <a class="btn btn-primary" href="{{ lockers_refresh }}" data-toggle="tooltip" title="{{ text_lockers_refresh }}"><i class="fa fa-refresh"></i></a>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <td>{{ column_locker_name }}</td>
+                            <td>{{ column_locker_county }}</td>
+                            <td>{{ column_locker_city }}</td>
+                            <td>{{ column_locker_address }}</td>
+                            <td>{{ column_locker_lat }}</td>
+                            <td>{{ column_locker_lng }}</td>
+                            <td>{{ column_locker_postal_code }}</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if lockers is empty  %}
+                            <tr>
+                                <td class="text-center" colspan="7">{{ text_lockers_empty }}</td>
+                            </tr>
+                        {% else %}
+                            {% for locker in lockers %}
+                                <tr>
+                                    <td>{{ locker.name }}</td>
+                                    <td>{{ locker.county }}</td>
+                                    <td>{{ locker.city }}</td>
+                                    <td>{{ locker.address }}</td>
+                                    <td>{{ locker.lat }}</td>
+                                    <td>{{ locker.lng }}</td>
+                                    <td>{{ locker.postal_code }}</td>
+                                </tr>
                             {% endfor %}
                         {% endif %}
                         </tbody>
