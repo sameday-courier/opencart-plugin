@@ -114,10 +114,10 @@ class ModelExtensionShippingSameday extends Model
 
     public function ensureSamedayServiceCodeColumn()
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service LIMIT 1";
+        $query = 'SHOW COLUMNS FROM ' . DB_PREFIX . "sameday_service LIKE 'sameday_code'";
         $row = $this->db->query($query)->row;
 
-        if (array_key_exists('sameday_code', $row)) {
+        if ($row) {
             return;
         }
 
