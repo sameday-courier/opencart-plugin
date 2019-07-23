@@ -137,6 +137,20 @@
                             </div>
                         </div>
 
+                        <!--  Awb Service //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_service"><span data-toggle="tooltip" title="<?php echo $entry_service_title; ?>"><?php echo $entry_service; ?></label>
+                            <div class="col-sm-10">
+                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
+                                    <?php foreach($services as $service) { ?>
+                                        <?php if ($service['status'] > 0) { ?>
+                                        <option value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?> </option>
+                                        <?php } ?>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-status-sameday-third_party_pickup"><span data-toggle="tooltip" title="<?php echo $entry_third_party_pickup_title; ?>"><?php echo $entry_third_party_pickup; ?></label>
