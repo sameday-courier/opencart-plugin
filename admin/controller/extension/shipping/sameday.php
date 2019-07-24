@@ -559,11 +559,6 @@ class ControllerExtensionShippingSameday extends Controller
             return null;
         }
 
-        $parts = explode('.', $orderInfo['shipping_code'], 2);
-        if (count($parts) !== 2 || $parts[0] !== 'sameday') {
-            return null;
-        }
-
         $this->load->language('extension/shipping/sameday');
         $this->load->model('extension/shipping/sameday');
         $data = array(
@@ -669,6 +664,8 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_package_type',
             'entry_package_type_title',
             'entry_awb_payment',
+            'entry_service',
+            'entry_service_title',
             'entry_awb_payment_title',
             'entry_third_party_pickup',
             'entry_third_party_pickup_title',
@@ -696,8 +693,15 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_third_party_person_iban_title'
         )));
 
-        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateFormBeforeAwbGeneration()) {
-            $postAwb = $this->postAwb($orderInfo);
+        $parts = explode('.', $orderInfo['shipping_code'], 4);
+        $data['default_service_id'] = isset($parts[2]) ? $parts[2] : null;
+        $orderInfo['locker_id'] = isset($parts[3]) ? $parts[3] : null;
+
+        if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
+            $params = array_merge($this->request->post, $orderInfo);
+            $service = $this->model_extension_shipping_sameday->getServiceSameday($params['sameday_service'], $this->isTesting());
+
+            $postAwb = $this->postAwb($params);
 
             $awb = $postAwb['awb'];
             $errors = $postAwb['errors'];
@@ -709,6 +713,8 @@ class ControllerExtensionShippingSameday extends Controller
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' =>  $awb->getCost()
                 ));
+
+                $this->model_extension_shipping_sameday->updateShippingMethodAfterPostAwb($orderInfo['order_id'], $service);
 
                 // Redirect to order page.
                 $this->response->redirect($this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderInfo['order_id'])), true));
@@ -755,6 +761,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $data['sameday_ramburs'] = round($orderInfo['total'], 2);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
+        $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
         $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
 
@@ -929,14 +936,8 @@ class ControllerExtensionShippingSameday extends Controller
      * @throws \Sameday\Exceptions\SamedaySDKException
      * @throws \Sameday\Exceptions\SamedayServerException
      */
-    private function postAwb($orderInfo)
+    private function postAwb($params)
     {
-        $params = array_merge($this->request->post, $orderInfo);
-        $parts = explode('.', $orderInfo['shipping_code'], 4);
-
-        $params['service_id'] = $parts[2];
-        $params['locker_id'] = isset($parts[3]) ? $parts[3] : '';
-
         $parcelDimensions = [];
         foreach ($this->request->post['sameday_package_weight'] as $k => $weight) {
             $parcelDimensions[] = new \Sameday\Objects\ParcelDimensionsObject(
@@ -985,16 +986,16 @@ class ControllerExtensionShippingSameday extends Controller
             $locker = $this->model_extension_shipping_sameday->getLocker($params['locker_id'], $this->isTesting());
         }
 
-        $city = $locker ? $locker['city'] : $params['shipping_city'];
-        $county = $locker ? $locker['county'] : $params['shipping_zone'];
-        $address = $locker ? $locker['address'] : trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
+        $city = isset($locker) ? $locker['city'] : $params['shipping_city'];
+        $county = isset($locker) ? $locker['county'] : $params['shipping_zone'];
+        $address = isset($locker) ? $locker['address'] : trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
 
         $request = new \Sameday\Requests\SamedayPostAwbRequest(
             $params['sameday_pickup_point'],
             null,
             new \Sameday\Objects\Types\PackageType($params['sameday_package_type']),
             $parcelDimensions,
-            $params['service_id'],
+            $params['sameday_service'],
             new \Sameday\Objects\Types\AwbPaymentType($params['sameday_awb_payment']),
             new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
                 $city,
@@ -1015,7 +1016,7 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_observation'],
             '',
             '',
-            $locker ? $locker['locker_id'] : null
+            isset($locker) ? $locker['locker_id'] : null
         );
 
         $sameday = new \Sameday\Sameday($this->initClient());
@@ -1081,9 +1082,6 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         if (! isset($return['errors'])) {
-            $parts = explode('.', $orderInfo['shipping_code'], 3);
-            $params['service_id'] = $parts[2];
-
             $estimateCostRequest = new Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
@@ -1091,7 +1089,7 @@ class ControllerExtensionShippingSameday extends Controller
                     $params['sameday_package_type']
                 ),
                 $parcelDimensions,
-                $params['service_id'],
+                $params['sameday_service'],
                 new Sameday\Objects\Types\AwbPaymentType(
                     $params['sameday_awb_payment']
                 ),

@@ -44,6 +44,20 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param $orderId
+     */
+    public function updateShippingMethodAfterPostAwb($orderId, $service)
+    {
+        $this->db->query('
+            UPDATE ' . DB_PREFIX . "order SET 
+                shipping_method='{$this->db->escape($service['name'])}',
+                shipping_code='{$this->db->escape('sameday' . '.' . $service['name'] . '.' . $service['sameday_id'])}'
+            WHERE 
+                order_id = '{$this->db->escape($orderId)}'
+        ");
+    }
+
+    /**
      * @return array
      */
     public function getCounties()
