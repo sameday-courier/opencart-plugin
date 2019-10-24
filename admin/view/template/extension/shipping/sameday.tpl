@@ -92,6 +92,12 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-extra-fee"><?php echo $entry_estimated_cost_extra_fee; ?></label>
+                        <div class="col-sm-10">
+                            <input type="text" name="sameday_estimated_cost_extra_fee" value="<?php echo $sameday_estimated_cost_extra_fee; ?>" placeholder="<?php echo $sameday_estimated_cost_extra_fee; ?>" id="input-username" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-sort-order"><?php echo $entry_sort_order; ?></label>
                         <div class="col-sm-10">
                             <input type="text" name="sameday_sort_order" value="<?php echo $sameday_sort_order; ?>" placeholder="<?php echo $entry_sort_order; ?>" id="input-sort-order" class="form-control" />

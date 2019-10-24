@@ -33,6 +33,8 @@ class ModelExtensionShippingSameday extends Model
 
         $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
 
+        $estimatedCostExtraFee = $this->getConfig('sameday_estimated_cost_extra_fee');
+
         $availableService = $this->getAvailableServices($this->getConfig('sameday_testing'));
         $quote_data = array();
 
@@ -61,8 +63,12 @@ class ModelExtensionShippingSameday extends Model
 
             if ($isEstimatedCostEnabled) {
                 $estimatedCost = $this->estimateCost($address, $service['sameday_id']);
-                if ($estimatedCost != null) {
+                if ($estimatedCost !== null) {
                     $price = $estimatedCost;
+
+                    if (isset($estimatedCostExtraFee) && $estimatedCostExtraFee > 0) {
+                        $price += round($price * ($estimatedCostExtraFee / 100), 2);
+                    }
                 }
             }
 

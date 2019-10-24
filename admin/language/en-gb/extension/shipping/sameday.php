@@ -52,6 +52,7 @@ $_['entry_password'] = 'Password';
 $_['entry_testing'] = 'Testing mode';
 $_['entry_status'] = 'Status';
 $_['entry_estimated_cost'] = 'Estimated cost';
+$_['entry_estimated_cost_extra_fee'] = 'Extra fee (% on estimated cost)';
 $_['entry_sort_order'] = 'Sort Order';
 $_['entry_name'] = 'Display name';
 $_['entry_price'] = 'Price';

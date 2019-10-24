@@ -154,6 +154,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_geo_zone',
             'entry_status',
             'entry_estimated_cost',
+            'entry_estimated_cost_extra_fee',
             'entry_sort_order',
 
             'column_internal_id',
@@ -222,6 +223,7 @@ class ControllerExtensionShippingSameday extends Controller
             'geo_zone_id',
             'status',
             'estimated_cost',
+            'estimated_cost_extra_fee',
             'sort_order'
         )));
 
@@ -696,7 +698,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_third_party_person_iban_title'
         )));
 
-        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateFormBeforeAwbGeneration()) {
+        if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
             $postAwb = $this->postAwb($orderInfo);
 
             $awb = $postAwb['awb'];
@@ -1111,13 +1113,15 @@ class ControllerExtensionShippingSameday extends Controller
             );
 
             $sameday =  new Sameday\Sameday($this->initClient());
+            $return = array();
 
             try {
                 $estimation = $sameday->postAwbEstimation($estimateCostRequest);
-                $cost = $estimation->getCost();
-                $currency = $estimation->getCurrency();
 
-                $return['success'] = sprintf($this->language->get('estimated_cost_success_message'), $cost, $currency);
+                $return['success'] = sprintf($this->language->get('estimated_cost_success_message'),
+                    $estimation->getCost(),
+                    $estimation->getCurrency()
+                );
             } catch (\Sameday\Exceptions\SamedayBadRequestException $exception) {
                 $erros = $exception->getErrors();
             }
