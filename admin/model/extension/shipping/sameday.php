@@ -353,7 +353,8 @@ class ModelExtensionShippingSameday extends Model
                 sameday_alias='{$this->db->escape($pickupPointObject->getAlias())}',
                 city='{$this->db->escape($pickupPointObject->getCity()->getName())}', 
                 county='{$this->db->escape($pickupPointObject->getCounty()->getName())}',
-                address='{$this->db->escape($pickupPointObject->getAddress())}'
+                address='{$this->db->escape($pickupPointObject->getAddress())}',
+                default_pickup_point='{$this->db->escape($pickupPointObject->isDefault())}'
             WHERE 
                 id='{$pickuppointId}'
         ");
