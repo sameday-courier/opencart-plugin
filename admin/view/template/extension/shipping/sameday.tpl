@@ -155,6 +155,7 @@
                             <td class="text-left"><?php echo $column_pickupPoint_city; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_county; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_address; ?></td>
+                            <td class="text-left"><?php echo $column_pickupPoint_default_address; ?></td>
                         </tr>
                         </thead>
                         <tbody>
@@ -170,6 +171,7 @@
                             <td><?php echo $pickupPoint['city']; ?></td>
                             <td><?php echo $pickupPoint['county']; ?></td>
                             <td><?php echo $pickupPoint['address']; ?></td>
+                            <td><?php echo $pickupPoint['default_pickup_point'] == 1 ? $yes : $no; ?></td>
                         </tr>
                         <?php } } ?>
                         </tbody>
