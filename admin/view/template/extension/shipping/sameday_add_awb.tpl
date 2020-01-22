@@ -146,6 +146,9 @@
                                     <?php if ($service['status'] > 0) { ?>
                                     <option value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?> </option>
                                     <?php } ?>
+                                        <?php if ($service['status'] > 0) { ?>
+                                        <option value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?> </option>
+                                        <?php } ?>
                                     <?php } ?>
                                 </select>
                             </div>
