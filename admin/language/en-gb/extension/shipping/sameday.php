@@ -122,6 +122,7 @@ $_['column_pickupPoint_alias'] = 'Sameday Alias';
 $_['column_pickupPoint_city'] = 'City';
 $_['column_pickupPoint_county'] = 'County';
 $_['column_pickupPoint_address'] = 'Address';
+$_['column_pickupPoint_default_address'] = 'Default address';
 
 // Column Awb History Table
 $_['column_parcel_number'] = 'Parcel number';
@@ -155,6 +156,9 @@ $_['text_lockers_empty'] = 'No lockers. Please login and press reload button.';
 
 $_['from'] = 'From';
 $_['to'] = 'To';
+
+$_['yes'] = 'Yes';
+$_['no'] = 'No';
 
 // Days Of Week
 $_['monday'] = 'Monday';
