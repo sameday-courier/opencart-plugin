@@ -1050,7 +1050,7 @@ class ControllerExtensionShippingSameday extends Controller
         $items = $this->getItemsByOrderId($orderId);
         $totalWeight = 0 ;
         foreach ($items as $item) {
-            $totalWeight += round($item['product_info']['weight'], 2);
+            $totalWeight += round($item['product_info']['weight'] * $item['quantity'], 2);
         }
 
         return $totalWeight;
