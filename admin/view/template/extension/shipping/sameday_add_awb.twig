@@ -132,6 +132,20 @@
                             </div>
                         </div>
 
+                        <!--  Awb Service //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_service"><span data-toggle="tooltip" title="{{ entry_service_title }}">{{ entry_service }}</label>
+                            <div class="col-sm-10">
+                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
+                                    {% for service in services %}
+                                        {% if service.status > 0 %}
+                                            <option value="{{ service.sameday_id }}" {% if (service.sameday_id == default_service_id)  %} selected="selected" {% endif %} > {{ service.name }} </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-status-sameday-third_party_pickup"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_title }}">{{ entry_third_party_pickup }}</span></label>

@@ -155,6 +155,7 @@
                             <td class="text-left">{{ column_pickupPoint_city }}</td>
                             <td class="text-left">{{ column_pickupPoint_county }}</td>
                             <td class="text-left">{{ column_pickupPoint_address }}</td>
+                            <td class="text-left">{{ column_pickupPoint_default_address }}</td>
                         </tr>
                         </thead>
                         <tbody>
@@ -170,6 +171,7 @@
                                 <td>{{ pickupPoint.city }}</td>
                                 <td>{{ pickupPoint.county }}</td>
                                 <td>{{ pickupPoint.address }}</td>
+                                <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
                             </tr>
                             {% endfor %}
                         {% endif %}
