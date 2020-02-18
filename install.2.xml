@@ -3,6 +3,7 @@
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
     <version>1.0.7</version>
+    <version>1.0.6</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
