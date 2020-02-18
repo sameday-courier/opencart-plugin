@@ -175,7 +175,10 @@ class ControllerExtensionShippingSameday extends Controller
             'column_pickupPoint_alias',
             'column_pickupPoint_city',
             'column_pickupPoint_county',
-            'column_pickupPoint_address'
+            'column_pickupPoint_address',
+            'column_pickupPoint_default_address',
+            'yes',
+            'no',
         ));
 
         $data['error_warning'] = $this->buildError('warning');
@@ -1043,7 +1046,7 @@ class ControllerExtensionShippingSameday extends Controller
         $items = $this->getItemsByOrderId($orderId);
         $totalWeight = 0 ;
         foreach ($items as $item) {
-            $totalWeight += round($item['product_info']['weight'], 2);
+            $totalWeight += round($item['product_info']['weight'] * $item['quantity'], 2);
         }
 
         return $totalWeight;
