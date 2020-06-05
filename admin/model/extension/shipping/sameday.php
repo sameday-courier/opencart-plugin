@@ -355,7 +355,6 @@ class ModelExtensionShippingSameday extends Model
                 county='{$this->db->escape($pickupPointObject->getCounty()->getName())}',
                 address='{$this->db->escape($pickupPointObject->getAddress())}',
                 default_pickup_point='{$this->db->escape($pickupPointObject->isDefault())}'
-                address='{$this->db->escape($pickupPointObject->getAddress())}'
             WHERE 
                 id='{$pickuppointId}'
         ");
