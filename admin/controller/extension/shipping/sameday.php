@@ -179,7 +179,6 @@ class ControllerExtensionShippingSameday extends Controller
             'column_pickupPoint_default_address',
             'yes',
             'no',
-            'column_pickupPoint_address'
         ));
 
         $data['error_warning'] = $this->buildError('warning');
