@@ -108,7 +108,7 @@ class ModelExtensionShippingSameday extends Model
         $key =  "{$this->getPrefix()}sameday_sync_lockers_ts";
         $time = time();
 
-        if ($time >= ($this->getConfig($key) + 3600)) {
+        if ($time >= ($this->getConfig($key) + 86400)) {
             $this->lockersRefresh();
         }
     }
@@ -166,6 +166,9 @@ class ModelExtensionShippingSameday extends Model
         return true;
     }
 
+    /**
+     * @return void
+     */
     private function updateLastSyncTimestamp()
     {
         $store_id = 0;
@@ -186,13 +189,45 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param $testing
+     *
+     * @return array
+     */
+    public function getCities($testing)
+    {
+        $tableName = DB_PREFIX . "sameday_locker";
+        $query = "SELECT city, county FROM {$tableName} WHERE testing={$testing} GROUP BY city";
+
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
+     * @param $city
+     * @param $testing
+     *
+     * @return array
+     */
+    public function getLockersByCity($city, $testing)
+    {
+        $tableName = DB_PREFIX . "sameday_locker";
+        $query = "SELECT * FROM {$tableName} WHERE city='{$city}' AND testing='{$testing}'";
+
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
      * @return array
      */
     private function getLockers()
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
+        $lockers = array();
+        foreach ($this->getCities($this->isTesting()) as $city) {
+            if ('' !== $city['city']) {
+                $lockers[$city['city'] . ' (' . $city['county'] . ')'] = $this->getLockersByCity($city['city'], $this->isTesting());
+            }
+        }
 
-        return $this->db->query($query)->rows;
+        return $lockers;
     }
 
     /**
