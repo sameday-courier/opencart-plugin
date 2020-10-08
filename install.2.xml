@@ -2,8 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.7</version>
-    <version>1.0.6</version>
+    <version>1.0.8</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -16,7 +15,17 @@
             ]]></add>
         </operation>
     </file>
-        <file path="catalog/controller/checkout/shipping_method.php">
+    <file path="catalog/controller/checkout/shipping_method.php">
+        <operation>
+            <search><![CDATA[
+                $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
+            ]]></search>
+            <add position="before"><![CDATA[
+                if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
+                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockersGroupedByCity();
+                }
+            ]]></add>
+        </operation>
         <operation>
             <search><![CDATA[
                 $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
@@ -70,8 +79,11 @@
                                     <div id="search" class="input-group">
                                         <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
                                             <option class="input-group" value=""> Alege Locker </option>
-                                            <?php foreach ($quote['lockers'] as $locker) { ?>
-                                                <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name']; ?> </option>
+                                            <?php foreach ($quote['lockers'] as $city => $cityLockers) { ?>
+                                                <optgroup label="<?php echo $city; ?>">
+                                                <?php foreach ($cityLockers as $locker) { ?>
+                                                    <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
+                                                <?php } ?>
                                             <?php } ?>
                                         </select>
                                     </div>

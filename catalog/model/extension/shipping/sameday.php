@@ -66,9 +66,9 @@ class ModelExtensionShippingSameday extends Model
                 }
             }
 
-            $quote_data[$service['name']] = array(
+            $quote_data[$service['sameday_code']] = array(
                 'sameday_name' => $service['name'],
-                'code' => 'sameday.' . $service['name'] . '.' . $service['sameday_id'],
+                'code' => 'sameday.' . $service['sameday_code'] . '.' . $service['sameday_id'],
                 'title' => $service['name'],
                 'cost' => $price,
                 'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
@@ -84,7 +84,6 @@ class ModelExtensionShippingSameday extends Model
 
             if ($service['sameday_code'] === "LN") {
                 $this->syncLockers();
-                $quote_data[$service['name']]['lockers'] = $this->getLockers();
             }
         }
 
@@ -108,7 +107,7 @@ class ModelExtensionShippingSameday extends Model
         $key =  "{$this->getPrefix()}sameday_sync_lockers_ts";
         $time = time();
 
-        if ($time >= ($this->getConfig($key) + 3600)) {
+        if ($time >= ($this->getConfig($key) + 86400)) {
             $this->lockersRefresh();
         }
     }
@@ -144,14 +143,18 @@ class ModelExtensionShippingSameday extends Model
 
         // Build array of local lockers.
         $localLockers = array_map(
-            function ($locker) {
-                return array(
-                    'id' => $locker['id'],
-                    'sameday_id' => $locker['locker_id']
-                );
+            static function ($locker) {
+                if (isset($locker['id'])) {
+                    return array(
+                        'id' => $locker['id'],
+                        'sameday_id' => $locker['locker_id']
+                    );
+                }
+
+                return false;
             },
 
-            $this->getLockers($this->isTesting())
+            $this->getLockers()
         );
 
         // Delete local lockers that aren't present in remote lockers anymore.
@@ -166,6 +169,9 @@ class ModelExtensionShippingSameday extends Model
         return true;
     }
 
+    /**
+     * @return void
+     */
     private function updateLastSyncTimestamp()
     {
         $store_id = 0;
@@ -188,11 +194,53 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return array
      */
-    private function getLockers()
+    public function getLockers()
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
 
-        return $this->db->query($query)->rows;
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
+     * @param $testing
+     *
+     * @return array
+     */
+    public function getCities($testing)
+    {
+        $tableName = DB_PREFIX . "sameday_locker";
+        $query = "SELECT city, county FROM {$tableName} WHERE testing={$testing} GROUP BY city";
+
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
+     * @param $city
+     * @param $testing
+     *
+     * @return array
+     */
+    public function getLockersByCity($city, $testing)
+    {
+        $tableName = DB_PREFIX . "sameday_locker";
+        $query = "SELECT * FROM {$tableName} WHERE city='{$city}' AND testing='{$testing}'";
+
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLockersGroupedByCity()
+    {
+        $lockers = array();
+        foreach ($this->getCities($this->isTesting()) as $city) {
+            if ('' !== $city['city']) {
+                $lockers[$city['city'] . ' (' . $city['county'] . ')'] = $this->getLockersByCity($city['city'], $this->isTesting());
+            }
+        }
+
+        return $lockers;
     }
 
     /**
