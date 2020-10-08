@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart</name>
     <code>ocmode-editor</code>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -16,6 +16,16 @@
         </operation>
     </file>
     <file path="catalog/controller/checkout/shipping_method.php">
+        <operation>
+            <search><![CDATA[
+                $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
+            ]]></search>
+            <add position="before"><![CDATA[
+                if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
+                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockers();
+                }
+            ]]></add>
+        </operation>
         <operation>
             <search><![CDATA[
                 $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
@@ -69,8 +79,11 @@
                                     <div id="search" class="input-group">
                                         <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
                                             <option class="input-group" value=""> Alege Locker </option>
-                                            {% for locker in quote.lockers %}
-                                                <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} </option>
+                                            {% for city, cityLockers in quote.lockers %}
+                                                <optgroup label="{{ city }}"></optgroup>
+                                                    {% for locker in cityLockers %}
+                                                        <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} - {{ locker.address}} </option>
+                                                    {% endfor %}
                                             {% endfor %}
                                         </select>
                                     </div>
@@ -80,18 +93,15 @@
                     </div>
                 {% endif %}
                 <script>
-                jQuery(document).ready(function ($) {
-                    $(document).on("click", "#selectLocker", function(){
-                        lockerValue = $(this).val();
-                        $(this).closest(".radio").children()[0].childNodes[1].checked = false;
+                    jQuery(document).ready(function ($) {
+                        $(document).on("click", "#selectLocker", function(){
+                            let lockerValue = $(this).val();
 
-                        if (lockerValue != "") {
-                            $(this).closest(".radio").children()[0].childNodes[1].checked = true;
-                        }
+                            $(this).closest(".radio").children()[0].childNodes[1].checked = lockerValue != "";
 
-                        $(this).closest(".radio").children()[0].childNodes[1].value = lockerValue;
+                            $(this).closest(".radio").children()[0].childNodes[1].value = lockerValue;
+                        });
                     });
-                });
                 </script>
             ]]></add>
         </operation>

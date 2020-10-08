@@ -57,6 +57,7 @@ class SamedayGetServicesResponse implements SamedayPaginatedResponseInterface
                         return new OptionalTaxObject(
                             $entry['id'],
                             $entry['name'],
+                            isset($entry['taxCode']) ? $entry['taxCode'] : '',
                             new CostType($entry['costType']),
                             $entry['tax'],
                             new PackageType($entry['packageType'])

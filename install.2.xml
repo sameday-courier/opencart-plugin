@@ -3,7 +3,6 @@
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
     <version>1.0.8</version>
-    <version>1.0.7</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -16,7 +15,17 @@
             ]]></add>
         </operation>
     </file>
-        <file path="catalog/controller/checkout/shipping_method.php">
+    <file path="catalog/controller/checkout/shipping_method.php">
+        <operation>
+            <search><![CDATA[
+            $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
+        ]]></search>
+            <add position="before"><![CDATA[
+            if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
+                $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockers();
+            }
+        ]]></add>
+        </operation>
         <operation>
             <search><![CDATA[
                 $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];

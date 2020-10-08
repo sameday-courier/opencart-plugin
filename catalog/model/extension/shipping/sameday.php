@@ -66,9 +66,9 @@ class ModelExtensionShippingSameday extends Model
                 }
             }
 
-            $quote_data[$service['name']] = array(
+            $quote_data[$service['sameday_code']] = array(
                 'sameday_name' => $service['name'],
-                'code' => 'sameday.' . $service['name'] . '.' . $service['sameday_id'],
+                'code' => 'sameday.' . $service['sameday_code'] . '.' . $service['sameday_id'],
                 'title' => $service['name'],
                 'cost' => $price,
                 'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
@@ -84,7 +84,6 @@ class ModelExtensionShippingSameday extends Model
 
             if ($service['sameday_code'] === "LN") {
                 $this->syncLockers();
-                $quote_data[$service['name']]['lockers'] = $this->getLockers();
             }
         }
 
@@ -144,14 +143,16 @@ class ModelExtensionShippingSameday extends Model
 
         // Build array of local lockers.
         $localLockers = array_map(
-            function ($locker) {
-                return array(
-                    'id' => $locker['id'],
-                    'sameday_id' => $locker['locker_id']
-                );
+            static function ($locker) {
+                if (isset($locker['id'])) {
+                    return array(
+                        'id' => $locker['id'],
+                        'sameday_id' => $locker['locker_id']
+                    );
+                }
             },
 
-            $this->getLockers($this->isTesting())
+            $this->getLockers()
         );
 
         // Delete local lockers that aren't present in remote lockers anymore.
@@ -218,7 +219,7 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return array
      */
-    private function getLockers()
+    public function getLockers()
     {
         $lockers = array();
         foreach ($this->getCities($this->isTesting()) as $city) {
