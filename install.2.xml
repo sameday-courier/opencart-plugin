@@ -18,13 +18,13 @@
     <file path="catalog/controller/checkout/shipping_method.php">
         <operation>
             <search><![CDATA[
-            $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
-        ]]></search>
+                $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
+            ]]></search>
             <add position="before"><![CDATA[
-            if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
-                $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockers();
-            }
-        ]]></add>
+                if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
+                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockersGroupedByCity();
+                }
+            ]]></add>
         </operation>
         <operation>
             <search><![CDATA[

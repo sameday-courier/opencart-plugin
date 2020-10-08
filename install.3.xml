@@ -22,7 +22,7 @@
             ]]></search>
             <add position="before"><![CDATA[
                 if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
-                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockers();
+                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockersGroupedByCity();
                 }
             ]]></add>
         </operation>

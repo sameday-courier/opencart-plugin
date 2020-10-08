@@ -150,6 +150,8 @@ class ModelExtensionShippingSameday extends Model
                         'sameday_id' => $locker['locker_id']
                     );
                 }
+
+                return false;
             },
 
             $this->getLockers()
@@ -190,6 +192,16 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @return array
+     */
+    public function getLockers()
+    {
+        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
+
+        return (array) $this->db->query($query)->rows;
+    }
+
+    /**
      * @param $testing
      *
      * @return array
@@ -219,7 +231,7 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return array
      */
-    public function getLockers()
+    public function getLockersGroupedByCity()
     {
         $lockers = array();
         foreach ($this->getCities($this->isTesting()) as $city) {
