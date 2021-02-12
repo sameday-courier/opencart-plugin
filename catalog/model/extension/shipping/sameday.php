@@ -202,41 +202,14 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param $testing
-     *
-     * @return array
-     */
-    public function getCities($testing)
-    {
-        $tableName = DB_PREFIX . "sameday_locker";
-        $query = "SELECT city, county FROM {$tableName} WHERE testing={$testing} GROUP BY city";
-
-        return (array) $this->db->query($query)->rows;
-    }
-
-    /**
-     * @param $city
-     * @param $testing
-     *
-     * @return array
-     */
-    public function getLockersByCity($city, $testing)
-    {
-        $tableName = DB_PREFIX . "sameday_locker";
-        $query = "SELECT * FROM {$tableName} WHERE city='{$city}' AND testing='{$testing}'";
-
-        return (array) $this->db->query($query)->rows;
-    }
-
-    /**
      * @return array
      */
     public function getLockersGroupedByCity()
     {
         $lockers = array();
-        foreach ($this->getCities($this->isTesting()) as $city) {
-            if ('' !== $city['city']) {
-                $lockers[$city['city'] . ' (' . $city['county'] . ')'] = $this->getLockersByCity($city['city'], $this->isTesting());
+        foreach ($this->getLockers() as $locker) {
+            if ('' !== $locker['city']) {
+                $lockers[$locker['city'] . ' (' . $locker['county'] . ')'][] = $locker;
             }
         }
 
