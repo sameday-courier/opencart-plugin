@@ -617,6 +617,7 @@ class ControllerExtensionShippingSameday extends Controller
             'sameday_package_number',
             'sameday_package_weight',
             'sameday_observation',
+            'sameday_client_reference',
             'sameday_package_type',
             'sameday_pickup_point',
             'sameday_service',
@@ -663,6 +664,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_pickup_point',
             'entry_pickup_point_title',
             'entry_observation_title',
+            'entry_client_reference_title',
             'entry_ramburs_title',
             'entry_package_type',
             'entry_package_type_title',
@@ -763,6 +765,7 @@ class ControllerExtensionShippingSameday extends Controller
         );
 
         $data['sameday_ramburs'] = round($orderInfo['total'], 2);
+        $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
@@ -1015,7 +1018,7 @@ class ControllerExtensionShippingSameday extends Controller
             $thirdPartyPickUp,
             array(),
             null,
-            null,
+            $params['sameday_client_reference'],
             $params['sameday_observation'],
             '',
             '',
