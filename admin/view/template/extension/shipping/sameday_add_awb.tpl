@@ -80,7 +80,6 @@
                         </div>
 
                         <!-- Package Number //-->
-
                         <div class="form-group package_dimension_field">
                             <!-- append element here //-->
                         </div>
@@ -90,6 +89,14 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_observation_title; ?>"><?php echo $entry_observation; ?></span></label>
                             <div class="col-sm-10">
                                 <input type="text" name="sameday_observation" value="<?php echo $sameday_observation; ?>" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <!-- Client Reference //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_client_reference_title; ?>"><?php echo $entry_client_reference; ?></span></label>
+                            <div class="col-sm-10">
+                                <input type="text" name="sameday_client_reference" value="<?php echo $sameday_client_reference; ?>" class="form-control" />
                             </div>
                         </div>
 
