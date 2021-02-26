@@ -34,6 +34,7 @@ class ModelExtensionShippingSameday extends Model
         $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
 
         $availableService = $this->getAvailableServices($this->getConfig('sameday_testing'));
+        $lockerMaxItems = (int) $this->getConfig('sameday_locker_max_items');
         $quote_data = array();
 
         if (empty($availableService)) {
@@ -49,7 +50,7 @@ class ModelExtensionShippingSameday extends Model
                 continue;
             }
 
-            if ($service['sameday_code'] === "LN" && (count($this->cart->getProducts()) > 1) ) {
+            if ($service['sameday_code'] === "LN" && (count($this->cart->getProducts()) > $lockerMaxItems)) {
                 continue;
             }
 

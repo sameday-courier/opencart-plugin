@@ -154,6 +154,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_geo_zone',
             'entry_status',
             'entry_estimated_cost',
+            'entry_locker_max_items',
             'entry_sort_order',
 
             'column_internal_id',
@@ -225,6 +226,7 @@ class ControllerExtensionShippingSameday extends Controller
             'geo_zone_id',
             'status',
             'estimated_cost',
+            'locker_max_items',
             'sort_order'
         )));
 
