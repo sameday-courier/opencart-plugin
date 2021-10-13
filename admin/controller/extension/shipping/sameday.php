@@ -580,11 +580,6 @@ class ControllerExtensionShippingSameday extends Controller
 
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderInfo['order_id']);
 
-        if (!$awb && !in_array($orderInfo['order_status_id'], $this->config->get('config_complete_status'))) {
-            // No awb generated and order is not completed, nothing to show.
-            return null;
-        }
-
         if ($awb) {
             $data['awb_number'] = $awb['awb_number'];
         }
@@ -1033,6 +1028,12 @@ class ControllerExtensionShippingSameday extends Controller
             $awb = $sameday->postAwb($request);
         }  catch (\Sameday\Exceptions\SamedayBadRequestException $e) {
             $errors = $e->getErrors();
+        } catch (\Sameday\Exceptions\SamedaySDKException $e) {
+            $errors[] = [
+                'key' => ['SDK Error'],
+                'errors' => [$e->getMessage()],
+            ];
+
         }
 
         return array(
@@ -1117,6 +1118,7 @@ class ControllerExtensionShippingSameday extends Controller
             );
 
             $sameday =  new Sameday\Sameday($this->initClient());
+            $return = [];
 
             try {
                 $estimation = $sameday->postAwbEstimation($estimateCostRequest);
@@ -1125,11 +1127,16 @@ class ControllerExtensionShippingSameday extends Controller
 
                 $return['success'] = sprintf($this->language->get('estimated_cost_success_message'), $cost, $currency);
             } catch (\Sameday\Exceptions\SamedayBadRequestException $exception) {
-                $erros = $exception->getErrors();
+                $errors = $exception->getErrors();
+            } catch (\Sameday\Exceptions\SamedaySDKException $exception) {
+                $errors[] = [
+                    'key' => ['SDK Error'],
+                    'errors' => [$exception->getMessage()],
+                ];
             }
 
-            if (isset($erros)) {
-                foreach ($erros as $error) {
+            if (isset($errors)) {
+                foreach ($errors as $error) {
                     foreach ($error['errors'] as $message) {
                         $return['errors'][] = implode('.', $error['key']) . ': ' . $message;
                     }
