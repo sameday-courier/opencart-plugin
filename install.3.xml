@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart</name>
     <code>ocmode-editor</code>
-    <version>1.0.9</version>
+    <version>1.0.10</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -48,7 +48,7 @@
                         <td class="text-right"><a href="{{ shipping_method_sameday['buttonAddAwbLink'] }}" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonAddAwb'] }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></a></td>
                     {% else %}
                         <td class="text-left"><strong>Sameday AWB</strong><a href="{{ shipping_method_sameday['buttonShowAwbHistory'] }}">{{ shipping_method_sameday['awb_number'] }}</a></td>
-                        <td class="text-left"><strong>Show on eAWB</strong><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber=<?php echo $shipping_method_sameday['awb_number']; ?>&tab=allAwbs"><?php echo $shipping_method_sameday['awb_number']; ?></a></td>
+                        <td class="text-left"><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber={{ shipping_method_sameday['awb_number'] }}&tab=allAwbs" target="_blank"><?php echo $shipping_method_sameday['awb_number']; ?><strong>Show on eAWB</strong></a></td>
                         <td class="text-center"><a href="{{ shipping_method_sameday['buttonShowAwbPdf'] }}" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonShowAwb'] }}" class="btn btn-info btn-xs"><i class="fa fa-file"></i></a></td>
                         <td class="text-right"><a href="{{ shipping_method_sameday['buttonDeleteAwbLink'] }}" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonDeleteAwb'] }}" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i></a></td>
                     {% endif %}
