@@ -90,6 +90,8 @@ require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
+    private const KEY_TOKEN = "sameday_token";
+    private const KEY_TOKEN_EXPIRES = "sameday_token_expires_at";
 
     public function install()
     {
@@ -118,11 +120,11 @@ class ControllerExtensionShippingSameday extends Controller
             $this->request->post["{$this->getPrefix()}sameday_sync_lockers_ts"] = $this->getConfig('sameday_sync_lockers_ts');
             $post_request = $this->request->post;
 
-            if(isset($this->session->data[$this->getPrefix().'sameday_token'])){
-                $post_request[$this->getPrefix().'sameday_token'] = $this->session->data[$this->getPrefix().'sameday_token'];
+            if(isset($this->session->data[$this->getPrefix().self::KEY_TOKEN])){
+                $post_request[$this->getPrefix().self::KEY_TOKEN] = $this->session->data[$this->getPrefix().'sameday_token'];
             }
-            if(isset($this->session->data[$this->getPrefix().'sameday_token_expires_at'])){
-                $post_request[$this->getPrefix().'sameday_token_expires_at'] = $this->session->data[$this->getPrefix().'sameday_token_expires_at'];
+            if(isset($this->session->data[$this->getPrefix().self::KEY_TOKEN_EXPIRES])){
+                $post_request[$this->getPrefix().self::KEY_TOKEN_EXPIRES] = $this->session->data[$this->getPrefix().'sameday_token_expires_at'];
             }
 
             $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $post_request);
