@@ -113,7 +113,6 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
-        $this->load->library('samedayclasses');
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $this->request->post["{$this->getPrefix()}sameday_sync_until_ts"] = $this->getConfig('sameday_sync_until_ts');
@@ -1294,11 +1293,14 @@ class ControllerExtensionShippingSameday extends Controller
             $testing = $this->request->post["{$this->getPrefix()}sameday_testing"];
             $needLogin = true;
         }
+        if($this->getConfig(self::KEY_TOKEN) == null || $this->getConfig(self::KEY_TOKEN_EXPIRES)){
+            $needLogin = true;
+        }
 
         if ($needLogin) {
             // Check if login is valid.
-            $peristanceHandler = Samedayclasses::get_object($this->registry, $this->getPrefix());
-            $client = $this->initClient($username, $password, $testing, $peristanceHandler);
+            $client = $this->initClient($username, $password, $testing);
+            //$client->get
 
             if (!$client->login()) {
                 $this->error['warning'] = $this->language->get('error_username_password');
@@ -1372,8 +1374,10 @@ class ControllerExtensionShippingSameday extends Controller
         return '';
     }
 
-    private function initClient($username = null, $password = null, $testing = null, $handler = null)
+    private function initClient($username = null, $password = null, $testing = null)
     {
+        $this->load->library('samedayclasses');
+        $peristanceHandler = Samedayclasses::get_object($this->registry, $this->getPrefix());
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
             $password = $this->getConfig('sameday_password');
@@ -1387,7 +1391,7 @@ class ControllerExtensionShippingSameday extends Controller
             'opencart',
             VERSION,
             'curl',
-            $handler
+            $peristanceHandler
         );
     }
 

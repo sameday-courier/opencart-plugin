@@ -434,6 +434,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private function initClient($username = null, $password = null, $testing = null)
     {
+        $this->load->library('samedayclasses');
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
             $password = $this->getConfig('sameday_password');
@@ -445,7 +446,9 @@ class ModelExtensionShippingSameday extends Model
             $password,
             $testing ? 'https://sameday-api.demo.zitec.com' : 'https://api.sameday.ro',
             'opencart',
-            VERSION
+            VERSION,
+            'curl',
+            Samedayclasses::get_object($this->registry, $this->getPrefix())
         );
     }
 }
