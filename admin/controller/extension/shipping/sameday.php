@@ -111,11 +111,21 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
+        $this->load->library('samedayclasses');
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $this->request->post["{$this->getPrefix()}sameday_sync_until_ts"] = $this->getConfig('sameday_sync_until_ts');
             $this->request->post["{$this->getPrefix()}sameday_sync_lockers_ts"] = $this->getConfig('sameday_sync_lockers_ts');
-            $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $this->request->post);
+            $post_request = $this->request->post;
+
+            if(isset($this->session->data[$this->getPrefix().'sameday_token'])){
+                $post_request[$this->getPrefix().'sameday_token'] = $this->session->data[$this->getPrefix().'sameday_token'];
+            }
+            if(isset($this->session->data[$this->getPrefix().'sameday_token_expires_at'])){
+                $post_request[$this->getPrefix().'sameday_token_expires_at'] = $this->session->data[$this->getPrefix().'sameday_token_expires_at'];
+            }
+
+            $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $post_request);
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
@@ -1285,7 +1295,8 @@ class ControllerExtensionShippingSameday extends Controller
 
         if ($needLogin) {
             // Check if login is valid.
-            $client = $this->initClient($username, $password, $testing);
+            $peristanceHandler = Samedayclasses::get_object($this->registry, $this->getPrefix());
+            $client = $this->initClient($username, $password, $testing, $peristanceHandler);
 
             if (!$client->login()) {
                 $this->error['warning'] = $this->language->get('error_username_password');
@@ -1359,7 +1370,7 @@ class ControllerExtensionShippingSameday extends Controller
         return '';
     }
 
-    private function initClient($username = null, $password = null, $testing = null)
+    private function initClient($username = null, $password = null, $testing = null, $handler = null)
     {
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
@@ -1372,7 +1383,9 @@ class ControllerExtensionShippingSameday extends Controller
             $password,
             $testing ? 'https://sameday-api.demo.zitec.com' : 'https://api.sameday.ro',
             'opencart',
-            VERSION
+            VERSION,
+            'curl',
+            $handler
         );
     }
 

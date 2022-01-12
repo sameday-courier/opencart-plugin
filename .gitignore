@@ -16,3 +16,5 @@
 !admin/view/template/extension/shipping/sameday_service.twig
 !catalog/model/extension/shipping/sameday.php
 !system/library/sameday-php-sdk/
+!system/library/sameday-classes/
+!system/library/samedayclasses.php
