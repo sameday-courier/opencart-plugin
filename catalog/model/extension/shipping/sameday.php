@@ -434,6 +434,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private function initClient($username = null, $password = null, $testing = null)
     {
+        $this->load->library('samedayclasses');
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
             $password = $this->getConfig('sameday_password');
@@ -445,7 +446,27 @@ class ModelExtensionShippingSameday extends Model
             $password,
             $testing ? 'https://sameday-api.demo.zitec.com' : 'https://api.sameday.ro',
             'opencart',
-            VERSION
+            VERSION,
+            'curl',
+            Samedayclasses::get_object($this->registry, $this->getPrefix())
         );
+    }
+
+    /**
+     * @param $code
+     * @param $data
+     * @param int $store_id
+     */
+    public function addAdditionalSetting($code, $data, $store_id = 0) {
+        foreach ($data as $key => $value) {
+            if (substr($key, 0, strlen($code)) == $code) {
+                $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE store_id = '" . (int)$store_id . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '".$this->db->escape($key)."'");
+                if (!is_array($value)) {
+                    $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+                } else {
+                    $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
+                }
+            }
+        }
     }
 }
