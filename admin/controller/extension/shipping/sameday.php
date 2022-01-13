@@ -1285,14 +1285,10 @@ class ControllerExtensionShippingSameday extends Controller
             $testing = $this->request->post["{$this->getPrefix()}sameday_testing"];
             $needLogin = true;
         }
-        if($this->getConfig(self::KEY_TOKEN) == null || $this->getConfig(self::KEY_TOKEN_EXPIRES)){
-            $needLogin = true;
-        }
 
         if ($needLogin) {
             // Check if login is valid.
             $client = $this->initClient($username, $password, $testing);
-            //$client->get
 
             if (!$client->login()) {
                 $this->error['warning'] = $this->language->get('error_username_password');
