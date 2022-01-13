@@ -9,11 +9,11 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
         SamedayClient::KEY_TOKEN => 'SAMEDAY_TOKEN',
         SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT'
     ];
+    protected const OC_SETTING_SAMEDAY_CODE = "shipping_sameday";
 
     protected $registry;
     protected $loader;
     protected $prefix;
-    protected $session;
 
     public function __construct($registry, $prefix) {
         $this->registry = $registry;
@@ -30,7 +30,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
     {
         $this->loader->model('setting/setting');
         $model = $this->registry->get('model_setting_setting');
-        $key = $this->prefix.strtolower(self::KEYS[$key]);
+        $key = $this->getKeyFormat($key);
         return $model->getSettingValue($key);
     }
 
@@ -43,7 +43,17 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
     {
         $this->loader->model('extension/shipping/sameday');
         $model = $this->registry->get('model_extension_shipping_sameday');
-        $data[$this->prefix.'sameday_'.$key] = $value;
-        $model->addAdditionalSetting("{$this->prefix}sameday", $data);
+        $key = $this->getKeyFormat($key);
+        $data[$key] = $value;
+        $model->addAdditionalSetting(self::OC_SETTING_SAMEDAY_CODE, $data);
+    }
+
+    /**
+     * @param $key
+     * @return string
+     */
+    private function getKeyFormat($key)
+    {
+        return $this->prefix.strtolower(self::KEYS[$key]);
     }
 }
