@@ -117,16 +117,8 @@ class ControllerExtensionShippingSameday extends Controller
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $this->request->post["{$this->getPrefix()}sameday_sync_until_ts"] = $this->getConfig('sameday_sync_until_ts');
             $this->request->post["{$this->getPrefix()}sameday_sync_lockers_ts"] = $this->getConfig('sameday_sync_lockers_ts');
-            $post_request = $this->request->post;
-
-            if(isset($this->session->data[$this->getPrefix().self::KEY_TOKEN])){
-                $post_request[$this->getPrefix().self::KEY_TOKEN] = $this->session->data[$this->getPrefix().'sameday_token'];
-            }
-            if(isset($this->session->data[$this->getPrefix().self::KEY_TOKEN_EXPIRES])){
-                $post_request[$this->getPrefix().self::KEY_TOKEN_EXPIRES] = $this->session->data[$this->getPrefix().'sameday_token_expires_at'];
-            }
-
-            $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $post_request);
+            $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $this->request->post);
+            $this->pickupPointRefresh();
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
@@ -1377,7 +1369,7 @@ class ControllerExtensionShippingSameday extends Controller
     private function initClient($username = null, $password = null, $testing = null)
     {
         $this->load->library('samedayclasses');
-        $peristanceHandler = Samedayclasses::get_object($this->registry, $this->getPrefix());
+
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
             $password = $this->getConfig('sameday_password');
@@ -1391,7 +1383,7 @@ class ControllerExtensionShippingSameday extends Controller
             'opencart',
             VERSION,
             'curl',
-            $peristanceHandler
+            Samedayclasses::get_object($this->registry, $this->getPrefix())
         );
     }
 

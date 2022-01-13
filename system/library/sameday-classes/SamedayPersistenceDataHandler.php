@@ -5,7 +5,7 @@ use Sameday\PersistentData\SamedayPersistentDataInterface;
 
 class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 {
-    public const KEYS = [
+    protected const KEYS = [
         SamedayClient::KEY_TOKEN => 'SAMEDAY_TOKEN',
         SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT'
     ];
@@ -41,8 +41,9 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function set($key, $value): void
     {
-        $this->session = $this->registry->get('session');
-        $key = strtolower(self::KEYS[$key]);
-        $this->session->data[$this->prefix.$key] = $value;
+        $this->loader->model('extension/shipping/sameday');
+        $model = $this->registry->get('model_extension_shipping_sameday');
+        $data[$this->prefix.'sameday_'.$key] = $value;
+        $model->addAdditionalSetting("{$this->prefix}sameday", $data);
     }
 }
