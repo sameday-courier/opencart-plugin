@@ -90,8 +90,6 @@ require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
-    private const KEY_TOKEN = "sameday_token";
-    private const KEY_TOKEN_EXPIRES = "sameday_token_expires_at";
 
     public function install()
     {
