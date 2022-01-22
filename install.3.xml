@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>OCMOD EDITOR for OpenCart</name>
-    <code>ocmode-editor</code>
+    <name>SameDay Courier for OpenCart v3</name>
+    <code>sameday_courier_v3</code>
     <version>1.0.11</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
         <operation>
-            <search><![CDATA[
-                $data['tabs'] = array();
-            ]]></search>
+            <search><![CDATA[$data['tabs'] = array();]]></search>
             <add position="after"><![CDATA[
                 $data['shipping_method_sameday'] = $this->load->controller('extension/shipping/sameday/info', $order_info);
             ]]></add>
@@ -17,9 +15,7 @@
     </file>
     <file path="catalog/controller/checkout/shipping_method.php">
         <operation>
-            <search><![CDATA[
-                $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
-            ]]></search>
+            <search><![CDATA[$this->response->setOutput($this->load->view('checkout/shipping_method', $data));]]></search>
             <add position="before"><![CDATA[
                 if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
                     $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockersGroupedByCity();
@@ -27,9 +23,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-                $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
-            ]]></search>
+            <search><![CDATA[$this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];]]></search>
             <add position="before"><![CDATA[
                 $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]]['code'] = $this->request->post['shipping_method'];
             ]]></add>
@@ -37,9 +31,7 @@
     </file>
     <file path="admin/view/template/sale/order_info.twig">
         <operation>
-            <search><![CDATA[
-                <td>{{ text_invoice }}</td>
-            ]]></search>
+            <search><![CDATA[<td>{{ text_invoice }}</td>]]></search>
             <add position="before"><![CDATA[
                 {% if shipping_method_sameday is not null %}
                     {% if shipping_method_sameday['awb_number'] is null %}
@@ -59,17 +51,11 @@
     </file>
     <file path="catalog/view/theme/default/template/checkout/shipping_method.twig">
         <operation>
-            <search><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" />
-            ]]></search>
-            <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} disabled {% endif %} />
-            ]]></add>
+            <search><![CDATA[<input type="radio" name="shipping_method" value="{{ quote.code }}" />]]></search>
+            <add position="replace"><![CDATA[<input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} disabled {% endif %} />]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-                </label>
-            ]]></search>
+            <search><![CDATA[</label>]]></search>
             <add position="after"><![CDATA[
                 {% if quote.lockers %}
                     <div class="lockers">
