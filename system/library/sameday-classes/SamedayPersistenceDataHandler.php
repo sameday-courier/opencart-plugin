@@ -7,8 +7,9 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 {
     protected const KEYS = [
         SamedayClient::KEY_TOKEN => 'SAMEDAY_TOKEN',
-        SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT'
+        SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT',
     ];
+
     protected const OC_SETTING_SAMEDAY_CODE = "shipping_sameday";
 
     protected $registry;

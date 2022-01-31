@@ -448,7 +448,7 @@ class ModelExtensionShippingSameday extends Model
             'opencart',
             VERSION,
             'curl',
-            Samedayclasses::get_object($this->registry, $this->getPrefix())
+            Samedayclasses::getSamedayPersistenceDataHandler($this->registry, $this->getPrefix())
         );
     }
 
