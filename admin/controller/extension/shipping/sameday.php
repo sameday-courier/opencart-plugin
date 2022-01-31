@@ -102,7 +102,7 @@ class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
 
-    public const SAMEDAY_CONFIGS = [
+    const SAMEDAY_CONFIGS = [
         'username',
         'password',
         'testing',
@@ -1449,27 +1449,6 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         return '';
-    }
-
-    private function initClient($username = null, $password = null, $testing = null)
-    {
-        $this->load->library('samedayclasses');
-
-        if ($username === null && $password === null && $testing === null) {
-            $username = $this->getConfig('sameday_username');
-            $password = $this->getConfig('sameday_password');
-            $testing = $this->getConfig('sameday_testing');
-        }
-
-        return new \Sameday\SamedayClient(
-            $username,
-            $password,
-            $testing ? 'https://sameday-api.demo.zitec.com' : 'https://api.sameday.ro',
-            'opencart',
-            VERSION,
-            'curl',
-            Samedayclasses::getSamedayPersistenceDataHandler($this->registry, $this->getPrefix())
-        );
     }
 
     private function getStatuses()
