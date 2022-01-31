@@ -29,9 +29,10 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function get($key)
     {
-        $this->loader->model('setting/setting');
-        $model = $this->registry->get('model_setting_setting');
+        $this->loader->model('extension/shipping/sameday');
+        $model = $this->registry->get('model_extension_shipping_sameday');
         $key = $this->getKeyFormat($key);
+
         return $model->getSettingValue($key);
     }
 
