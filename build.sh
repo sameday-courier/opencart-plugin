@@ -23,6 +23,8 @@ if [ $VERSION -eq 2 ]; then
         admin/view/template/extension/shipping/sameday_service.tpl \
         catalog/model/extension/shipping/sameday.php \
         system/library/sameday-php-sdk/ \
+        system/library/sameday-classes/ \
+        system/library/samedayclasses.php \
         upload
 
     cp install.$VERSION.xml install.xml
@@ -47,6 +49,8 @@ elif [ $VERSION -eq 3 ]; then
         admin/view/template/extension/shipping/sameday_service.twig \
         catalog/model/extension/shipping/sameday.php \
         system/library/sameday-php-sdk/ \
+        system/library/sameday-classes/ \
+        system/library/samedayclasses.php \
         upload
 
     cp install.$VERSION.xml install.xml
