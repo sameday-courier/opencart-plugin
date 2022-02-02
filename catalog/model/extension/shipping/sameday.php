@@ -339,10 +339,7 @@ class ModelExtensionShippingSameday extends Model
         $sameday =  new Sameday\Sameday($this->initClient());
 
         try {
-            $estimation = $sameday->postAwbEstimation($estimateCostRequest);
-            $cost = $estimation->getCost();
-
-            return $cost;
+            return $sameday->postAwbEstimation($estimateCostRequest)->getCost();
         } catch (\Sameday\Exceptions\SamedayBadRequestException $exception) {
             return null;
         }
@@ -435,6 +432,7 @@ class ModelExtensionShippingSameday extends Model
     private function initClient($username = null, $password = null, $testing = null)
     {
         $this->load->library('samedayclasses');
+
         if ($username === null && $password === null && $testing === null) {
             $username = $this->getConfig('sameday_username');
             $password = $this->getConfig('sameday_password');
@@ -448,7 +446,7 @@ class ModelExtensionShippingSameday extends Model
             'opencart',
             VERSION,
             'curl',
-            Samedayclasses::get_object($this->registry, $this->getPrefix())
+            Samedayclasses::getSamedayPersistenceDataHandler($this->registry, $this->getPrefix())
         );
     }
 
@@ -468,5 +466,10 @@ class ModelExtensionShippingSameday extends Model
                 }
             }
         }
+    }
+
+    public function getSettingValue($code)
+    {
+        return $this->getConfig($code);
     }
 }

@@ -65,15 +65,6 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-testing"><?php echo $entry_testing; ?></label>
-                        <div class="col-sm-10">
-                            <select name="sameday_testing" id="input-testing" class="form-control">
-                                <option value="0" <?php if (!$sameday_testing) { ?>selected="selected"<?php } ?>><?php echo $text_disabled; ?></option>
-                                <option value="1" <?php if ($sameday_testing) { ?>selected="selected"<?php } ?>><?php echo $text_enabled; ?></option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_status; ?></label>
                         <div class="col-sm-10">
                             <select name="sameday_status" id="input-status" class="form-control">
