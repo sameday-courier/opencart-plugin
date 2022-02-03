@@ -63,7 +63,10 @@
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} disabled {% endif %} />
+               {% if quote.lockers %}
+                    <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
+                {% endif %}
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} id="locker_nextday" {% endif %} />
             ]]></add>
         </operation>
         <operation>
@@ -72,37 +75,23 @@
             ]]></search>
             <add position="after"><![CDATA[
                 {% if quote.lockers %}
-                    <div class="lockers">
-                        <div class="row">
-                            <ul>
-                                <div class="col-sm-4">
-                                    <div id="search" class="input-group">
-                                        <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
-                                            <option class="input-group" value=""> Alege Locker </option>
-                                            {% for city, cityLockers in quote.lockers %}
-                                                <optgroup label="{{ city }}"></optgroup>
-                                                    {% for locker in cityLockers %}
-                                                        <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} - {{ locker.address}} </option>
-                                                    {% endfor %}
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                            </ul>
-                        </div>
-                    </div>
-                {% endif %}
-                <script>
-                    jQuery(document).ready(function ($) {
-                        $(document).on("click", "#selectLocker", function(){
-                            let lockerValue = $(this).val();
+                    <script>
+                        jQuery(document).ready(function ($) {
+                            let nextDayVal = $("#locker_nextday").val() + ".";
+                            $(document).on("click", "#locker_nextday", function () {
+                                window.LockerPlugin.init();
+                                let plugin = window.LockerPlugin.getInstance();
+                                plugin.open();
 
-                            $(this).closest(".radio").children()[0].childNodes[1].checked = lockerValue != "";
-
-                            $(this).closest(".radio").children()[0].childNodes[1].value = lockerValue;
+                                plugin.subscribe((message) => {
+                                    let lockerValue = message.lockerId
+                                    $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    plugin.close();
+                                });
+                            });
                         });
-                    });
-                </script>
+                    </script>
+                 {% endif %}
             ]]></add>
         </operation>
     </file>
