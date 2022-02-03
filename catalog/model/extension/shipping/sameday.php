@@ -467,9 +467,4 @@ class ModelExtensionShippingSameday extends Model
             }
         }
     }
-
-    public function getSettingValue($code)
-    {
-        return $this->getConfig($code);
-    }
 }
