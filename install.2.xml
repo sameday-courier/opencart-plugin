@@ -63,10 +63,10 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                {% if quote.lockers %}
+                <?php if (isset($quote['lockers'])) { ?>
                     <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
-                {% endif %}
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} id="locker_nextday" {% endif %} />
+                <?php } ?>
+                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?> />
             ]]></add>
         </operation>
         <operation>
@@ -74,7 +74,7 @@
                 </label>
             ]]></search>
             <add position="after"><![CDATA[
-                 {% if quote.lockers %}
+                 <?php if (isset($quote['lockers'])) { ?>
                     <script>
                         jQuery(document).ready(function ($) {
                             let nextDayVal = $("#locker_nextday").val() + ".";
@@ -91,7 +91,7 @@
                             });
                         });
                     </script>
-                 {% endif %}
+                 <?php } ?>
             ]]></add>
         </operation>
     </file>
