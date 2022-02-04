@@ -58,63 +58,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-group showWorkingDays" style="display: none">
-                        <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_working_days; ?></label>
-
-                        <div class="col-sm-10">
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover">
-                                    <thead>
-                                    <tr>
-                                        <td class="text-center">Select</td>
-                                        <td class="text-left"><?php echo $entry_working_days; ?></td>
-                                        <td class="text-left"><?php echo $from;?></td>
-                                        <td class="text-left"><?php echo $to;?></td>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php foreach ($days as $day) { ?>
-                                    <tr class="chosenDay">
-                                        <td style="width: 5%; text-align: center;">
-                                            <input class="form-check-input selectDay"
-                                                   name="working_days[<?php echo $day['value']; ?>][check]"
-                                                   type="checkbox"
-                                                   <?php if (isset($working_days[$day['value']]['check'])) { ?> checked="checked"  <?php } ?>
-                                                   value="<?php echo $day['text']; ?>" >
-                                        </td>
-                                        <td style="width: 30%;">
-                                            <?php echo $day['text']; ?>
-                                        </td>
-                                        <td style="width: 30%;">
-                                            <div class="col-xs-12 col-sm-12 col-md-12">
-                                                <div class="form-group">
-                                                    <div class="input-group date date_from">
-                                                        <input type="text" name="working_days[<?php echo $day['value']; ?>][from]" value="<?php echo $working_days[$day['value']]['from']; ?>" autocomplete="off" class="form-control">
-                                                        <span class="input-group-btn">
-                                                  <button type="button" class="btn btn-default"><i class="fa fa-clock-o"></i></button>
-                                                  </span></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style="width: 30%;">
-                                            <div class="col-xs-12 col-sm-12 col-md-12">
-                                                <div class="form-group">
-                                                    <div class="input-group date date_to">
-                                                        <input type="text" name="working_days[<?php echo $day['value']; ?>][to]" value="<?php echo $working_days[$day['value']]['to']; ?>" autocomplete="off" class="form-control">
-                                                        <span class="input-group-btn">
-                                                  <button type="button" class="btn btn-default"><i class="fa fa-clock-o"></i></button>
-                                                  </span></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr
-                                    <?php } ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </form>
             </div>
         </div>
@@ -164,14 +107,6 @@
             endDate: Infinity        // set a maximum date
         });
 
-
-    $(document).on('change', '#input-status', function(){
-        if ($('#input-status').val() == 2) {
-            $('.showWorkingDays').css("display", "block");
-        } else {
-            $('.showWorkingDays').css("display", "none");
-        }
-    });
     $('#input-status').trigger('change');
 </script>
 
