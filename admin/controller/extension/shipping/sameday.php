@@ -667,6 +667,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_calculated_weight',
             'entry_calculated_weight_title',
             'entry_package_dimension',
+            'entry_client_reference',
             'entry_weight',
             'entry_width',
             'entry_length',
