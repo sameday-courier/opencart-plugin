@@ -182,15 +182,12 @@ class ModelExtensionShippingSameday extends Model
      */
     public function updateService($id, $postFields)
     {
-        $postFields['working_days'] = serialize($postFields['working_days']);
-
         $this->db->query('
             UPDATE ' . DB_PREFIX . "sameday_service SET 
                 name='{$this->db->escape($postFields['name'])}',
                 status='{$this->db->escape($postFields['status'])}', 
                 price='{$this->db->escape($postFields['price'])}',
-                price_free=" . ((string) $postFields['price_free'] !== '' ? ('\''.$this->db->escape($postFields['price_free']) . '\'') : 'NULL') . ",
-                working_days='{$this->db->escape($postFields['working_days'])}'
+                price_free=" . ((string) $postFields['price_free'] !== '' ? ('\''.$this->db->escape($postFields['price_free']) . '\'') : 'NULL') . "
             WHERE 
                 id = '{$this->db->escape($id)}'
         ");
@@ -508,7 +505,6 @@ class ModelExtensionShippingSameday extends Model
                 price DOUBLE(10, 2),
                 price_free DOUBLE(10, 2),
                 status INT(11),
-                working_days TEXT,
                 PRIMARY KEY (id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
         ';

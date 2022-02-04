@@ -357,26 +357,8 @@ class ModelExtensionShippingSameday extends Model
 
         $availableServices = array();
         foreach ($services as $service) {
-            switch ($service['status']) {
-                case 1:
-                    $availableServices[] = $service;
-                    break;
-
-                case 2:
-                    $working_days = unserialize($service['working_days']);
-
-                    $today = date('w');
-                    $date_from = strtotime($working_days[$today]['from']);
-                    $date_to = strtotime($working_days[$today]['to']);
-                    $time = time();
-
-                    if (!isset($working_days[$today]['check']) || $time < $date_from || $time > $date_to) {
-                        // Not working on this day, or out of available time period.
-                        break;
-                    }
-
-                    $availableServices[] = $service;
-                    break;
+            if ($service['status'] == 1) {
+                $availableServices[] = $service;
             }
         }
 
