@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -63,7 +63,10 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" <?php if (isset($quote['lockers'])) { ?> disabled <?php } ?> />
+                {% if quote.lockers %}
+                    <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
+                {% endif %}
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} id="locker_nextday" {% endif %} />
             ]]></add>
         </operation>
         <operation>
@@ -71,41 +74,24 @@
                 </label>
             ]]></search>
             <add position="after"><![CDATA[
-                <?php if (isset($quote['lockers'])) { ?>
-                    <div class="lockers">
-                        <div class="row">
-                            <ul>
-                                <div class="col-sm-4">
-                                    <div id="search" class="input-group">
-                                        <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
-                                            <option class="input-group" value=""> Alege Locker </option>
-                                            <?php foreach ($quote['lockers'] as $city => $cityLockers) { ?>
-                                                <optgroup label="<?php echo $city; ?>">
-                                                <?php foreach ($cityLockers as $locker) { ?>
-                                                    <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
-                                                <?php } ?>
-                                            <?php } ?>
-                                        </select>
-                                    </div>
-                                </div>
-                            </ul>
-                        </div>
-                    </div>
-                <?php } ?>
-                <script>
-                jQuery(document).ready( function ($) {
-                    $(document).on("click", "#selectLocker", function() {
-                        lockerValue = $(this).val();
-                        $(this).closest(".radio").children()[0].childNodes[1].checked = false;
+                 {% if quote.lockers %}
+                    <script>
+                        jQuery(document).ready(function ($) {
+                            let nextDayVal = $("#locker_nextday").val() + ".";
+                            $(document).on("click", "#locker_nextday", function () {
+                                window.LockerPlugin.init();
+                                let plugin = window.LockerPlugin.getInstance();
+                                plugin.open();
 
-                        if (lockerValue != "") {
-                            $(this).closest(".radio").children()[0].childNodes[1].checked = true;
-                        }
-
-                        $(this).closest(".radio").children()[0].childNodes[1].value = lockerValue;
-                    });
-                });
-                </script>
+                                plugin.subscribe((message) => {
+                                    let lockerValue = message.lockerId
+                                    $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    plugin.close();
+                                });
+                            });
+                        });
+                    </script>
+                 {% endif %}
             ]]></add>
         </operation>
     </file>

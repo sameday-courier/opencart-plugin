@@ -32,7 +32,6 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
         $this->loader->model('setting/setting');
         $model = $this->registry->get('model_setting_setting');
         $key = $this->getKeyFormat($key);
-
         return $model->getSettingValue($key);
     }
 
