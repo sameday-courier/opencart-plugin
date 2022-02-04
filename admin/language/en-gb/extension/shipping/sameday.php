@@ -14,7 +14,7 @@ $_['text_edit_service'] = 'Edit service "%s"';
 $_['text_services'] = 'Services';
 $_['text_services_refresh'] = 'Refresh services';
 $_['text_services_empty'] = 'No services. Please login and press reload button.';
-$_['text_services_status_interval'] = 'Interval';
+$_['text_services_status_always'] = 'Always';
 $_['text_pickup_points'] = 'Pick-up Points';
 $_['text_pickup_points_refresh'] = 'Refresh pickup points';
 $_['text_pickup_points_empty'] = 'No pickup points. Please login and press reload button.';
@@ -57,7 +57,6 @@ $_['entry_sort_order'] = 'Sort Order';
 $_['entry_name'] = 'Display name';
 $_['entry_price'] = 'Price';
 $_['entry_price_free'] = 'Free delivery price';
-$_['entry_working_days'] = 'Working Days';
 $_['entry_geo_zone'] = 'Geo Zone';
 
 // Create Awb Form Lables
@@ -162,15 +161,6 @@ $_['to'] = 'To';
 
 $_['yes'] = 'Yes';
 $_['no'] = 'No';
-
-// Days Of Week
-$_['monday'] = 'Monday';
-$_['tuesday'] = 'Tuesday';
-$_['wednesday'] = 'Wednesday';
-$_['thursday'] = 'Thursday';
-$_['friday'] = 'Friday';
-$_['saturday'] = 'Saturday';
-$_['sunday'] = 'Sunday';
 
 // Error
 $_['error_permission'] = 'Warning: You do not have permission to modify these settings!';

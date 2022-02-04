@@ -197,7 +197,7 @@ class ControllerExtensionShippingSameday extends Controller
             'text_pickup_points',
             'text_pickup_points_refresh',
             'text_pickup_points_empty',
-            'text_services_status_interval',
+            'text_services_status_always',
             'text_none',
             'text_all_zones',
 
@@ -506,13 +506,12 @@ class ControllerExtensionShippingSameday extends Controller
             'text_edit_service',
             'text_enabled',
             'text_disabled',
-            'text_services_status_interval',
+            'text_services_status_always',
 
             'entry_name',
             'entry_price',
             'entry_price_free',
             'entry_status',
-            'entry_working_days',
 
             'from',
             'to',
@@ -554,46 +553,12 @@ class ControllerExtensionShippingSameday extends Controller
                     'price',
                     'price_free',
                     'status',
-                    'working_days'
                 ),
                 $service
             )
         );
 
         $data['statuses'] = $this->getStatuses();
-        $data['days'] = array(
-            array(
-                'value' => 0,
-                'text' => $data['sunday'],
-            ),
-            array(
-                'value' => 1,
-                'text' => $data['monday']
-            ),
-            array(
-                'value' => 2,
-                'text' => $data['tuesday']
-            ),
-            array(
-                'value' => 3,
-                'text' => $data['wednesday']
-            ),
-            array(
-                'value' => 4,
-                'text' => $data['thursday']
-            ),
-            array(
-                'value' => 5,
-                'text' => $data['friday']
-            ),
-            array(
-                'value' => 6,
-                'text' => $data['saturday']
-            )
-        );
-
-        $data['working_days'] = unserialize($data['working_days']);
-
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
@@ -1454,9 +1419,8 @@ class ControllerExtensionShippingSameday extends Controller
     private function getStatuses()
     {
         $lang = $this->buildLanguage([
-            'text_enabled',
             'text_disabled',
-            'text_services_status_interval'
+            'text_services_status_always'
         ]);
 
         return array(
@@ -1466,11 +1430,7 @@ class ControllerExtensionShippingSameday extends Controller
             ),
             array(
                 'value' => 1,
-                'text' => $lang['text_enabled']
-            ),
-            array(
-                'value' => 2,
-                'text' => $lang['text_services_status_interval']
+                'text' => $lang['text_services_status_always']
             )
         );
     }
