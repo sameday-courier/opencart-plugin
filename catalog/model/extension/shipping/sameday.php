@@ -5,6 +5,25 @@ require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 class ModelExtensionShippingSameday extends Model
 {
     /**
+     * @var SamedayHelper
+     */
+    private $samedayHelper;
+
+    const SAMEDAY_CONFIGS = [
+        'username',
+        'password',
+        'testing',
+        'host_country',
+    ];
+
+    public function __construct($registry)
+    {
+        parent::__construct($registry);
+
+        $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(self::SAMEDAY_CONFIGS), $registry, $this->getPrefix());
+    }
+
+    /**
      * @param array $address
      *
      * @return array
@@ -103,6 +122,16 @@ class ModelExtensionShippingSameday extends Model
         return $method_data;
     }
 
+    private function buildRequest(array $keys)
+    {
+        $entries = array();
+        foreach ($keys as $key) {
+            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"] ?? $this->getConfig("sameday_$key");
+        }
+
+        return $entries;
+    }
+
     private function syncLockers()
     {
         $key =  "{$this->getPrefix()}sameday_sync_lockers_ts";
@@ -120,7 +149,7 @@ class ModelExtensionShippingSameday extends Model
     private function lockersRefresh()
     {
         $this->load->model('extension/shipping/sameday');
-        $sameday = new \Sameday\Sameday($this->initClient());
+        $sameday = new \Sameday\Sameday($this->samedayHelper->initClient());
 
         $request = new Sameday\Requests\SamedayGetLockersRequest();
 
@@ -336,7 +365,7 @@ class ModelExtensionShippingSameday extends Model
             array()
         );
 
-        $sameday =  new Sameday\Sameday($this->initClient());
+        $sameday =  new Sameday\Sameday($this->samedayHelper->initClient());
 
         try {
             return $sameday->postAwbEstimation($estimateCostRequest)->getCost();
@@ -376,7 +405,7 @@ class ModelExtensionShippingSameday extends Model
         $defaultPickupPoint = $this->db->query($query)->row;
 
         if (empty($defaultPickupPoint)) {
-            return;
+            return null;
         }
 
         return $defaultPickupPoint['sameday_id'];
@@ -402,34 +431,6 @@ class ModelExtensionShippingSameday extends Model
         }
 
         return 'shipping_';
-    }
-
-    /**
-     * @param null $username
-     * @param null $password
-     * @param null $testing
-     * @return \Sameday\SamedayClient
-     * @throws \Sameday\Exceptions\SamedaySDKException
-     */
-    private function initClient($username = null, $password = null, $testing = null)
-    {
-        $this->load->library('samedayclasses');
-
-        if ($username === null && $password === null && $testing === null) {
-            $username = $this->getConfig('sameday_username');
-            $password = $this->getConfig('sameday_password');
-            $testing = $this->getConfig('sameday_testing');
-        }
-
-        return new \Sameday\SamedayClient(
-            $username,
-            $password,
-            $testing ? 'https://sameday-api.demo.zitec.com' : 'https://api.sameday.ro',
-            'opencart',
-            VERSION,
-            'curl',
-            Samedayclasses::getSamedayPersistenceDataHandler($this->registry, $this->getPrefix())
-        );
     }
 
     /**

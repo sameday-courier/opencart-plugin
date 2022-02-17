@@ -295,7 +295,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function serviceRefresh()
     {
-        $this->load->library('samedayclasses');
         $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
@@ -311,6 +310,8 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $services = $sameday->getServices($request);
             } catch (\Exception $e) {
+                $this->session->data['error_warning'] = 'An internal error occurred !';
+
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
@@ -368,6 +369,8 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $pickUpPoints = $sameday->getPickupPoints($request);
             } catch (\Exception $e) {
+                $this->session->data['error_warning'] = 'An internal error occurred !';
+
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
@@ -1369,9 +1372,7 @@ class ControllerExtensionShippingSameday extends Controller
     {
         $entries = array();
         foreach ($keys as $key) {
-            $entries["sameday_$key"] = isset($this->request->post["{$this->getPrefix()}sameday_$key"])
-                ? $this->request->post["{$this->getPrefix()}sameday_$key"]
-                : $this->getConfig("sameday_$key");
+            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"] ?? $this->getConfig("sameday_$key");
         }
 
         return $entries;
