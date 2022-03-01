@@ -295,7 +295,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function serviceRefresh()
     {
-        $this->load->library('samedayclasses');
         $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
@@ -311,6 +310,8 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $services = $sameday->getServices($request);
             } catch (\Exception $e) {
+                $this->session->data['error_warning'] = 'An internal error occurred !';
+
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
@@ -368,6 +369,8 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $pickUpPoints = $sameday->getPickupPoints($request);
             } catch (\Exception $e) {
+                $this->session->data['error_warning'] = 'An internal error occurred !';
+
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
 
@@ -1017,13 +1020,7 @@ class ControllerExtensionShippingSameday extends Controller
             );
         }
 
-        if ($params['locker_id']) {
-            $locker = $this->model_extension_shipping_sameday->getLocker($params['locker_id'], $this->isTesting());
-        }
-
-        $city = isset($locker) ? $locker['city'] : $params['shipping_city'];
-        $county = isset($locker) ? $locker['county'] : $params['shipping_zone'];
-        $address = isset($locker) ? $locker['address'] : trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
+        $address = trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
 
         $request = new SamedayPostAwbRequest(
             $params['sameday_pickup_point'],
@@ -1033,13 +1030,14 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_service'],
             new \Sameday\Objects\Types\AwbPaymentType($params['sameday_awb_payment']),
             new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
-                $city,
-                $county,
+                $params['shipping_city'],
+                $params['shipping_zone'],
                 $address,
                 $params['shipping_firstname'] . ' ' . $params['shipping_lastname'],
                 $params['telephone'],
                 $params['email'],
-                $companyObject
+                $companyObject,
+                $params['postcode']
             ),
             $params['sameday_insured_value'],
             $params['sameday_ramburs'],
@@ -1051,7 +1049,7 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_observation'],
             '',
             '',
-            isset($locker) ? $locker['locker_id'] : null
+            $params['locker_id'] ?? null
         );
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -1123,26 +1121,26 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         if (! isset($return['errors'])) {
-            /** @var \Sameday\Requests\SamedayPostAwbEstimationRequest $estimateCostRequest */
-            $estimateCostRequest = new SamedayPostAwbEstimationRequest(
+            $estimateCostRequest = new \Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
-                new Sameday\Objects\Types\PackageType(
+                new \Sameday\Objects\Types\PackageType(
                     $params['sameday_package_type']
                 ),
                 $parcelDimensions,
                 $params['sameday_service'],
-                new Sameday\Objects\Types\AwbPaymentType(
+                new \Sameday\Objects\Types\AwbPaymentType(
                     $params['sameday_awb_payment']
                 ),
-                new Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
+                new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
                     ucwords(strtolower($orderInfo['shipping_city'])) !== 'Bucuresti' ? $orderInfo['shipping_city'] : 'Sector 1',
                     $orderInfo['shipping_zone'],
                     $orderInfo['shipping_address_1'],
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    $orderInfo['postcode']
                 ),
                 $params['sameday_insured_value'],
                 $params['sameday_ramburs'],
@@ -1150,7 +1148,7 @@ class ControllerExtensionShippingSameday extends Controller
                 array()
             );
 
-            $sameday =  new Sameday\Sameday($this->samedayHelper->initClient());
+            $sameday =  new \Sameday\Sameday($this->samedayHelper->initClient());
             $return = [];
 
             try {
@@ -1208,7 +1206,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         if ($awb) {
             try {
-                $sameday->deleteAwb(new Sameday\Requests\SamedayDeleteAwbRequest($awb['awb_number']));
+                $sameday->deleteAwb(new \Sameday\Requests\SamedayDeleteAwbRequest($awb['awb_number']));
                 $this->model_extension_shipping_sameday->deleteAwb($awb['awb_number']);
             } catch (\Exception $e) { }
         }
@@ -1369,9 +1367,7 @@ class ControllerExtensionShippingSameday extends Controller
     {
         $entries = array();
         foreach ($keys as $key) {
-            $entries["sameday_$key"] = isset($this->request->post["{$this->getPrefix()}sameday_$key"])
-                ? $this->request->post["{$this->getPrefix()}sameday_$key"]
-                : $this->getConfig("sameday_$key");
+            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"] ?? $this->getConfig("sameday_$key");
         }
 
         return $entries;
