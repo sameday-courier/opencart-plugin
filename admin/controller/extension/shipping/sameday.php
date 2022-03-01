@@ -1145,7 +1145,8 @@ class ControllerExtensionShippingSameday extends Controller
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    $orderInfo['postcode']
                 ),
                 $params['sameday_insured_value'],
                 $params['sameday_ramburs'],

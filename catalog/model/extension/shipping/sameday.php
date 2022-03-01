@@ -357,7 +357,8 @@ class ModelExtensionShippingSameday extends Model
                 null,
                 null,
                 null,
-                null
+                null,
+                $address['postcode']
             ),
             0,
             $this->cart->getTotal(),
