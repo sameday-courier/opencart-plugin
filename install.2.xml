@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.17</version>
+    <version>1.0.18</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -22,7 +22,7 @@
             ]]></search>
             <add position="before"><![CDATA[
                 if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
-                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->getLockersGroupedByCity();
+                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->showLockersList();
                 }
             ]]></add>
         </operation>
@@ -63,8 +63,8 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <?php if (isset($quote['lockers'])) { ?>
-                    <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
+                <?php if (isset($quote['lockers']) && !empty($quote['lockers'])) { ?>
+                    <!--<script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>-->
                 <?php } ?>
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?> />
             ]]></add>
@@ -74,15 +74,56 @@
                 </label>
             ]]></search>
             <add position="after"><![CDATA[
-                 <?php if (isset($quote['lockers'])) { ?>
+                <?php if (isset($quote['lockers']) && !empty($quote['lockers']) ) { ?>
+                    <div class="lockers">
+                        <div class="row">
+                            <ul>
+                                <div class="col-sm-4">
+                                    <div id="search" class="input-group">
+                                        <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
+                                            <option class="input-group" value=""> Alege Locker </option>
+                                            <?php foreach ($quote['lockers'] as $city => $cityLockers) { ?>
+                                                <optgroup label="<?php echo $city; ?>">
+                                                <?php foreach ($cityLockers as $locker) { ?>
+                                                    <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
+                                                <?php } ?>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                    <script>
+                    jQuery(document).ready( function ($) {
+                        $('#selectLocker').on('click', (event) => {
+                            lockerSelector = event.target;
+                            lockerValue = lockerSelector.value;
+
+                            $('#locker_nextday').prop('checked', false);
+
+                            if (lockerValue != "") {
+                                $('#locker_nextday').prop('checked', true);
+                            }
+
+                            $('#locker_nextday').val(lockerValue);
+                        });
+                    });
+                </script>
+                <?php } else if (isset($quote['lockers']) && empty($quote['lockers'])) { ?>
+                    <div class="lockers">
+                        <div class="row">
+                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
+                        </div>
+                    </div>
+                    <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
                     <script>
                         jQuery(document).ready(function ($) {
                             let nextDayVal = $("#locker_nextday").val() + ".";
-                            $(document).on("click", "#locker_nextday", function () {
+                            $(document).on("click", "#showLockerMap", function () {
                                 window.LockerPlugin.init();
                                 let plugin = window.LockerPlugin.getInstance();
                                 plugin.open();
-
                                 plugin.subscribe((message) => {
                                     let lockerValue = message.lockerId
                                     $("#locker_nextday").val(nextDayVal + lockerValue)
@@ -91,7 +132,7 @@
                             });
                         });
                     </script>
-                 <?php } ?>
+                <?php } ?>
             ]]></add>
         </operation>
     </file>

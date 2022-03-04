@@ -83,6 +83,15 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_show_lockers_map; ?></label>
+                        <div class="col-sm-10">
+                            <select name="sameday_show_lockers_map" id="input-status" class="form-control">
+                                <option value="0" <?php if (!$sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_enabled; ?></option>
+                                <option value="1" <?php if ($sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_disabled; ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-sort-order"><?php echo $entry_locker_max_items; ?></label>
                         <div class="col-sm-10">
                             <input type="text" name="sameday_locker_max_items" value="<?php echo $sameday_locker_max_items; ?>" placeholder="<?php echo $entry_locker_max_items; ?>" id="input-sort-order" class="form-control" />
