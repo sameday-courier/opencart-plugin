@@ -63,9 +63,6 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <?php if (isset($quote['lockers']) && !empty($quote['lockers'])) { ?>
-                    <!--<script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>-->
-                <?php } ?>
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?> />
             ]]></add>
         </operation>
