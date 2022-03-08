@@ -35,7 +35,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="admin/view/template/sale/order_info.tpl">
+    <file path="admin/view/template/sale/order_info.twig">
         <operation>
             <search><![CDATA[
                 <td>{{ text_invoice }}</td>
@@ -57,15 +57,12 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/shipping_method.tpl">
+    <file path="catalog/view/theme/default/template/checkout/shipping_method.twig">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="shipping_method" value="{{ quote['code'] }}" />
             ]]></search>
             <add position="replace"><![CDATA[
-                {% (quote['lockers'] && !empty(quote['lockers'])) %}
-                    <!--<script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>-->
-                {% endif %}
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} id="locker_nextday" {% endif %} />
             ]]></add>
         </operation>
@@ -74,7 +71,7 @@
                 </label>
             ]]></search>
             <add position="after"><![CDATA[
-                {% if quote['lockers'] && !empty(quote['lockers']) ) %}
+                {% if (quote.lockers and quote.lockers is not empty) %}
                     <div class="lockers">
                         <div class="row">
                             <ul>
@@ -110,7 +107,7 @@
                             });
                         });
                     </script>
-                {% else if (quote['lockers'] && empty(quote['lockers'])) %}
+                {% elseif (quote.lockers and quote.lockers is empty) %}
                     <div class="lockers">
                         <div class="row">
                             <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
@@ -127,6 +124,8 @@
                                 plugin.subscribe((message) => {
                                     let lockerValue = message.lockerId
                                     $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    $('#locker_nextday').prop('checked', true);
+
                                     plugin.close();
                                 });
                             });

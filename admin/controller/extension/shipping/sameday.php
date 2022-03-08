@@ -717,8 +717,8 @@ class ControllerExtensionShippingSameday extends Controller
         )));
 
         $parts = explode('.', $orderInfo['shipping_code'], 4);
-        $data['default_service_id'] = isset($parts[2]) ? $parts[2] : null;
-        $orderInfo['locker_id'] = isset($parts[3]) ? $parts[3] : null;
+        $data['default_service_id'] = $parts[2] ?? null;
+        $orderInfo['locker_id'] = $parts[3] ?? null;
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
             $params = array_merge($this->request->post, $orderInfo);
@@ -1039,7 +1039,7 @@ class ControllerExtensionShippingSameday extends Controller
                 $params['telephone'],
                 $params['email'],
                 $companyObject,
-                $params['postcode']
+                $params['shipping_postcode']
             ),
             $params['sameday_insured_value'],
             $params['sameday_ramburs'],
