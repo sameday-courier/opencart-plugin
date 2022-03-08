@@ -231,11 +231,23 @@ class ModelExtensionShippingSameday extends Model
         return (array) $this->db->query($query)->rows;
     }
 
+    private function isShowLockersMap()
+    {
+        $sameday_show_lockers_map = $this->getConfig('sameday_show_lockers_map');
+
+        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '1');
+    }
+
     /**
      * @return array
      */
-    public function getLockersGroupedByCity()
+    public function showLockersList()
     {
+        // If client wants to show lockers map is not need any more the lockers list from local import
+        if (!$this->isShowLockersMap()) {
+            return [];
+        }
+
         $lockers = array();
         foreach ($this->getLockers() as $locker) {
             if ('' !== $locker['city']) {
