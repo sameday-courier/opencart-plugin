@@ -127,6 +127,8 @@
                                 plugin.subscribe((message) => {
                                     let lockerValue = message.lockerId
                                     $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    $('#locker_nextday').prop('checked', true);
+
                                     plugin.close();
                                 });
                             });
