@@ -102,6 +102,8 @@ class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
 
+    const CASH_ON_DELIVERY_CODE = 'cod';
+
     const SAMEDAY_CONFIGS = [
         'username',
         'password',
@@ -782,7 +784,12 @@ class ControllerExtensionShippingSameday extends Controller
             )
         );
 
-        $data['sameday_ramburs'] = round($orderInfo['total'], 2);
+        $repayment = 0;
+        if ($orderInfo['payment_code'] === self::CASH_ON_DELIVERY_CODE) {
+            $repayment = round($orderInfo['total'], 2);
+        }
+
+        $data['sameday_ramburs'] = $repayment;
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
