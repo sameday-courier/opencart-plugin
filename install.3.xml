@@ -42,15 +42,15 @@
             ]]></search>
             <add position="before"><![CDATA[
                 {% if shipping_method_sameday %}
-                    {% if !shipping_method_sameday['awb_number'] %}
+                    {% if (shipping_method_sameday.awb_number is null) %}
                         <td class="text-left"><span><a href="https://eawb.sameday.ro/" target="_blank">Sameday AWB</span></a></td>
                         <td class="text-center"></td>
-                        <td class="text-right"><a href="{{ shipping_method_sameday['buttonAddAwbLink']; ?>" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonAddAwb']; }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></a></td>
+                        <td class="text-right"><a href="{{ shipping_method_sameday.buttonAddAwbLink }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonAddAwb }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></a></td>
                     {% else %}
-                        <td class="text-left"><strong>Sameday AWB</strong><a href="{{ shipping_method_sameday['buttonShowAwbHistory']; }}">{{ shipping_method_sameday['awb_number']; }}</a></td>
-                        <td class="text-left"><strong>Show on eAWB</strong><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber={{ shipping_method_sameday['awb_number']; }}&tab=allAwbs">{{ shipping_method_sameday['awb_number']; }}</a></td>
-                        <td class="text-center"><a href="{{ shipping_method_sameday['buttonShowAwbPdf']; }}" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonShowAwb']; }}" class="btn btn-info btn-xs"><i class="fa fa-file"></i></a></td>
-                        <td class="text-right"><a href="{{ shipping_method_sameday['buttonDeleteAwbLink']; }}" data-toggle="tooltip" title="{{ shipping_method_sameday['buttonDeleteAwb']; }}" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i></a></td>
+                        <td class="text-left"><strong>Sameday AWB</strong><a href="{{ shipping_method_sameday.buttonShowAwbHistory }}">{{ shipping_method_sameday.awb_number }}</a></td>
+                        <td class="text-left"><strong>Show on eAWB</strong><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber={{ shipping_method_sameday.awb_number }}&tab=allAwbs">{{ shipping_method_sameday.awb_number }}</a></td>
+                        <td class="text-center"><a href="{{ shipping_method_sameday.buttonShowAwbPdf }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonShowAwb }}" class="btn btn-info btn-xs"><i class="fa fa-file"></i></a></td>
+                        <td class="text-right"><a href="{{ shipping_method_sameday.buttonDeleteAwbLink }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonDeleteAwb }}" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i></a></td>
                     {% endif %}
                     </tr><tr>
                 {% endif %}
@@ -60,10 +60,10 @@
     <file path="catalog/view/theme/default/template/checkout/shipping_method.twig">
         <operation>
             <search><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote['code'] }}" />
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers %} id="locker_nextday" {% endif %} />
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers is not null %} id="locker_nextday" {% endif %} />
             ]]></add>
         </operation>
         <operation>
@@ -71,66 +71,69 @@
                 </label>
             ]]></search>
             <add position="after"><![CDATA[
-                {% if (quote.lockers and quote.lockers is not empty) %}
-                    <div class="lockers">
-                        <div class="row">
-                            <ul>
-                                <div class="col-sm-4">
-                                    <div id="search" class="input-group">
-                                        <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
-                                            <option class="input-group" value=""> Alege Locker </option>
-                                            {% for city, cityLockers in quote.lockers %}
-                                                <optgroup label="{{ city }}"></optgroup>
-                                                    {% for locker in cityLockers %}
-                                                        <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} - {{ locker.address}} </option>
-                                                    {% endfor %}
-                                            {% endfor %}
-                                        </select>
+                {% if (quote.lockers is not null) %}
+                    {% if (quote.lockers is not empty) %}
+                        <div class="lockers">
+                            <div class="row">
+                                <ul>
+                                    <div class="col-sm-4">
+                                        <div id="search" class="input-group">
+                                            <select id="selectLocker" name="search" placeholder="Search" class="form-control input-lg">
+                                                <option class="input-group" value=""> Alege Locker </option>
+                                                {% for city, cityLockers in quote.lockers %}
+                                                    <optgroup label="{{ city }}"></optgroup>
+                                                        {% for locker in cityLockers %}
+                                                            <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} - {{ locker.address}} </option>
+                                                        {% endfor %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
-                            </ul>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-                    <script>
-                        jQuery(document).ready( function ($) {
-                            $('#selectLocker').on('click', (event) => {
-                                lockerSelector = event.target;
-                                lockerValue = lockerSelector.value;
+                        <script>
+                            jQuery(document).ready( function ($) {
+                                $('#selectLocker').on('click', (event) => {
+                                    lockerSelector = event.target;
+                                    lockerValue = lockerSelector.value;
 
-                                $('#locker_nextday').prop('checked', false);
+                                    $('#locker_nextday').prop('checked', false);
 
-                                if (lockerValue != "") {
-                                    $('#locker_nextday').prop('checked', true);
-                                }
+                                    if (lockerValue != "") {
+                                        $('#locker_nextday').prop('checked', true);
+                                    }
 
-                                $('#locker_nextday').val(lockerValue);
-                            });
-                        });
-                    </script>
-                {% elseif (quote.lockers and quote.lockers is empty) %}
-                    <div class="lockers">
-                        <div class="row">
-                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
-                        </div>
-                    </div>
-                    <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
-                    <script>
-                        jQuery(document).ready(function ($) {
-                            let nextDayVal = $("#locker_nextday").val() + ".";
-                            $(document).on("click", "#showLockerMap", function () {
-                                window.LockerPlugin.init();
-                                let plugin = window.LockerPlugin.getInstance();
-                                plugin.open();
-                                plugin.subscribe((message) => {
-                                    let lockerValue = message.lockerId
-                                    $("#locker_nextday").val(nextDayVal + lockerValue)
-                                    $('#locker_nextday').prop('checked', true);
-
-                                    plugin.close();
+                                    $('#locker_nextday').val(lockerValue);
                                 });
                             });
-                        });
-                    </script>
+                        </script>
+                    {% endif %}
+                    {% if (quote.lockers is empty) %}
+                        <div class="lockers">
+                            <div class="row">
+                                <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
+                            </div>
+                        </div>
+                        <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
+                        <script>
+                            jQuery(document).ready(function ($) {
+                                let nextDayVal = $("#locker_nextday").val() + ".";
+                                $(document).on("click", "#showLockerMap", function () {
+                                    window.LockerPlugin.init();
+                                    let plugin = window.LockerPlugin.getInstance();
+                                    plugin.open();
+                                    plugin.subscribe((message) => {
+                                        let lockerValue = message.lockerId
+                                        $("#locker_nextday").val(nextDayVal + lockerValue)
+                                        $('#locker_nextday').prop('checked', true);
+
+                                        plugin.close();
+                                    });
+                                });
+                            });
+                        </script>
+                    {% endif %}
                 {% endif %}
             ]]></add>
         </operation>
