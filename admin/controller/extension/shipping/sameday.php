@@ -102,8 +102,6 @@ class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
 
-    const CASH_ON_DELIVERY_CODE = 'cod';
-
     const SAMEDAY_CONFIGS = [
         'username',
         'password',
@@ -785,7 +783,7 @@ class ControllerExtensionShippingSameday extends Controller
         );
 
         $repayment = 0;
-        if ($orderInfo['payment_code'] === self::CASH_ON_DELIVERY_CODE) {
+        if ($orderInfo['payment_code'] === $this->samedayHelper::CASH_ON_DELIVERY_CODE) {
             $repayment = round($orderInfo['total'], 2);
         }
 
