@@ -20,6 +20,8 @@ class SamedayHelper
      */
     private $samedayConfigs;
 
+    const CASH_ON_DELIVERY_CODE = 'cod';
+
     const API_PROD = 0;
     const API_DEMO = 1;
 

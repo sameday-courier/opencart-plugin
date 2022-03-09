@@ -351,6 +351,12 @@ class ModelExtensionShippingSameday extends Model
         $pickupPointId = $this->getDefaultPickupPointId($this->getConfig('sameday_testing'));
         $weight = $this->cart->getWeight();
 
+        $selectedPaymentMethod = $this->request->cookie['selected_payment_method'] ?? null;
+        $repayment = 0;
+        if (null === $selectedPaymentMethod || $this->samedayHelper::CASH_ON_DELIVERY_CODE === $selectedPaymentMethod) {
+            $repayment = $this->cart->getTotal();
+        }
+
         $estimateCostRequest = new Sameday\Requests\SamedayPostAwbEstimationRequest(
             $pickupPointId,
             null,
@@ -373,7 +379,7 @@ class ModelExtensionShippingSameday extends Model
                 $address['postcode']
             ),
             0,
-            $this->cart->getTotal(),
+            $repayment,
             null,
             array()
         );
