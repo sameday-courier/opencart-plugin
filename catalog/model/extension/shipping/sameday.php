@@ -336,6 +336,14 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @return mixed
+     */
+    public function getHostCountry()
+    {
+        return $this->getConfig('sameday_host_country');
+    }
+
+    /**
      * @param $address
      * @param $serviceId
      * @return float|null

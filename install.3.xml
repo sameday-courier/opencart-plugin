@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.20</version>
+    <version>1.0.21</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -115,7 +115,7 @@
                                 <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
                             </div>
                         </div>
-                        <script src="https://cdnsameday.azureedge.net/preprod-locker-plugin/lockerpluginsdk.js"></script>
+                        <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
                         <script>
                             jQuery(document).ready(function ($) {
                                 let nextDayVal = $("#locker_nextday").val() + ".";
