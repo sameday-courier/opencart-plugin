@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.21</version>
+    <version>1.0.22</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -58,7 +58,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/shipping_method.tpl">
+    <file path="catalog/view/theme/*/template/checkout/shipping_method.tpl">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
@@ -153,7 +153,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/payment_method.tpl">
+    <file path="catalog/view/theme/*/template/checkout/payment_method.tpl">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="payment_method" value="<?php echo $payment_method['code']; ?>" />
