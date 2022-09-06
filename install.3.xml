@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>OCMOD EDITOR for OpenCart v2</name>
+    <name>OCMOD EDITOR for OpenCart v3</name>
     <code>ocmode-editor</code>
-    <version>1.0.22</version>
+    <version>1.0.23</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -24,6 +24,7 @@
                 if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
                     $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->showLockersList();
                     $data['shipping_methods']['sameday']['quote']['LN']['hostCountry'] = $this->{'model_extension_shipping_' . $result['code']}->getHostCountry();
+                    $data['shipping_methods']['sameday']['quote']['LN']['apiUsername'] = $this->{'model_extension_shipping_' . $result['code']}->getApiUsername();
                 }
             ]]></add>
         </operation>
@@ -64,7 +65,11 @@
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" {% if quote.lockers is not null %} id="locker_nextday" {% endif %} {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %} />
+                <input type="radio" name="shipping_method" value="{{ quote.code }}"
+                 {% if quote.lockers is not null %} id="locker_nextday" {% endif %}
+                 {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
+                 {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                 />
             ]]></add>
         </operation>
         <operation>
@@ -72,7 +77,11 @@
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked" {% if quote.lockers is not null %} id="locker_nextday" {% endif %} {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}/>
+                <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked"
+                    {% if quote.lockers is not null %} id="locker_nextday" {% endif %}
+                    {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
+                    {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                />
             ]]></add>
         </operation>
         <operation>
@@ -130,12 +139,14 @@
                                 const ln = $("#locker_nextday");
                                 const nextDayVal = ln.val() + ".";
                                 const hostCountry = ln.data('host_country');
+                                const apiUsername = ln.data('api_username');
                                 $(document).on("click", "#showLockerMap", function () {
                                     const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
                                     const lockerInit = {
                                         'clientId': clientId,
                                         'countryCode': hostCountry,
-                                        'langCode': hostCountry.toLowerCase()
+                                        'langCode': hostCountry.toLowerCase(),
+                                        'apiUsername': apiUsername,
                                     };
                                     console.log(lockerInit);
                                     window.LockerPlugin.init(lockerInit);

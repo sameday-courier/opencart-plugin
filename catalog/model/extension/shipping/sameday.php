@@ -343,6 +343,11 @@ class ModelExtensionShippingSameday extends Model
         return $this->getConfig('sameday_host_country');
     }
 
+    public function getApiUsername()
+    {
+        return $this->getConfig('sameday_username');
+    }
+
     /**
      * @param $address
      * @param $serviceId

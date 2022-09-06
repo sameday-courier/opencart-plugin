@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.22</version>
+    <version>1.0.23</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -24,6 +24,7 @@
                 if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
                     $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->showLockersList();
                     $data['shipping_methods']['sameday']['quote']['LN']['hostCountry'] = $this->{'model_extension_shipping_' . $result['code']}->getHostCountry();
+                    $data['shipping_methods']['sameday']['quote']['LN']['apiUser'] = $this->{'model_extension_shipping_' . $result['code']}->getApiUsername();
                 }
             ]]></add>
         </operation>
@@ -64,7 +65,14 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?> <?php if (isset($quote['hostCountry'])) { ?> data-host_country="<?php echo $quote['hostCountry']; ?>" <?php } ?> />
+                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
+                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
+                <?php if (isset($quote['hostCountry'])) { ?>
+                    data-host_country="<?php echo $quote['hostCountry']; ?>"
+                <?php } ?> />
+                <?php if (isset($quote['apiUsername'])) { ?>
+                    data-host_country="<?php echo $quote['apiUsername']; ?>"
+                <?php } ?> />
             ]]></add>
         </operation>
         <operation>
@@ -72,7 +80,14 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" checked="checked" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" checked="checked" <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?> <?php if (isset($quote['hostCountry'])) { ?> data-host_country="<?php echo $quote['hostCountry']; ?>" <?php } ?> />
+                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
+                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
+                <?php if (isset($quote['hostCountry'])) { ?>
+                    data-host_country="<?php echo $quote['hostCountry']; ?>"
+                <?php } ?> />
+                <?php if (isset($quote['apiUsername'])) { ?>
+                    data-host_country="<?php echo $quote['apiUsername']; ?>"
+                <?php } ?> />
             ]]></add>
         </operation>
         <operation>
@@ -128,12 +143,14 @@
                             const ln = $("#locker_nextday");
                             const nextDayVal = ln.val() + ".";
                             const hostCountry = ln.data('host_country');
+                            const apiUsername = ln.data('api_username');
                             $(document).on("click", "#showLockerMap", function () {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
                                 const lockerInit = {
                                     'clientId': clientId,
                                     'countryCode': hostCountry,
-                                    'langCode': hostCountry.toLowerCase()
+                                    'langCode': hostCountry.toLowerCase(),
+                                    'apiUsername': apiUsername,
                                 };
                                 console.log(lockerInit);
                                 window.LockerPlugin.init(lockerInit);
