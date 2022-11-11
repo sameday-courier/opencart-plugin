@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.23</version>
+    <version>1.0.24</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -66,10 +66,14 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
-                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
+                <?php if (isset($quote['lockers'])) { ?>
+                    id="locker_nextday"
+                    disabled="disabled"
+                    title="Please, choose your easybox using lockers map!"
+                <?php } ?>
                 <?php if (isset($quote['hostCountry'])) { ?>
                     data-host_country="<?php echo $quote['hostCountry']; ?>"
-                <?php } ?> />
+                <?php } ?>
                 <?php if (isset($quote['apiUsername'])) { ?>
                     data-host_country="<?php echo $quote['apiUsername']; ?>"
                 <?php } ?> />
@@ -81,13 +85,18 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
-                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
-                <?php if (isset($quote['hostCountry'])) { ?>
-                    data-host_country="<?php echo $quote['hostCountry']; ?>"
-                <?php } ?> />
-                <?php if (isset($quote['apiUsername'])) { ?>
-                    data-host_country="<?php echo $quote['apiUsername']; ?>"
-                <?php } ?> />
+                    <?php if (isset($quote['lockers'])) { ?>
+                        id="locker_nextday"
+                        disabled="disabled"
+                        title="Please choose your easybox!"
+                    <?php } ?>
+                    <?php if (isset($quote['hostCountry'])) { ?>
+                        data-host_country="<?php echo $quote['hostCountry']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['apiUsername'])) { ?>
+                        data-host_country="<?php echo $quote['apiUsername']; ?>"
+                    <?php } ?>
+                />
             ]]></add>
         </operation>
         <operation>
@@ -133,9 +142,10 @@
                 </script>
                 <?php } else if (isset($quote['lockers']) && empty($quote['lockers'])) { ?>
                     <div class="lockers">
-                        <div class="row">
-                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap" >
-                        </div>
+                        <span style="text-align:center;">
+                             <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap" > </span>
+                             <span id="showLockerDetails"></span>
+                        </span>
                     </div>
                     <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
                     <script>
@@ -152,14 +162,21 @@
                                     'langCode': hostCountry.toLowerCase(),
                                     'apiUsername': apiUsername,
                                 };
-                                console.log(lockerInit);
+
                                 window.LockerPlugin.init(lockerInit);
+
                                 let plugin = window.LockerPlugin.getInstance();
+
                                 plugin.open();
+
                                 plugin.subscribe((message) => {
-                                    let lockerValue = message.lockerId
-                                    $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    let locker = JSON.stringify(message);
+
+                                    let lockerValue = message.lockerId;
+
+                                    $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
+                                    $('#showLockerDetails').html('<strong>' + message.lockerId + ' ' + message.address + '</strong>');
 
                                     plugin.close();
                                 });
