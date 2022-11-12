@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.24</version>
+    <version>1.0.25</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -176,7 +176,7 @@
 
                                     $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
-                                    $('#showLockerDetails').html('<strong>' + message.lockerId + ' ' + message.address + '</strong>');
+                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
 
                                     plugin.close();
                                 });
