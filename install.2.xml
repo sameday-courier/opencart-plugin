@@ -176,6 +176,7 @@
 
                                     $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
+                                    $('#locker_nextday').prop('disabled', false);
                                     $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
 
                                     plugin.close();
