@@ -66,9 +66,13 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="{{ quote.code }}"
-                 {% if quote.lockers is not null %} id="locker_nextday" {% endif %}
-                 {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
-                 {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                     {% if quote.lockers is not null %}
+                            id="locker_nextday"
+                            disabled="disabled"
+                            title="Please choose your easybox!"
+                     {% endif %}
+                     {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
                  />
             ]]></add>
         </operation>
@@ -78,7 +82,11 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked"
-                    {% if quote.lockers is not null %} id="locker_nextday" {% endif %}
+                    {% if quote.lockers is not null %}
+                        id="locker_nextday"
+                        disabled="disabled"
+                        title="Please, choose your easybox using lockers map!"
+                    {% endif %}
                     {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
                 />
@@ -134,34 +142,40 @@
                             </div>
                         </div>
                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
-                        <script>
-                            jQuery(document).ready(function ($) {
-                                const ln = $("#locker_nextday");
-                                const nextDayVal = ln.val() + ".";
-                                const hostCountry = ln.data('host_country');
-                                const apiUsername = ln.data('api_username');
-                                $(document).on("click", "#showLockerMap", function () {
-                                    const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
-                                    const lockerInit = {
-                                        'clientId': clientId,
-                                        'countryCode': hostCountry,
-                                        'langCode': hostCountry.toLowerCase(),
-                                        'apiUsername': apiUsername,
-                                    };
-                                    console.log(lockerInit);
-                                    window.LockerPlugin.init(lockerInit);
-                                    let plugin = window.LockerPlugin.getInstance();
-                                    plugin.open();
-                                    plugin.subscribe((message) => {
-                                        let lockerValue = message.lockerId
-                                        $("#locker_nextday").val(nextDayVal + lockerValue)
-                                        $('#locker_nextday').prop('checked', true);
+                    <script>
+                        jQuery(document).ready(function ($) {
+                            const ln = $("#locker_nextday");
+                            const nextDayVal = ln.val() + ".";
+                            const hostCountry = ln.data('host_country');
+                            const apiUsername = ln.data('api_username');
+                            $(document).on("click", "#showLockerMap", function () {
+                                const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+                                const lockerInit = {
+                                    'clientId': clientId,
+                                    'countryCode': hostCountry,
+                                    'langCode': hostCountry.toLowerCase(),
+                                    'apiUsername': apiUsername,
+                                };
 
-                                        plugin.close();
-                                    });
+                                window.LockerPlugin.init(lockerInit);
+
+                                let plugin = window.LockerPlugin.getInstance();
+
+                                plugin.open();
+
+                                plugin.subscribe((message) => {
+                                    let lockerValue = message.lockerId;
+
+                                    $("#locker_nextday").val(nextDayVal + locker);
+                                    $('#locker_nextday').prop('checked', true);
+                                    $('#locker_nextday').prop('disabled', false);
+                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
+
+                                    plugin.close();
                                 });
                             });
-                        </script>
+                        });
+                    </script>
                     {% endif %}
                 {% endif %}
             ]]></add>

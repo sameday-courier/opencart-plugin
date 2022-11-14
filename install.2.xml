@@ -170,8 +170,6 @@
                                 plugin.open();
 
                                 plugin.subscribe((message) => {
-                                    let locker = JSON.stringify(message);
-
                                     let lockerValue = message.lockerId;
 
                                     $("#locker_nextday").val(nextDayVal + locker);
