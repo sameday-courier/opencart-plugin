@@ -163,7 +163,7 @@
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"><?php echo $entry_locker_details; ?></label>
                                 <div class="col-sm-10">
-                                    <textarea class="form-control"> <?php echo $lockerDetails; ?> </textarea>
+                                    <textarea class="form-control" disabled="disabled"> <?php echo $lockerDetails; ?> </textarea>
                                 </div>
                             </div>
                         <?php } ?>
