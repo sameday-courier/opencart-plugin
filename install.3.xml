@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v3</name>
     <code>ocmode-editor</code>
-    <version>1.0.26</version>
+    <version>1.0.27</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -137,9 +137,8 @@
                     {% endif %}
                     {% if (quote.lockers is empty) %}
                         <div class="lockers">
-                            <div class="row">
-                                <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
-                            </div>
+                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
+                            <span id="showLockerDetails"></span>
                         </div>
                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
                     <script>
