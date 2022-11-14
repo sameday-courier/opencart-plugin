@@ -681,6 +681,8 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_ramburs',
             'entry_pickup_point',
             'entry_pickup_point_title',
+            'entry_locker_details',
+            'entry_locker_details_title',
             'entry_observation_title',
             'entry_client_reference_title',
             'entry_ramburs_title',
@@ -716,9 +718,14 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_third_party_person_iban_title'
         )));
 
-        $parts = explode('.', $orderInfo['shipping_code'], 4);
+        $parts = explode('.', $orderInfo['shipping_code'], 5);
         $data['default_service_id'] = $parts[2] ?? null;
         $orderInfo['locker_id'] = $parts[3] ?? null;
+
+        $lockerDetails = null;
+        if (isset($parts[3], $parts[4])) {
+            $lockerDetails = $parts[4];
+        }
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
             $params = array_merge($this->request->post, $orderInfo);
@@ -791,6 +798,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $data['lockerDetails'] = $lockerDetails;
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
         $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
 
