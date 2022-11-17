@@ -50,7 +50,7 @@
                         <td class="text-right"><a href="{{ shipping_method_sameday.buttonAddAwbLink }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonAddAwb }}" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></a></td>
                     {% else %}
                         <td class="text-left"><strong>Sameday AWB</strong><a href="{{ shipping_method_sameday.buttonShowAwbHistory }}">{{ shipping_method_sameday.awb_number }}</a></td>
-                        <td class="text-left"><strong>Show on eAWB</strong><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber={{ shipping_method_sameday.awb_number }}&tab=allAwbs">{{ shipping_method_sameday.awb_number }}</a></td>
+                        <td class="text-left"><strong>Show on eAWB</strong><a href="{{ shipping_method_sameday.EAWB_country_instance }}awb?awbOrParcelNumber={{ shipping_method_sameday.awb_number }}&tab=allAwbs">{{ shipping_method_sameday.awb_number }}</a></td>
                         <td class="text-center"><a href="{{ shipping_method_sameday.buttonShowAwbPdf }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonShowAwb }}" class="btn btn-info btn-xs"><i class="fa fa-file"></i></a></td>
                         <td class="text-right"><a href="{{ shipping_method_sameday.buttonDeleteAwbLink }}" data-toggle="tooltip" title="{{ shipping_method_sameday.buttonDeleteAwb }}" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i></a></td>
                     {% endif %}
