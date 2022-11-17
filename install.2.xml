@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.27</version>
+    <version>1.0.28</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -115,7 +115,7 @@
                                             <?php foreach ($quote['lockers'] as $city => $cityLockers) { ?>
                                                 <optgroup label="<?php echo $city; ?>">
                                                 <?php foreach ($cityLockers as $locker) { ?>
-                                                    <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
+                                                    <option class="input-group" value="<?php echo $quote['code'] . $locker['locker_id'] . $locker['name']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
                                                 <?php } ?>
                                             <?php } ?>
                                         </select>

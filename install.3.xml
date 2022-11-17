@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v3</name>
     <code>ocmode-editor</code>
-    <version>1.0.27</version>
+    <version>1.0.28</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -109,7 +109,7 @@
                                                 {% for city, cityLockers in quote.lockers %}
                                                     <optgroup label="{{ city }}"></optgroup>
                                                         {% for locker in cityLockers %}
-                                                            <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}"> {{ locker.name }} - {{ locker.address}} </option>
+                                                            <option class="input-group" value="{{ quote.code }}.{{ locker.locker_id }}.{{ locker.name }}"> {{ locker.name }} - {{ locker.address}} </option>
                                                         {% endfor %}
                                                 {% endfor %}
                                             </select>
