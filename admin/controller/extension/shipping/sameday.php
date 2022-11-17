@@ -587,6 +587,7 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->load->model('extension/shipping/sameday');
         $data = array(
+            'EAWB_country_instance' => $this->samedayHelper::getEAWBInstanceUrlByCountry($this->getConfig('sameday_host_country')),
             'samedayAwb' => $this->language->get('text_sameday_awb'),
             'buttonAddAwb' => $this->language->get('text_button_add_awb'),
             'buttonDeleteAwb' => $this->language->get('text_button_delete_awb'),
