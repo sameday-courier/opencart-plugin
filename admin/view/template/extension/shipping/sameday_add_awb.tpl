@@ -159,14 +159,41 @@
                         </div>
 
                         <!--// Show Locker Details -->
-                        <?php if (isset($lockerDetails)) { ?>
+                        <?php if (isset($lockerDetails)): ?>
                             <div class="form-group">
-                                <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"><?php echo $entry_locker_details; ?></label>
+                                <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"> <?php echo $entry_locker_details; ?></label>
                                 <div class="col-sm-10">
-                                    <textarea class="form-control" disabled="disabled"> <?php echo $lockerDetails; ?> </textarea>
+                                        <span>
+                                            <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> <?php echo $lockerDetails; ?> </textarea>
+                                        </span>
+                                    <br/>
+                                    <span>
+                                            <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
+                                            <button type="button" class="btn btn-warning"
+                                                    id="changeLocker"
+                                                    data-url="<?php echo $lockerPluginData['url']; ?>"
+                                                    data-country="<?php echo $lockerPluginData['country']; ?>"
+                                                    data-apiUsername="<?php echo $lockerPluginData['apiUsername'] ;?>"
+                                                    data-city="<?php echo $lockerPluginData['city']; ?>"
+                                            >
+                                                <?php echo $entry_locker_change; ?>
+                                            </button>
+                                            <input
+                                                    type="hidden"
+                                                    name="sameday_locker_id"
+                                                    id="input-status-sameday_locker_id"
+                                                    value="<?php echo $lockerPluginData['lockerId']; ?>"
+                                            >
+                                            <input
+                                                    type="hidden"
+                                                    name="sameday_locker_address"
+                                                    id="input-status-sameday_locker_address"
+                                                    value="<?php echo $lockerPluginData['lockerAddress']; ?>"
+                                            >
+                                        </span>
                                 </div>
                             </div>
-                        <?php } ?>
+                        <?php endif; ?>
 
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
@@ -317,6 +344,41 @@
 </div>
 
 <script>
+    $(document).on('click', '#changeLocker', (element) => {
+        const clientId="b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+
+        const _getAttribute = (_attribute) => {
+            return element.target.getAttribute('data-' + _attribute);
+        }
+
+        const country = _getAttribute('country');
+        const apiUsername = _getAttribute('apiUsername');
+        const city = _getAttribute('city');
+
+        const LockerPlugin = window['LockerPlugin'];
+
+        LockerPlugin.init({
+            clientId: clientId,
+            countryCode: country,
+            langCode: country,
+            theme: 'light', // Hard-coded
+            apiUsername: apiUsername,
+            city: city,
+        });
+
+        const LockerPluginInstance = LockerPlugin.getInstance();
+
+        LockerPluginInstance.open();
+
+        LockerPluginInstance.subscribe((locker) => {
+            $('#input-status-sameday-locker_details').val(locker.name);
+            $('#input-status-sameday_locker_id').val(locker.lockerId);
+            $('#input-status-sameday_locker_address').val(locker.address);
+
+            LockerPluginInstance.close();
+        });
+    });
+
     $(document).on('click', '#estimateCost', function() {
         // config vars.
         link= $(this).data('link');
