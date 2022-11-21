@@ -46,12 +46,22 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @param $orderId
      */
-    public function updateShippingMethodAfterPostAwb($orderId, $service)
+    public function updateShippingMethodAfterPostAwb($orderId, $service, $lockerId = null, $lockerAddress = null)
     {
+        $shippingCode = sprintf(
+            'sameday.%s.%s',
+            $service['name'],
+            $service['sameday_id']
+        );
+
+        if (null !== $lockerId && null !== $lockerAddress) {
+            $shippingCode .= sprintf('.%s.%s', $lockerId, $lockerAddress);
+        }
+
         $this->db->query('
             UPDATE ' . DB_PREFIX . "order SET 
                 shipping_method='{$this->db->escape($service['name'])}',
-                shipping_code='{$this->db->escape('sameday' . '.' . $service['name'] . '.' . $service['sameday_id'])}'
+                shipping_code='{$this->db->escape($shippingCode)}'
             WHERE 
                 order_id = '{$this->db->escape($orderId)}'
         ");

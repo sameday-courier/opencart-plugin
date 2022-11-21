@@ -587,6 +587,7 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->load->model('extension/shipping/sameday');
         $data = array(
+            'EAWB_country_instance' => $this->samedayHelper::getEAWBInstanceUrlByCountry($this->getConfig('sameday_host_country')),
             'samedayAwb' => $this->language->get('text_sameday_awb'),
             'buttonAddAwb' => $this->language->get('text_button_add_awb'),
             'buttonDeleteAwb' => $this->language->get('text_button_delete_awb'),
@@ -638,6 +639,7 @@ class ControllerExtensionShippingSameday extends Controller
             'sameday_package_type',
             'sameday_pickup_point',
             'sameday_service',
+            'sameday_locker_id',
             'sameday_awb_payment',
             'sameday_third_party_pickup',
             'sameday_third_party_pickup_county',
@@ -681,6 +683,9 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_ramburs',
             'entry_pickup_point',
             'entry_pickup_point_title',
+            'entry_locker_details',
+            'entry_locker_details_title',
+            'entry_locker_change',
             'entry_observation_title',
             'entry_client_reference_title',
             'entry_ramburs_title',
@@ -716,12 +721,31 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_third_party_person_iban_title'
         )));
 
-        $parts = explode('.', $orderInfo['shipping_code'], 4);
+        $parts = explode('.', $orderInfo['shipping_code'], 5);
         $data['default_service_id'] = $parts[2] ?? null;
-        $orderInfo['locker_id'] = $parts[3] ?? null;
+
+        $lockerDetails = null;
+        $lockerPluginData = null;
+        if (isset($parts[3], $parts[4])) {
+            $lockerDetails = $parts[4];
+            $lockerPluginData = [
+                'lockerId' => $parts[3],
+                'lockerAddress' => $parts[4],
+                'country' => $this->getConfig('sameday_host_country'),
+                'apiUsername' => $this->getConfig('sameday_username'),
+                'city' => $orderInfo['shipping_city'] ?? null
+            ];
+        }
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
-            $params = array_merge($this->request->post, $orderInfo);
+            $postRequestData = $this->request->post;
+
+            if ('' === $postRequestData['sameday_locker_id'] || '' === $postRequestData['sameday_locker_address']) {
+                $postRequestData['sameday_locker_id'] = null;
+                $postRequestData['sameday_locker_address'] = null;
+            }
+
+            $params = array_merge($postRequestData, $orderInfo);
             $service = $this->model_extension_shipping_sameday->getServiceSameday($params['sameday_service'], $this->isTesting());
 
             $postAwb = $this->postAwb($params);
@@ -737,7 +761,12 @@ class ControllerExtensionShippingSameday extends Controller
                     'awb_cost' =>  $awb->getCost()
                 ));
 
-                $this->model_extension_shipping_sameday->updateShippingMethodAfterPostAwb($orderInfo['order_id'], $service);
+                $this->model_extension_shipping_sameday->updateShippingMethodAfterPostAwb(
+                    $orderInfo['order_id'],
+                    $service,
+                    $postRequestData['sameday_locker_id'],
+                    $postRequestData['sameday_locker_address']
+                );
 
                 // Redirect to order page.
                 $this->response->redirect($this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderInfo['order_id'])), true));
@@ -791,6 +820,8 @@ class ControllerExtensionShippingSameday extends Controller
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $data['lockerDetails'] = $lockerDetails;
+        $data['lockerPluginData'] = $lockerPluginData;
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
         $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
 
@@ -831,7 +862,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('extension/shipping/sameday_add_awb', $data));
+        return $this->response->setOutput($this->load->view('extension/shipping/sameday_add_awb', $data));
     }
 
     /**
@@ -1056,7 +1087,7 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_observation'],
             '',
             '',
-            $params['locker_id'] ?? null
+            $params['sameday_locker_id']
         );
 
         $sameday = new Sameday($this->samedayHelper->initClient());

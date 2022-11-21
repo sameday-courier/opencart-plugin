@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v2</name>
     <code>ocmode-editor</code>
-    <version>1.0.23</version>
+    <version>1.2.0</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -45,12 +45,12 @@
             <add position="before"><![CDATA[
                 <?php if (isset($shipping_method_sameday)) { ?>
                     <?php if (!isset($shipping_method_sameday['awb_number'])) { ?>
-                        <td class="text-left"><span><a href="https://eawb.sameday.ro/" target="_blank">Sameday AWB</span></a></td>
+                        <td class="text-left"><span><a href="<?php echo $shipping_method_sameday['EAWB_country_instance']; ?>" target="_blank">Sameday AWB</span></a></td>
                         <td class="text-center"></td>
                         <td class="text-right"><a href="<?php echo $shipping_method_sameday['buttonAddAwbLink']; ?>" data-toggle="tooltip" title="<?php echo $shipping_method_sameday['buttonAddAwb']; ?>" class="btn btn-success btn-xs"><i class="fa fa-plus-circle"></i></a></td>
                     <?php } else { ?>
                         <td class="text-left"><strong>Sameday AWB</strong><a href="<?php echo $shipping_method_sameday['buttonShowAwbHistory']; ?>"><?php echo $shipping_method_sameday['awb_number']; ?></a></td>
-                        <td class="text-left"><strong>Show on eAWB</strong><a href="https://eawb.sameday.ro/awb?awbOrParcelNumber=<?php echo $shipping_method_sameday['awb_number']; ?>&tab=allAwbs"><?php echo $shipping_method_sameday['awb_number']; ?></a></td>
+                        <td class="text-left"><strong>Show on eAWB</strong><a href="<?php echo $shipping_method_sameday['EAWB_country_instance']; ?>awb?awbOrParcelNumber=<?php echo $shipping_method_sameday['awb_number']; ?>&tab=allAwbs"><?php echo $shipping_method_sameday['awb_number']; ?></a></td>
                         <td class="text-center"><a href="<?php echo $shipping_method_sameday['buttonShowAwbPdf']; ?>" data-toggle="tooltip" title="<?php echo $shipping_method_sameday['buttonShowAwb']; ?>" class="btn btn-info btn-xs"><i class="fa fa-file"></i></a></td>
                         <td class="text-right"><a href="<?php echo $shipping_method_sameday['buttonDeleteAwbLink']; ?>" data-toggle="tooltip" title="<?php echo $shipping_method_sameday['buttonDeleteAwb']; ?>" class="btn btn-danger btn-xs"><i class="fa fa-remove"></i></a></td>
                     <?php } ?>
@@ -66,10 +66,14 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
-                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
+                <?php if (isset($quote['lockers'])) { ?>
+                    id="locker_nextday"
+                    disabled="disabled"
+                    title="Please, choose your easybox using lockers map!"
+                <?php } ?>
                 <?php if (isset($quote['hostCountry'])) { ?>
                     data-host_country="<?php echo $quote['hostCountry']; ?>"
-                <?php } ?> />
+                <?php } ?>
                 <?php if (isset($quote['apiUsername'])) { ?>
                     data-host_country="<?php echo $quote['apiUsername']; ?>"
                 <?php } ?> />
@@ -81,13 +85,18 @@
             ]]></search>
             <add position="replace"><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
-                <?php if (isset($quote['lockers'])) { ?> id="locker_nextday" <?php } ?>
-                <?php if (isset($quote['hostCountry'])) { ?>
-                    data-host_country="<?php echo $quote['hostCountry']; ?>"
-                <?php } ?> />
-                <?php if (isset($quote['apiUsername'])) { ?>
-                    data-host_country="<?php echo $quote['apiUsername']; ?>"
-                <?php } ?> />
+                    <?php if (isset($quote['lockers'])) { ?>
+                        id="locker_nextday"
+                        disabled="disabled"
+                        title="Please choose your easybox!"
+                    <?php } ?>
+                    <?php if (isset($quote['hostCountry'])) { ?>
+                        data-host_country="<?php echo $quote['hostCountry']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['apiUsername'])) { ?>
+                        data-host_country="<?php echo $quote['apiUsername']; ?>"
+                    <?php } ?>
+                />
             ]]></add>
         </operation>
         <operation>
@@ -106,7 +115,7 @@
                                             <?php foreach ($quote['lockers'] as $city => $cityLockers) { ?>
                                                 <optgroup label="<?php echo $city; ?>">
                                                 <?php foreach ($cityLockers as $locker) { ?>
-                                                    <option class="input-group" value="<?php echo $quote['code']; ?>.<?php echo $locker['locker_id']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
+                                                    <option class="input-group" value="<?php echo $quote['code'] . $locker['locker_id'] . $locker['name']; ?>"> <?php echo $locker['name'] . ' - ' . $locker['address']; ?> </option>
                                                 <?php } ?>
                                             <?php } ?>
                                         </select>
@@ -133,9 +142,10 @@
                 </script>
                 <?php } else if (isset($quote['lockers']) && empty($quote['lockers'])) { ?>
                     <div class="lockers">
-                        <div class="row">
-                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap" >
-                        </div>
+                        <span style="text-align:center;">
+                             <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap" > </span>
+                             <span id="showLockerDetails"></span>
+                        </span>
                     </div>
                     <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
                     <script>
@@ -152,14 +162,22 @@
                                     'langCode': hostCountry.toLowerCase(),
                                     'apiUsername': apiUsername,
                                 };
-                                console.log(lockerInit);
+
                                 window.LockerPlugin.init(lockerInit);
+
                                 let plugin = window.LockerPlugin.getInstance();
+
                                 plugin.open();
+
                                 plugin.subscribe((message) => {
-                                    let lockerValue = message.lockerId
-                                    $("#locker_nextday").val(nextDayVal + lockerValue)
+                                    let locker = `${message.lockerId}.${message.name}`;
+
+                                    let lockerValue = message.lockerId;
+
+                                    $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
+                                    $('#locker_nextday').prop('disabled', false);
+                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
 
                                     plugin.close();
                                 });

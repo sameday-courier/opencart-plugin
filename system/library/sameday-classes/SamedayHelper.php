@@ -27,6 +27,7 @@ class SamedayHelper
 
     const API_HOST_LOCALE_RO = 'RO';
     const API_HOST_LOCAL_HU = 'HU';
+    const API_HOST_LOCAL_BG = 'BG';
 
     public static function getEnvModes(): array
     {
@@ -39,7 +40,25 @@ class SamedayHelper
                 self::API_PROD => 'https://api.sameday.hu',
                 self::API_DEMO => 'https://sameday-api-hu.demo.zitec.com',
             ],
+            self::API_HOST_LOCAL_BG => [
+                self::API_PROD => 'https://api.sameday.bg',
+                self::API_DEMO => 'https://sameday-api-bg.demo.zitec.com',
+            ]
         ];
+    }
+
+    private static function getEAWBInstances(): array
+    {
+        return [
+            self::API_HOST_LOCALE_RO => 'https://eawb.sameday.ro/',
+            self::API_HOST_LOCAL_HU => 'https://eawb.sameday.hu/',
+            self::API_HOST_LOCAL_BG => 'https://eawb.sameday.bg/',
+        ];
+    }
+
+    public static function getEAWBInstanceUrlByCountry($countryCode): string
+    {
+        return self::getEawbInstances()[$countryCode];
     }
 
     /**

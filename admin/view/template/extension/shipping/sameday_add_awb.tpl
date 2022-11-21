@@ -52,7 +52,7 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_insured_value_title; ?>"><?php echo $entry_insured_value; ?></span></label>
                             <div class="col-sm-6">
-                                <input type="number" name="sameday_insured_value" value="<?php echo ($sameday_insured_value != '') ? $sameday_insured_value : 0; ?>" min="0" class="form-control"/>
+                                <input type="number" step="any" name="sameday_insured_value" value="<?php echo ($sameday_insured_value != '') ? $sameday_insured_value : 0; ?>" min="0" class="form-control"/>
                                 <?php if (isset($error_insured_value)) { ?>
                                 <div class="text-danger"><?php echo $error_insured_value; ?></div>
                                 <?php } ?>
@@ -74,7 +74,7 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_calculated_weight_title; ?>"><?php echo $entry_calculated_weight; ?></span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
-                                    <input type="number" value="<?php echo $calculated_weight; ?>" readonly="readonly" class="form-control input-number"/>
+                                    <input type="number" step="any" value="<?php echo $calculated_weight; ?>" readonly="readonly" class="form-control input-number"/>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>"><?php echo $entry_ramburs; ?></span></label>
                             <div class="col-sm-10">
-                                <input type="number" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
+                                <input type="number" step="any" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
                             </div>
                         </div>
 
@@ -157,6 +157,43 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!--// Show Locker Details -->
+                        <?php if (isset($lockerDetails)): ?>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"> <?php echo $entry_locker_details; ?></label>
+                                <div class="col-sm-10">
+                                        <span>
+                                            <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> <?php echo $lockerDetails; ?> </textarea>
+                                        </span>
+                                    <br/>
+                                    <span>
+                                            <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
+                                            <button type="button" class="btn btn-warning"
+                                                    id="changeLocker"
+                                                    data-url="<?php echo $lockerPluginData['url']; ?>"
+                                                    data-country="<?php echo $lockerPluginData['country']; ?>"
+                                                    data-apiUsername="<?php echo $lockerPluginData['apiUsername'] ;?>"
+                                                    data-city="<?php echo $lockerPluginData['city']; ?>"
+                                            >
+                                                <?php echo $entry_locker_change; ?>
+                                            </button>
+                                            <input
+                                                    type="hidden"
+                                                    name="sameday_locker_id"
+                                                    id="input-status-sameday_locker_id"
+                                                    value="<?php echo $lockerPluginData['lockerId']; ?>"
+                                            >
+                                            <input
+                                                    type="hidden"
+                                                    name="sameday_locker_address"
+                                                    id="input-status-sameday_locker_address"
+                                                    value="<?php echo $lockerPluginData['lockerAddress']; ?>"
+                                            >
+                                        </span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
@@ -307,6 +344,41 @@
 </div>
 
 <script>
+    $(document).on('click', '#changeLocker', (element) => {
+        const clientId="b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+
+        const _getAttribute = (_attribute) => {
+            return element.target.getAttribute('data-' + _attribute);
+        }
+
+        const country = _getAttribute('country');
+        const apiUsername = _getAttribute('apiUsername');
+        const city = _getAttribute('city');
+
+        const LockerPlugin = window['LockerPlugin'];
+
+        LockerPlugin.init({
+            clientId: clientId,
+            countryCode: country,
+            langCode: country,
+            theme: 'light', // Hard-coded
+            apiUsername: apiUsername,
+            city: city,
+        });
+
+        const LockerPluginInstance = LockerPlugin.getInstance();
+
+        LockerPluginInstance.open();
+
+        LockerPluginInstance.subscribe((locker) => {
+            $('#input-status-sameday-locker_details').val(locker.name);
+            $('#input-status-sameday_locker_id').val(locker.lockerId);
+            $('#input-status-sameday_locker_address').val(locker.address);
+
+            LockerPluginInstance.close();
+        });
+    });
+
     $(document).on('click', '#estimateCost', function() {
         // config vars.
         link= $(this).data('link');
@@ -393,16 +465,16 @@
             "<div class=\"col-sm-10\" style='padding-bottom: 5px;'>\n" +
             "<div class=\"row\">\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_width; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_width; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_length; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_length; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_height; ?>\" id=\"input-height\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_height; ?>\" id=\"input-height\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-4\">\n" +
             "<span id='removePackageDimensionField'><i class='fa fa-remove pull-left' style='vertical-align: bottom; cursor: pointer; padding-top: 12px;'></i></span>\n" +
