@@ -52,7 +52,7 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_insured_value_title; ?>"><?php echo $entry_insured_value; ?></span></label>
                             <div class="col-sm-6">
-                                <input type="number" name="sameday_insured_value" value="<?php echo ($sameday_insured_value != '') ? $sameday_insured_value : 0; ?>" min="0" class="form-control"/>
+                                <input type="number" step="any" name="sameday_insured_value" value="<?php echo ($sameday_insured_value != '') ? $sameday_insured_value : 0; ?>" min="0" class="form-control"/>
                                 <?php if (isset($error_insured_value)) { ?>
                                 <div class="text-danger"><?php echo $error_insured_value; ?></div>
                                 <?php } ?>
@@ -74,7 +74,7 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_calculated_weight_title; ?>"><?php echo $entry_calculated_weight; ?></span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
-                                    <input type="number" value="<?php echo $calculated_weight; ?>" readonly="readonly" class="form-control input-number"/>
+                                    <input type="number" step="any" value="<?php echo $calculated_weight; ?>" readonly="readonly" class="form-control input-number"/>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>"><?php echo $entry_ramburs; ?></span></label>
                             <div class="col-sm-10">
-                                <input type="number" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
+                                <input type="number" step="any" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
                             </div>
                         </div>
 
@@ -465,16 +465,16 @@
             "<div class=\"col-sm-10\" style='padding-bottom: 5px;'>\n" +
             "<div class=\"row\">\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_width; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_width; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_length; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_length; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_height; ?>\" id=\"input-height\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_height; ?>\" id=\"input-height\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-4\">\n" +
             "<span id='removePackageDimensionField'><i class='fa fa-remove pull-left' style='vertical-align: bottom; cursor: pointer; padding-top: 12px;'></i></span>\n" +

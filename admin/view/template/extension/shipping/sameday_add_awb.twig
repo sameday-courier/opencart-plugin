@@ -48,7 +48,7 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_insured_value_title }}">{{ entry_insured_value }}</span></label>
                             <div class="col-sm-6">
-                                <input type="number" name="sameday_insured_value" value="{{ sameday_insured_value }}" min="0" class="form-control"/>
+                                <input type="number" step="any" name="sameday_insured_value" value="{{ sameday_insured_value }}" min="0" class="form-control"/>
                                 {% if error_insured_val is not null %}
                                     <div class="text-danger">{{ error_insured_val }}</div>
                                 {% endif %}
@@ -70,7 +70,7 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_calculated_weight_title }}">{{ entry_calculated_weight }}</span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
-                                    <input type="number" value="{{ calculated_weight }}" readonly="readonly" class="form-control input-number"/>
+                                    <input type="number" step="any" value="{{ calculated_weight }}" readonly="readonly" class="form-control input-number"/>
                                 </div>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_ramburs_title }}">{{ entry_ramburs }}</span></label>
                             <div class="col-sm-10">
-                                <input type="number" name="sameday_ramburs" value="{{ sameday_ramburs }}" class="form-control"/>
+                                <input type="number" step="any" name="sameday_ramburs" value="{{ sameday_ramburs }}" class="form-control"/>
                             </div>
                         </div>
 
@@ -465,16 +465,16 @@
             "<div class=\"col-sm-10\" style='padding-bottom: 5px;'>\n" +
             "<div class=\"row\">\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=" + entry_weight + " id=\"input-length\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=" + entry_weight + " id=\"input-length\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=" + entry_width + " id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=" + entry_width + " id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=" + entry_length + " id=\"input-width\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_length[]\" value=\"\" min=\"0\" placeholder=" + entry_length + " id=\"input-width\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=" + entry_height + " id=\"input-height\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_height[]\" value=\"\" min=\"0\" placeholder=" + entry_height + " id=\"input-height\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-4\">\n" +
             "<span id='removePackageDimensionField'><i class='fa fa-remove pull-left' style='vertical-align: bottom; cursor: pointer; padding-top: 12px;'></i></span>\n" +
