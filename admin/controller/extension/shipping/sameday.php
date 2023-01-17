@@ -1087,6 +1087,7 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_observation'],
             '',
             '',
+            null,
             $params['sameday_locker_id']
         );
 
