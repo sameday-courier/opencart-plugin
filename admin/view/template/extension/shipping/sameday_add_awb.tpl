@@ -142,7 +142,7 @@
                                 <span data-toggle="tooltip" title="<?php echo $entry_locker_first_mile_title; ?>"><?php echo $entry_locker_first_mile; ?> <a href="https://sameday.ro/easybox#lockers-intro">(Show on map)</a></span>
                             </label>
                             <div class="col-sm-1">
-                                <input type="checkbox" class="form-control" value="<?php $pdo_code; ?>" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
+                                <input type="checkbox" class="form-control" value="<?php echo $pdo_code; ?>" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
                             </div>
                             <div class="col-sm-9">
                                 <div class="custom_tooltip"> Lockers box dimensions
