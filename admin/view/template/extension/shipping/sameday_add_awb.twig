@@ -48,7 +48,7 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_insured_value_title }}">{{ entry_insured_value }}</span></label>
                             <div class="col-sm-6">
-                                <input type="number" step="any" name="sameday_insured_value" value="{{ sameday_insured_value }}" min="0" class="form-control"/>
+                                <input type="number" step="any" name="sameday_insured_value" value="0" min="0" class="form-control"/>
                                 {% if error_insured_val is not null %}
                                     <div class="text-danger">{{ error_insured_val }}</div>
                                 {% endif %}
@@ -106,11 +106,98 @@
 
                         <!-- Package Type //-->
                         <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_package_type"><span data-toggle="tooltip" title="{{ entry_package_type_title }}">{{ entry_package_type }}</label>
+                            <label class="col-sm-2 control-label" for="input-status-sameday_package_type">
+                                <span data-toggle="tooltip" title="{{ entry_package_type_title }}">{{ entry_package_type }}</span>
+                            </label>
                             <div class="col-sm-10">
                                 <select name="sameday_package_type" id="input-status-sameday-package-type" class="form-control">
                                     {% for _packageType in packageTypes %}
                                     <option value="{{ _packageType['value'] }}" {% if _packageType['value'] == sameday_package_type %} selected="selected" {% endif %} > {{ _packageType['name'] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!--  Awb Service //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_service">
+                                <span data-toggle="tooltip" title="{{ entry_service_title }}">{{ entry_service }}</span>
+                            </label>
+                            <div class="col-sm-10">
+                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
+                                    {% for service in services %}
+                                            <option
+                                                value="{{ service.sameday_id }}" {% if (service.sameday_id == default_service_id)  %}
+                                                selected="selected" {% endif %}
+                                                data-service_eligible_to_locker="{{ service.service_eligible_to_locker }}"
+                                                data-service_eligible_to_pdo="{{ service.service_eligible_to_pdo }}"
+                                            > {{ service.name }}
+                                            </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Locker FirstMile //-->
+                        <div class="form-group" id="showPDO" style="display: {{ showPDO }}">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_locker_first_mile">
+                                <span data-toggle="tooltip" title="{{ entry_locker_first_mile_title }}">{{ entry_locker_first_mile }} <a href="https://sameday.ro/easybox#lockers-intro">(Show on map)</a></span>
+                            </label>
+                            <div class="col-sm-1">
+                                <input type="checkbox" class="form-control" value="{{ pdo_code }}" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
+                            </div>
+                            <div class="col-sm-9">
+                                <div class="custom_tooltip"> Lockers box dimensions
+                                    <span class="tooltiptext">
+                                        <div class="table-responsive"><table class="table table-bordered table-hover"> <thead> <tr> <td></td><td style="text-align: center;"> L</td><td style="text-align: center;"> l</td><td style="text-align: center;"> h</td></tr></thead> <tbody> <tr> <td>Small (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 10</td></tr><tr> <td>Medium (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 19</td></tr><tr> <td>Large (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 39</td></tr></tbody> </table></div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--// Show Locker Details -->
+                        <div class="form-group" id="showLockerDetails" style="display: {{ showLockerDetails }}">
+                            <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="{{ entry_locker_details_title }}">{{ entry_locker_details }}</label>
+                            <div class="col-sm-10">
+                                <span>
+                                    <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> {{ lockerDetails }} </textarea>
+                                </span>
+                                <br/>
+                                <span>
+                                    <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
+                                    <button type="button" class="btn btn-warning"
+                                            id="changeLocker"
+                                            data-url="{{ lockerPluginData.url }}"
+                                            data-country="{{ lockerPluginData.country }}"
+                                            data-apiUsername="{{ lockerPluginData.apiUsername }}"
+                                            data-city="{{ lockerPluginData.city }}"
+                                    >
+                                        {{ entry_locker_change }}
+                                    </button>
+                                    <input
+                                            type="hidden"
+                                            name="sameday_locker_id"
+                                            id="input-status-sameday_locker_id"
+                                            value="{{ lockerPluginData.lockerId }}"
+                                    >
+                                    <input
+                                            type="hidden"
+                                            name="sameday_locker_address"
+                                            id="input-status-sameday_locker_address"
+                                            value="{{ lockerPluginData.lockerAddress }}"
+                                    >
+                                </span>
+                            </div>
+                        </div>
+
+
+                        <!-- Awb Payment //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_awb_payment"><span data-toggle="tooltip" title="{{ entry_awb_payment_title }}">{{ entry_awb_payment }}</span></label>
+                            <div class="col-sm-10">
+                                <select name="sameday_awb_payment" id="input-status-sameday_awb_payment" class="form-control">
+                                    {% for paymentType in awbPaymentsType %}
+                                        <option value="{{ paymentType['value'] }}" {% if paymentType['value'] == sameday_awb_payment %} selected="selected" {% endif %}> {{ paymentType['name'] }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -128,69 +215,6 @@
                             </div>
                         </div>
 
-                        <!-- Awb Payment //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_awb_payment"><span data-toggle="tooltip" title="{{ entry_awb_payment_title }}">{{ entry_awb_payment }}</span></label>
-                            <div class="col-sm-10">
-                                <select name="sameday_awb_payment" id="input-status-sameday_awb_payment" class="form-control">
-                                    {% for paymentType in awbPaymentsType %}
-                                    <option value="{{ paymentType['value'] }}" {% if paymentType['value'] == sameday_awb_payment %} selected="selected" {% endif %}> {{ paymentType['name'] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <!--  Awb Service //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_service"><span data-toggle="tooltip" title="{{ entry_service_title }}">{{ entry_service }}</label>
-                            <div class="col-sm-10">
-                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
-                                    {% for service in services %}
-                                        {% if service.status > 0 %}
-                                            <option value="{{ service.sameday_id }}" {% if (service.sameday_id == default_service_id)  %} selected="selected" {% endif %} > {{ service.name }} </option>
-                                        {% endif %}
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <!--// Show Locker Details -->
-                        {% if lockerDetails is defined %}
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="{{ entry_locker_details_title }}">{{ entry_locker_details }}</label>
-                                <div class="col-sm-10">
-                                    <span>
-                                        <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> {{ lockerDetails }} </textarea>
-                                    </span>
-                                    <br/>
-                                    <span>
-                                        <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
-                                        <button type="button" class="btn btn-warning"
-                                                id="changeLocker"
-                                                data-url="{{ lockerPluginData.url }}"
-                                                data-country="{{ lockerPluginData.country }}"
-                                                data-apiUsername="{{ lockerPluginData.apiUsername }}"
-                                                data-city="{{ lockerPluginData.city }}"
-                                        >
-                                            {{ entry_locker_change }}
-                                        </button>
-                                        <input
-                                                type="hidden"
-                                                name="sameday_locker_id"
-                                                id="input-status-sameday_locker_id"
-                                                value="{{ lockerPluginData.lockerId }}"
-                                        >
-                                        <input
-                                                type="hidden"
-                                                name="sameday_locker_address"
-                                                id="input-status-sameday_locker_address"
-                                                value="{{ lockerPluginData.lockerAddress }}"
-                                        >
-                                    </span>
-                                </div>
-                            </div>
-                        {% endif %}
-
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-status-sameday-third_party_pickup"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_title }}">{{ entry_third_party_pickup }}</span></label>
@@ -203,7 +227,6 @@
                         </div>
 
                         <div class="thirt_party_pickup_address" style="display: none;">
-
                             <!-- Third Party Pickup County //-->
                             <div class="form-group">
                                 <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_county_title }}">{{ entry_third_party_pickup_county }}</span></label>
@@ -375,6 +398,22 @@
         });
     });
 
+    // Change service:
+    $(document).on('change', '#input-status-sameday_service', (element) => {
+        const _target = element.target;
+        const currentService = _target.options[_target.selectedIndex];
+        const showLockerFirstMile = document.getElementById('showPDO');
+        const showLockerDetails = document.getElementById('showLockerDetails');
+        const lockerFirstMileElem = document.getElementById('input-status-sameday_locker_first_mile');
+
+        /* Uncheck Locker FirstMile Element */
+        lockerFirstMileElem.checked = false;
+
+        /* Toggle Element */
+        showLockerDetails.style.display = currentService.getAttribute('data-service_eligible_to_locker');
+        showLockerFirstMile.style.display = currentService.getAttribute('data-service_eligible_to_pdo');
+    });
+
     $(document).on('click', '#estimateCost', function() {
         link = $(this).data('link');
         url = new URL(window.location.href);
@@ -537,6 +576,31 @@
 {{ footer }}
 
 <style>
+    /* Locker Dimensions Tooltip */
+    .custom_tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted black;
+    }
+
+    .custom_tooltip .tooltiptext {
+        visibility: hidden;
+        width: auto;
+        background: #f6f5f5;
+        color: #000000;
+        text-align: center;
+        border-radius: 5px;
+        padding: 5px;
+
+        /* Position the custom_tooltip */
+        position: absolute;
+        z-index: 10000;
+    }
+
+    .custom_tooltip:hover .tooltiptext {
+        visibility: visible;
+    }
+
     .input-number {
         text-align: center;
     }

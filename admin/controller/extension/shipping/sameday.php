@@ -116,6 +116,11 @@ class ControllerExtensionShippingSameday extends Controller
         'host_country',
     ];
 
+    const TOGGLE_HTML_ELEMENT = [
+        'show' => 'block',
+        'hide' => 'none',
+    ];
+
     /**
      * @var null
      */
@@ -302,7 +307,11 @@ class ControllerExtensionShippingSameday extends Controller
 
         $sameday = new Sameday($this->samedayHelper->initClient());
 
-        $this->model_extension_shipping_sameday->ensureSamedayServiceCodeColumn();
+        $samedayDBModel = $this->model_extension_shipping_sameday;
+
+        $samedayDBModel->ensureSamedayServiceCodeColumn();
+
+        $samedayDBModel->ensureSamedayServiceOptionalTaxColumn();
 
         $remoteServices = [];
         $page = 1;
@@ -322,8 +331,9 @@ class ControllerExtensionShippingSameday extends Controller
                 if (!$service) {
                     // Service not found, add it.
                     $this->model_extension_shipping_sameday->addService($serviceObject, $this->isTesting());
-                } elseif ($service['sameday_code'] != $serviceObject->getCode()) {
-                    $this->model_extension_shipping_sameday->updateServiceCode($service['id'], $serviceObject->getCode());
+                } else {
+                    // Service already exist, update it.
+                    $this->model_extension_shipping_sameday->editService($service['id'], $serviceObject);
                 }
 
                 // Save as current sameday service.
@@ -333,10 +343,10 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Build array of local services.
         $localServices = array_map(
-            function ($service) {
+            static function ($service) {
                 return array(
-                    'id' => $service['id'],
-                    'sameday_id' => $service['sameday_id']
+                    'id' => (int) $service['id'],
+                    'sameday_id' => (int) $service['sameday_id']
                 );
             },
             $this->model_extension_shipping_sameday->getServices($this->isTesting())
@@ -344,7 +354,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Delete local services that aren't present in remote services anymore.
         foreach ($localServices as $localService) {
-            if (!in_array($localService['sameday_id'], $remoteServices)) {
+            if (!in_array($localService['sameday_id'], $remoteServices, true)) {
                 $this->model_extension_shipping_sameday->deleteService($localService['id']);
             }
         }
@@ -639,6 +649,7 @@ class ControllerExtensionShippingSameday extends Controller
             'sameday_package_type',
             'sameday_pickup_point',
             'sameday_service',
+            'sameday_locker_first_mile',
             'sameday_locker_id',
             'sameday_awb_payment',
             'sameday_third_party_pickup',
@@ -694,6 +705,8 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_awb_payment',
             'entry_service',
             'entry_service_title',
+            'entry_locker_first_mile',
+            'entry_locker_first_mile_title',
             'entry_awb_payment_title',
             'entry_third_party_pickup',
             'entry_third_party_pickup_title',
@@ -724,7 +737,8 @@ class ControllerExtensionShippingSameday extends Controller
         $parts = explode('.', $orderInfo['shipping_code'], 5);
         $data['default_service_id'] = $parts[2] ?? null;
 
-        $lockerDetails = null;
+        $showLockerDetails = $this->toggleHtmlElement(false);
+        $lockerDetails = '';
         $lockerPluginData = null;
         if (isset($parts[3], $parts[4])) {
             $lockerDetails = $parts[4];
@@ -735,6 +749,14 @@ class ControllerExtensionShippingSameday extends Controller
                 'apiUsername' => $this->getConfig('sameday_username'),
                 'city' => $orderInfo['shipping_city'] ?? null
             ];
+
+            $showLockerDetails = $this->toggleHtmlElement(true);
+        }
+
+        $showPDO = $this->toggleHtmlElement(false);
+        $currentService = $this->model_extension_shipping_sameday->getServiceSameday($data['default_service_id'], $this->isTesting());
+        if (isset($currentService['service_optional_taxes']) && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])) {
+            $showPDO = $this->toggleHtmlElement(true);
         }
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
@@ -816,12 +838,39 @@ class ControllerExtensionShippingSameday extends Controller
             $repayment = round($orderInfo['total'], 2);
         }
 
+        $availableServices = [];
+        $services = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        foreach ($services as $service) {
+            if ($service['status'] > 0) {
+                $service['service_eligible_to_locker'] = $this->toggleHtmlElement(false);
+                if (isset($service['sameday_code'])) {
+                    $service['service_eligible_to_locker'] = $service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE
+                        ? $this->toggleHtmlElement(true)
+                        : $this->toggleHtmlElement(false)
+                    ;
+                }
+
+                $service['service_eligible_to_pdo'] = $this->toggleHtmlElement(false);
+                if (isset($service['service_optional_taxes'])) {
+                    $service['service_eligible_to_pdo'] = $this->isServiceEligibleToPDO($service['service_optional_taxes'])
+                        ? $this->toggleHtmlElement(true)
+                        : $this->toggleHtmlElement(false)
+                    ;
+                }
+
+                $availableServices[] = $service;
+            }
+        }
+
         $data['sameday_ramburs'] = $repayment;
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
-        $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $data['services'] = $availableServices;
         $data['lockerDetails'] = $lockerDetails;
         $data['lockerPluginData'] = $lockerPluginData;
+        $data['showLockerDetails'] = $showLockerDetails;
+        $data['showPDO'] = $showPDO;
+        $data['pdo_code'] = $this->samedayHelper::SERVICE_OPTIONAL_TAX_PDO_CODE;
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
         $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
 
@@ -1060,6 +1109,11 @@ class ControllerExtensionShippingSameday extends Controller
 
         $address = trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
 
+        $serviceTaxes = [];
+        if (isset($params['sameday_locker_first_mile'])) {
+            $serviceTaxes[] = $params['sameday_locker_first_mile'];
+        }
+
         $request = new SamedayPostAwbRequest(
             $params['sameday_pickup_point'],
             null,
@@ -1081,7 +1135,7 @@ class ControllerExtensionShippingSameday extends Controller
             $params['sameday_ramburs'],
             new \Sameday\Objects\Types\CodCollectorType(\Sameday\Objects\Types\CodCollectorType::CLIENT),
             $thirdPartyPickUp,
-            array(),
+            $serviceTaxes,
             null,
             $params['sameday_client_reference'],
             $params['sameday_observation'],
@@ -1160,6 +1214,11 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         if (! isset($return['errors'])) {
+            $serviceTaxes = [];
+            if (isset($params['sameday_locker_first_mile'])) {
+                $serviceTaxes[] = $params['sameday_locker_first_mile'];
+            }
+
             $estimateCostRequest = new \Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
@@ -1184,7 +1243,7 @@ class ControllerExtensionShippingSameday extends Controller
                 $params['sameday_insured_value'],
                 $params['sameday_ramburs'],
                 null,
-                array()
+                $serviceTaxes
             );
 
             $sameday =  new \Sameday\Sameday($this->samedayHelper->initClient());
@@ -1402,7 +1461,7 @@ class ControllerExtensionShippingSameday extends Controller
         return $entries;
     }
 
-    private function buildRequest(array $keys)
+    private function buildRequest(array $keys): array
     {
         $entries = array();
         foreach ($keys as $key) {
@@ -1412,25 +1471,21 @@ class ControllerExtensionShippingSameday extends Controller
         return $entries;
     }
 
-    private function buildRequestService($keys, $service)
+    private function buildRequestService($keys, $service): array
     {
         $entries = array();
         foreach ($keys as $key) {
-            $entries[$key] = isset($this->request->post[$key])
-                ? $this->request->post[$key]
-                : $service[$key];
+            $entries[$key] = $this->request->post[$key] ?? $service[$key];
         }
 
         return $entries;
     }
 
-    private function buildRequestAwb($keys)
+    private function buildRequestAwb($keys): array
     {
         $entries = array();
         foreach ($keys as $key) {
-            $entries[$key] = isset($this->request->post[$key])
-                ? $this->request->post[$key]
-                : '';
+            $entries[$key] = $this->request->post[$key] ?? '';
         }
 
         return $entries;
@@ -1469,6 +1524,18 @@ class ControllerExtensionShippingSameday extends Controller
                 'text' => $lang['text_services_status_always']
             )
         );
+    }
+
+    private function isServiceEligibleToPDO($serviceOptionalTaxes)
+    {
+        $serviceOptionalTaxes = json_decode($serviceOptionalTaxes, true);
+        foreach ($serviceOptionalTaxes as $tax) {
+            if ($tax['code'] === $this->samedayHelper::SERVICE_OPTIONAL_TAX_PDO_CODE) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1518,5 +1585,10 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         return 'marketplace/extension';
+    }
+
+    private function toggleHtmlElement(bool $isShow): string
+    {
+        return $isShow === true ? self::TOGGLE_HTML_ELEMENT['show'] : self::TOGGLE_HTML_ELEMENT['hide'];
     }
 }

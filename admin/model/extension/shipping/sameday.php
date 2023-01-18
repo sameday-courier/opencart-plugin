@@ -1,5 +1,8 @@
 <?php
 
+use Sameday\Objects\Service\OptionalTaxObject;
+use Sameday\Objects\Service\ServiceObject;
+
 require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 
 class ModelExtensionShippingSameday extends Model
@@ -148,25 +151,42 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query('alter table '. DB_PREFIX .'sameday_service add sameday_code VARCHAR(255) default \'\' not null');
     }
 
+    public function ensureSamedayServiceOptionalTaxColumn()
+    {
+        $query = 'SHOW COLUMNS FROM ' . DB_PREFIX . "sameday_service LIKE 'service_optional_taxes'";
+        $row = $this->db->query($query)->row;
+
+        if ($row) {
+            return;
+        }
+
+        $this->db->query('alter table '. DB_PREFIX .'sameday_service add service_optional_taxes TEXT default null');
+    }
+
     /**
-     * @param int $id
-     * @param string $samedayServiceCode
+     * @param $id
+     * @param ServiceObject $serviceObject
+     *
+     * @return void
      */
-    public function updateServiceCode($id, $samedayServiceCode)
+    public function editService($id, ServiceObject $serviceObject)
     {
         $this->db->query('
-            UPDATE ' . DB_PREFIX . "sameday_service SET 
-                sameday_code='{$this->db->escape($samedayServiceCode)}'
+            UPDATE ' . DB_PREFIX . "sameday_service SET
+                sameday_id='{$this->db->escape($serviceObject->getId())}',
+                sameday_name='{$this->db->escape($serviceObject->getName())}',
+                sameday_code='{$this->db->escape($serviceObject->getCode())}',
+                service_optional_taxes='{$this->db->escape($this->buildServiceOptionalTaxes($serviceObject->getOptionalTaxes()))}'
             WHERE 
                 id = '{$this->db->escape($id)}'
         ");
     }
 
     /**
-     * @param \Sameday\Objects\Service\ServiceObject $service
+     * @param ServiceObject $service
      * @param bool $testing
      */
-    public function addService(\Sameday\Objects\Service\ServiceObject $service, $testing)
+    public function addService(ServiceObject $service, bool $testing)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_service (
@@ -174,13 +194,15 @@ class ModelExtensionShippingSameday extends Model
                 sameday_name, 
                 sameday_code,
                 testing, 
-                status
+                status,
+                service_optional_taxes
             ) VALUES (
                 '{$this->db->escape($service->getId())}', 
                 '{$this->db->escape($service->getName())}', 
                 '{$this->db->escape($service->getCode())}', 
                 '{$this->db->escape($testing)}',
-                0
+                0,
+                '{$this->db->escape($this->buildServiceOptionalTaxes($service->getOptionalTaxes()))}'
             )";
 
         $this->db->query($query);
@@ -484,6 +506,21 @@ class ModelExtensionShippingSameday extends Model
         }
 
         return $rows;
+    }
+
+    private function buildServiceOptionalTaxes($serviceTaxes): string
+    {
+        $data = [];
+        /** @var OptionalTaxObject $serviceTax */
+        foreach ($serviceTaxes as $serviceTax) {
+            $data[] = [
+                'id' => $serviceTax->getId(),
+                'code' => $serviceTax->getCode(),
+                'type' => $serviceTax->getPackageType()
+            ];
+        }
+
+        return json_encode($data);
     }
 
     private function createAwbTable()
