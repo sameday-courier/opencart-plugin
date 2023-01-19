@@ -1,5 +1,13 @@
 <?php
 
+use Sameday\Exceptions\SamedayAuthenticationException;
+use Sameday\Exceptions\SamedayAuthorizationException;
+use Sameday\Exceptions\SamedayBadRequestException;
+use Sameday\Exceptions\SamedayNotFoundException;
+use Sameday\Exceptions\SamedayOtherException;
+use Sameday\Exceptions\SamedaySDKException;
+use Sameday\Exceptions\SamedayServerException;
+
 require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 
 class ModelExtensionShippingSameday extends Model
@@ -24,16 +32,28 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param array $address
-     *
-     * @return array
+     * @param $address
+     * @return array|null
+     * @throws SamedaySDKException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
+     * @throws SamedayOtherException
+     * @throws SamedayServerException
      */
     public function getQuote($address)
     {
-        $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "zone_to_geo_zone WHERE 
+        $table = DB_PREFIX .  "zone_to_geo_zone";
+        $countryId = (int) $address['country_id'];
+        $zoneId = (int) $address['zone_id'];
+
+
+        $query = $this->db->query(
+            "SELECT * FROM $table WHERE 
             geo_zone_id='{$this->getConfig('sameday_geo_zone_id')}'
-            AND country_id='{$address['country_id']}'
-            AND (zone_id='{$address['zone_id']}' OR zone_id='0')");
+            AND country_id=$countryId
+            AND (zone_id=$zoneId OR zone_id=0)"
+        );
 
         if (!$this->getConfig('sameday_geo_zone_id')) {
             $status = true;
@@ -81,7 +101,7 @@ class ModelExtensionShippingSameday extends Model
 
             if ($isEstimatedCostEnabled) {
                 $estimatedCost = $this->estimateCost($address, $service['sameday_id']);
-                if ($estimatedCost != null) {
+                if ($estimatedCost !== null) {
                     $price = $estimatedCost;
                 }
             }
@@ -102,7 +122,8 @@ class ModelExtensionShippingSameday extends Model
                 )
             );
 
-            if ($service['sameday_code'] === "LN") {
+            // If client choose for Drop-down list
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE && $this->isShowLockersMap()) {
                 $this->syncLockers();
             }
         }
@@ -132,19 +153,21 @@ class ModelExtensionShippingSameday extends Model
         return $entries;
     }
 
+    /**
+     * @throws SamedaySDKException
+     */
     private function syncLockers()
     {
-        $key =  "{$this->getPrefix()}sameday_sync_lockers_ts";
         $time = time();
 
-        if ($time >= ($this->getConfig($key) + 86400)) {
+        if ($time >= (((int) $this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
             $this->lockersRefresh();
         }
     }
 
     /**
-     * @return bool
-     * @throws \Sameday\Exceptions\SamedaySDKException
+     * @return void
+     * @throws SamedaySDKException
      */
     private function lockersRefresh()
     {
@@ -156,7 +179,7 @@ class ModelExtensionShippingSameday extends Model
         try {
             $lockers = $sameday->getLockers($request)->getLockers();
         } catch (\Exception $exception) {
-            return false;
+            return;
         }
 
         $remoteLockers = [];
@@ -176,8 +199,8 @@ class ModelExtensionShippingSameday extends Model
             static function ($locker) {
                 if (isset($locker['id'])) {
                     return array(
-                        'id' => $locker['id'],
-                        'sameday_id' => $locker['locker_id']
+                        'id' => (int) $locker['id'],
+                        'sameday_id' => (int) $locker['locker_id'],
                     );
                 }
 
@@ -189,14 +212,12 @@ class ModelExtensionShippingSameday extends Model
 
         // Delete local lockers that aren't present in remote lockers anymore.
         foreach ($localLockers as $localLocker) {
-            if (!in_array($localLocker['sameday_id'], $remoteLockers)) {
+            if (!in_array($localLocker['sameday_id'], $remoteLockers, true)) {
                 $this->deleteLocker($localLocker['id']);
             }
         }
 
         $this->updateLastSyncTimestamp();
-
-        return true;
     }
 
     /**
@@ -352,12 +373,12 @@ class ModelExtensionShippingSameday extends Model
      * @param $address
      * @param $serviceId
      * @return float|null
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayNotFoundException
-     * @throws \Sameday\Exceptions\SamedayOtherException
-     * @throws \Sameday\Exceptions\SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
+     * @throws SamedayOtherException
+     * @throws SamedaySDKException
+     * @throws SamedayServerException
      */
     private function estimateCost($address, $serviceId)
     {
@@ -401,7 +422,9 @@ class ModelExtensionShippingSameday extends Model
 
         try {
             return $sameday->postAwbEstimation($estimateCostRequest)->getCost();
-        } catch (\Sameday\Exceptions\SamedayBadRequestException $exception) {
+        } catch (SamedayBadRequestException $exception) {
+            return null;
+        } catch (SamedaySDKException $exception) {
             return null;
         }
     }

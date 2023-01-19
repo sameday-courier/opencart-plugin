@@ -633,7 +633,9 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->load->model('extension/shipping/sameday');
-        $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderInfo['order_id']);
+        $shippingSamedayModel = $this->model_extension_shipping_sameday;
+
+        $awb = $shippingSamedayModel->getAwbForOrderId($orderInfo['order_id']);
 
         if ($awb) {
             // Already generated.
@@ -754,7 +756,7 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $showPDO = $this->toggleHtmlElement(false);
-        $currentService = $this->model_extension_shipping_sameday->getServiceSameday($data['default_service_id'], $this->isTesting());
+        $currentService = $shippingSamedayModel->getServiceSameday($data['default_service_id'], $this->isTesting());
         if (isset($currentService['service_optional_taxes']) && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])) {
             $showPDO = $this->toggleHtmlElement(true);
         }
@@ -762,13 +764,17 @@ class ControllerExtensionShippingSameday extends Controller
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
             $postRequestData = $this->request->post;
 
-            if ('' === $postRequestData['sameday_locker_id'] || '' === $postRequestData['sameday_locker_address']) {
+            if ('' === $postRequestData['sameday_locker_id']
+                || '' === $postRequestData['sameday_locker_address']
+                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday($postRequestData['sameday_service'], $this->isTesting())['sameday_code'] ?? null
+            )
+            {
                 $postRequestData['sameday_locker_id'] = null;
                 $postRequestData['sameday_locker_address'] = null;
             }
 
             $params = array_merge($postRequestData, $orderInfo);
-            $service = $this->model_extension_shipping_sameday->getServiceSameday($params['sameday_service'], $this->isTesting());
+            $service = $shippingSamedayModel->getServiceSameday($params['sameday_service'], $this->isTesting());
 
             $postAwb = $this->postAwb($params);
 
@@ -776,14 +782,14 @@ class ControllerExtensionShippingSameday extends Controller
             $errors = $postAwb['errors'];
 
             if (isset($awb)) {
-                $this->model_extension_shipping_sameday->saveAwb(array(
+                $shippingSamedayModel->saveAwb(array(
                     'order_id' => $orderInfo['order_id'],
                     'awb_number' => $awb->getAwbNumber(),
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' =>  $awb->getCost()
                 ));
 
-                $this->model_extension_shipping_sameday->updateShippingMethodAfterPostAwb(
+                $shippingSamedayModel->updateShippingMethodAfterPostAwb(
                     $orderInfo['order_id'],
                     $service,
                     $postRequestData['sameday_locker_id'],
@@ -839,7 +845,7 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $availableServices = [];
-        $services = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $services = $shippingSamedayModel->getServices($this->getConfig('sameday_testing'));
         foreach ($services as $service) {
             if ($service['status'] > 0) {
                 $service['service_eligible_to_locker'] = $this->toggleHtmlElement(false);
@@ -864,7 +870,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $data['sameday_ramburs'] = $repayment;
         $data['sameday_client_reference'] = $orderInfo['order_id'];
-        $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
+        $data['pickupPoints'] = $shippingSamedayModel->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $availableServices;
         $data['lockerDetails'] = $lockerDetails;
         $data['lockerPluginData'] = $lockerPluginData;
@@ -872,7 +878,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['showPDO'] = $showPDO;
         $data['pdo_code'] = $this->samedayHelper::SERVICE_OPTIONAL_TAX_PDO_CODE;
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
-        $data['counties'] = $this->model_extension_shipping_sameday->getCounties();
+        $data['counties'] = $shippingSamedayModel->getCounties();
 
         /*
          * Breadcrumbs
@@ -934,6 +940,8 @@ class ControllerExtensionShippingSameday extends Controller
             return new Action('error/not_found');
         }
 
+        $orderId = (int) $awb['order_id'];
+
         /*
         * Labels
         */
@@ -971,11 +979,11 @@ class ControllerExtensionShippingSameday extends Controller
             ),
             array(
                 'text' => $this->language->get('text_order_info'),
-                'href' => $this->url->link('sale/order/info', $this->addToken(array('order_id' => $awb['order_id'])), true)
+                'href' => $this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderId)), true)
             ),
             array(
                 'text' => 'AWB',
-                'href' => $this->url->link('extension/shipping/sameday/showAwbStatus', $this->addToken(array('order_id' => $awb['order_id'])), true)
+                'href' => $this->url->link('extension/shipping/sameday/showAwbStatus', $this->addToken(array('order_id' => $orderId)), true)
             )
         );
 
@@ -1033,7 +1041,8 @@ class ControllerExtensionShippingSameday extends Controller
     public function showAsPdf()
     {
         $this->load->model('extension/shipping/sameday');
-        $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($this->request->get['order_id']);
+        $orderId = (int) $this->request->get['order_id'];
+        $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderId);
 
         if (!$awb) {
             return new Action('error/not_found');
