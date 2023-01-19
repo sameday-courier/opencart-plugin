@@ -52,7 +52,7 @@
                         <div class="form-group required">
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_insured_value_title; ?>"><?php echo $entry_insured_value; ?></span></label>
                             <div class="col-sm-6">
-                                <input type="number" step="any" name="sameday_insured_value" value="<?php echo ($sameday_insured_value != '') ? $sameday_insured_value : 0; ?>" min="0" class="form-control"/>
+                                <input type="number" step="any" name="sameday_insured_value" value="0" min="0" class="form-control"/>
                                 <?php if (isset($error_insured_value)) { ?>
                                 <div class="text-danger"><?php echo $error_insured_value; ?></div>
                                 <?php } ?>
@@ -108,6 +108,86 @@
                             </div>
                         </div>
 
+                        <!-- Awb Payment //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_awb_payment"><span data-toggle="tooltip" title="<?php echo $entry_awb_payment_title; ?>"><?php echo $entry_awb_payment; ?></label>
+                            <div class="col-sm-10">
+                                <select name="sameday_awb_payment" id="input-status-sameday_awb_payment" class="form-control">
+                                    <?php foreach($awbPaymentsType as $paymentType) { ?>
+                                    <option value="<?php echo $paymentType['value']; ?>" <?php if ($paymentType['value'] == $sameday_awb_payment) { ?> selected="selected" <?php } ?>><?php echo $paymentType['name']; ?> </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!--  Awb Service //-->
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_service"><span data-toggle="tooltip" title="<?php echo $entry_service_title; ?>"><?php echo $entry_service; ?></label>
+                            <div class="col-sm-10">
+                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
+                                    <?php foreach($services as $service) { ?>
+                                        <option
+                                                data-service_eligible_to_locker="<?php echo $service['service_eligible_to_locker']; ?>"
+                                                data-service_eligible_to_pdo="<?php echo $service['service_eligible_to_pdo']; ?>"
+                                                value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Locker FirstMile //-->
+                        <div class="form-group" id="showPDO" style="display: <?php echo $showPDO; ?>">
+                            <label class="col-sm-2 control-label" for="input-status-sameday_locker_first_mile">
+                                <span data-toggle="tooltip" title="<?php echo $entry_locker_first_mile_title; ?>"><?php echo $entry_locker_first_mile; ?> <a href="https://sameday.ro/easybox#lockers-intro">(Show on map)</a></span>
+                            </label>
+                            <div class="col-sm-1">
+                                <input type="checkbox" class="form-control" value="<?php echo $pdo_code; ?>" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
+                            </div>
+                            <div class="col-sm-9">
+                                <div class="custom_tooltip"> Lockers box dimensions
+                                    <span class="tooltiptext">
+                                        <div class="table-responsive"><table class="table table-bordered table-hover"> <thead> <tr> <td></td><td style="text-align: center;"> L</td><td style="text-align: center;"> l</td><td style="text-align: center;"> h</td></tr></thead> <tbody> <tr> <td>Small (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 10</td></tr><tr> <td>Medium (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 19</td></tr><tr> <td>Large (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 39</td></tr></tbody> </table></div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--// Show Locker Details -->
+                        <div class="form-group" id="showLockerDetails" style="display: <?php echo $showLockerDetails; ?>">
+                            <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"> <?php echo $entry_locker_details; ?></label>
+                            <div class="col-sm-10">
+                                    <span>
+                                        <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> <?php echo $lockerDetails; ?> </textarea>
+                                    </span>
+                                <br/>
+                                <span>
+                                        <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
+                                        <button type="button" class="btn btn-warning"
+                                                id="changeLocker"
+                                                data-url="<?php echo $lockerPluginData['url']; ?>"
+                                                data-country="<?php echo $lockerPluginData['country']; ?>"
+                                                data-apiUsername="<?php echo $lockerPluginData['apiUsername'] ;?>"
+                                                data-city="<?php echo $lockerPluginData['city']; ?>"
+                                        >
+                                            <?php echo $entry_locker_change; ?>
+                                        </button>
+                                        <input
+                                                type="hidden"
+                                                name="sameday_locker_id"
+                                                id="input-status-sameday_locker_id"
+                                                value="<?php echo $lockerPluginData['lockerId']; ?>"
+                                        >
+                                        <input
+                                                type="hidden"
+                                                name="sameday_locker_address"
+                                                id="input-status-sameday_locker_address"
+                                                value="<?php echo $lockerPluginData['lockerAddress']; ?>"
+                                        >
+                                    </span>
+                            </div>
+                        </div>
+
                         <!-- Package Type //-->
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="input-status-sameday_package_type"><span data-toggle="tooltip" title="<?php echo $entry_package_type_title; ?>"><?php echo $entry_package_type; ?></label>
@@ -131,69 +211,6 @@
                                 </select>
                             </div>
                         </div>
-
-                        <!-- Awb Payment //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_awb_payment"><span data-toggle="tooltip" title="<?php echo $entry_awb_payment_title; ?>"><?php echo $entry_awb_payment; ?></label>
-                            <div class="col-sm-10">
-                                <select name="sameday_awb_payment" id="input-status-sameday_awb_payment" class="form-control">
-                                    <?php foreach($awbPaymentsType as $paymentType) { ?>
-                                    <option value="<?php echo $paymentType['value']; ?>" <?php if ($paymentType['value'] == $sameday_awb_payment) { ?> selected="selected" <?php } ?>><?php echo $paymentType['name']; ?> </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!--  Awb Service //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_service"><span data-toggle="tooltip" title="<?php echo $entry_service_title; ?>"><?php echo $entry_service; ?></label>
-                            <div class="col-sm-10">
-                                <select name="sameday_service" id="input-status-sameday_service" class="form-control">
-                                    <?php foreach($services as $service) { ?>
-                                    <?php if ($service['status'] > 0) { ?>
-                                    <option value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?> </option>
-                                    <?php } ?>
-                                    <?php } ?>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!--// Show Locker Details -->
-                        <?php if (isset($lockerDetails)): ?>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="<?php echo $entry_locker_details_title; ?>"> <?php echo $entry_locker_details; ?></label>
-                                <div class="col-sm-10">
-                                        <span>
-                                            <textarea class="form-control" disabled="disabled" id="input-status-sameday-locker_details"> <?php echo $lockerDetails; ?> </textarea>
-                                        </span>
-                                    <br/>
-                                    <span>
-                                            <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
-                                            <button type="button" class="btn btn-warning"
-                                                    id="changeLocker"
-                                                    data-url="<?php echo $lockerPluginData['url']; ?>"
-                                                    data-country="<?php echo $lockerPluginData['country']; ?>"
-                                                    data-apiUsername="<?php echo $lockerPluginData['apiUsername'] ;?>"
-                                                    data-city="<?php echo $lockerPluginData['city']; ?>"
-                                            >
-                                                <?php echo $entry_locker_change; ?>
-                                            </button>
-                                            <input
-                                                    type="hidden"
-                                                    name="sameday_locker_id"
-                                                    id="input-status-sameday_locker_id"
-                                                    value="<?php echo $lockerPluginData['lockerId']; ?>"
-                                            >
-                                            <input
-                                                    type="hidden"
-                                                    name="sameday_locker_address"
-                                                    id="input-status-sameday_locker_address"
-                                                    value="<?php echo $lockerPluginData['lockerAddress']; ?>"
-                                            >
-                                        </span>
-                                </div>
-                            </div>
-                        <?php endif; ?>
 
                         <!-- Third Party Pick-up //-->
                         <div class="form-group">
@@ -379,6 +396,20 @@
         });
     });
 
+    // Change service:
+    $(document).on('change', '#input-status-sameday_service', (element) => {
+        const _target = element.target;
+        const currentService = _target.options[_target.selectedIndex];
+        const showLockerFirstMile = document.getElementById('showPDO');
+        const showLockerDetails = document.getElementById('showLockerDetails');
+        const lockerFirstMileElem = document.getElementById('input-status-sameday_locker_first_mile');
+        /* Uncheck Locker FirstMile Element */
+        lockerFirstMileElem.checked = false;
+        /* Toggle Element */
+        showLockerDetails.style.display = currentService.getAttribute('data-service_eligible_to_locker');
+        showLockerFirstMile.style.display = currentService.getAttribute('data-service_eligible_to_pdo');
+    });
+
     $(document).on('click', '#estimateCost', function() {
         // config vars.
         link= $(this).data('link');
@@ -551,6 +582,28 @@
         height: 24px;
         -webkit-animation: spin 2s linear infinite; /* Safari */
         animation: spin 2s linear infinite;
+    }
+
+    /* Locker Dimensions Tooltip */
+    .custom_tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted black;
+    }
+    .custom_tooltip .tooltiptext {
+        visibility: hidden;
+        width: auto;
+        background: #f6f5f5;
+        color: #000000;
+        text-align: center;
+        border-radius: 5px;
+        padding: 5px;
+        /* Position the custom_tooltip */
+        position: absolute;
+        z-index: 10000;
+    }
+    .custom_tooltip:hover .tooltiptext {
+        visibility: visible;
     }
 
     /* Safari */

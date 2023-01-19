@@ -22,6 +22,13 @@ class SamedayHelper
 
     const CASH_ON_DELIVERY_CODE = 'cod';
 
+    const LOCKER_NEXT_DAY_CODE = 'LN';
+
+    const AFTER_48_HOURS = 172800;
+
+    // PDO stands for Personal Delivery Option and is an additional tax that apply to Service
+    const SERVICE_OPTIONAL_TAX_PDO_CODE = 'PDO';
+
     const API_PROD = 0;
     const API_DEMO = 1;
 
