@@ -758,7 +758,10 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $showPDO = $this->toggleHtmlElement(false);
-        $currentService = $shippingSamedayModel->getServiceSameday($data['default_service_id'], $this->isTesting());
+        $currentService = $shippingSamedayModel->getServiceSameday(
+            (int) ($data['default_service_id'] ?? null),
+            $this->isTesting()
+        );
         if (isset($currentService['service_optional_taxes']) && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])) {
             $showPDO = $this->toggleHtmlElement(true);
         }
@@ -768,8 +771,10 @@ class ControllerExtensionShippingSameday extends Controller
 
             if ('' === $postRequestData['sameday_locker_id']
                 || '' === $postRequestData['sameday_locker_address']
-                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday($postRequestData['sameday_service'], $this->isTesting())['sameday_code'] ?? null
-            )
+                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday(
+                    (int) $postRequestData['sameday_service'],
+                    $this->isTesting())['sameday_code'] ?? null
+                )
             {
                 $postRequestData['sameday_locker_id'] = null;
                 $postRequestData['sameday_locker_address'] = null;
