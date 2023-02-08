@@ -77,11 +77,16 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param string $hostCountry
+     *
      * @return array
      */
-    public function getCounties()
+    public function getCounties(string $hostCountry): array
     {
-        $query = 'SELECT country_id FROM ' . DB_PREFIX . 'country WHERE iso_code_2="RO"';
+        $table = DB_PREFIX . "country";
+        $isoCode = $hostCountry;
+
+        $query = sprintf("SELECT country_id FROM %s WHERE iso_code_2='%s'", $table, $this->db->escape($isoCode));
 
         $result = $this->db->query($query);
         if (empty($result->row)) {
@@ -101,9 +106,8 @@ class ModelExtensionShippingSameday extends Model
     public function getServices($testing)
     {
         $table = DB_PREFIX . "sameday_service";
-        $testing = $this->db->escape($testing);
 
-        $query = "SELECT * FROM $table WHERE testing=$testing";
+        $query = sprintf("SELECT * FROM %s WHERE testing='%s'", $table, $this->db->escape($testing));
 
         $rows = $this->db->query($query)->rows;
         foreach ($rows as $k => $row) {
@@ -120,7 +124,7 @@ class ModelExtensionShippingSameday extends Model
      *
      * @return array
      */
-    public function getService($id)
+    public function getService(int $id)
     {
         $table = DB_PREFIX. "sameday_service";
         $id = $this->db->escape($id);
@@ -136,13 +140,15 @@ class ModelExtensionShippingSameday extends Model
      *
      * @return array
      */
-    public function getServiceSameday($samedayId, $testing)
+    public function getServiceSameday(int $samedayId, $testing)
     {
         $table = DB_PREFIX . "sameday_service";
-        $samedayId = $this->db->escape($samedayId);
-        $testing = $this->db->escape($testing);
 
-        $query = "SELECT * FROM $table WHERE sameday_id=$samedayId AND testing=$testing";
+        $query = sprintf("SELECT * FROM %s WHERE sameday_id='%s' AND testing='%s'",
+            $table,
+            $this->db->escape($samedayId),
+            $this->db->escape($testing)
+        );
 
         return $this->db->query($query)->row;
     }
@@ -383,7 +389,7 @@ class ModelExtensionShippingSameday extends Model
      * @param PickupPointObject $pickupPointObject
      * @param int $pickuppointId
      */
-    public function updatePickupPoint(PickupPointObject $pickupPointObject, $pickuppointId)
+    public function updatePickupPoint(PickupPointObject $pickupPointObject, int $pickuppointId)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . "sameday_pickup_point SET 

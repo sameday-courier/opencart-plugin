@@ -321,7 +321,7 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $services = $sameday->getServices($request);
             } catch (\Exception $e) {
-                $this->session->data['error_warning'] = 'An internal error occurred !';
+                $this->session->data['error_warning'] = $e->getMessage();
 
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
@@ -381,7 +381,7 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $pickUpPoints = $sameday->getPickupPoints($request);
             } catch (\Exception $e) {
-                $this->session->data['error_warning'] = 'An internal error occurred !';
+                $this->session->data['error_warning'] = $e->getMessage();
 
                 $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
             }
@@ -402,10 +402,10 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Build array of local pickup points.
         $localPickupPoints = array_map(
-            function ($pickupPoint) {
+            static function ($pickupPoint) {
                 return array(
-                    'id' => $pickupPoint['id'],
-                    'sameday_id' => $pickupPoint['sameday_id']
+                    'id' => (int) $pickupPoint['id'],
+                    'sameday_id' => (int) $pickupPoint['sameday_id']
                 );
             },
             $this->model_extension_shipping_sameday->getPickupPoints($this->isTesting())
@@ -413,7 +413,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Delete local pickup points that aren't present in remote pickup points anymore.
         foreach ($localPickupPoints as $localPickupPoint) {
-            if (!in_array($localPickupPoint['sameday_id'], $remotePickupPoints)) {
+            if (!in_array($localPickupPoint['sameday_id'], $remotePickupPoints, true)) {
                 $this->model_extension_shipping_sameday->deletePickupPoint($localPickupPoint['id']);
             }
         }
@@ -436,6 +436,8 @@ class ControllerExtensionShippingSameday extends Controller
         try {
             $lockers = $sameday->getLockers($request)->getLockers();
         } catch (\Exception $exception) {
+            $this->session->data['error_warning'] = $exception->getMessage();
+
             $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
         }
 
@@ -453,10 +455,10 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Build array of local lockers.
         $localLockers = array_map(
-            function ($locker) {
+            static function ($locker) {
                 return array(
-                    'id' => $locker['id'],
-                    'sameday_id' => $locker['locker_id']
+                    'id' => (int) $locker['id'],
+                    'sameday_id' => (int) $locker['locker_id']
                 );
             },
             $this->model_extension_shipping_sameday->getLockers($this->isTesting())
@@ -464,7 +466,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         // Delete local lockers that aren't present in remote lockers anymore.
         foreach ($localLockers as $localLocker) {
-            if (!in_array($localLocker['sameday_id'], $remoteLockers)) {
+            if (!in_array($localLocker['sameday_id'], $remoteLockers, true)) {
                 $this->model_extension_shipping_sameday->deleteLocker($localLocker['id']);
             }
         }
@@ -756,7 +758,10 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $showPDO = $this->toggleHtmlElement(false);
-        $currentService = $shippingSamedayModel->getServiceSameday($data['default_service_id'], $this->isTesting());
+        $currentService = $shippingSamedayModel->getServiceSameday(
+            (int) ($data['default_service_id'] ?? null),
+            $this->isTesting()
+        );
         if (isset($currentService['service_optional_taxes']) && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])) {
             $showPDO = $this->toggleHtmlElement(true);
         }
@@ -766,15 +771,17 @@ class ControllerExtensionShippingSameday extends Controller
 
             if ('' === $postRequestData['sameday_locker_id']
                 || '' === $postRequestData['sameday_locker_address']
-                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday($postRequestData['sameday_service'], $this->isTesting())['sameday_code'] ?? null
-            )
+                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday(
+                    (int) $postRequestData['sameday_service'],
+                    $this->isTesting())['sameday_code'] ?? null
+                )
             {
                 $postRequestData['sameday_locker_id'] = null;
                 $postRequestData['sameday_locker_address'] = null;
             }
 
             $params = array_merge($postRequestData, $orderInfo);
-            $service = $shippingSamedayModel->getServiceSameday($params['sameday_service'], $this->isTesting());
+            $service = $shippingSamedayModel->getServiceSameday((int) ($params['sameday_service'] ?? null), $this->isTesting());
 
             $postAwb = $this->postAwb($params);
 
@@ -878,7 +885,9 @@ class ControllerExtensionShippingSameday extends Controller
         $data['showPDO'] = $showPDO;
         $data['pdo_code'] = $this->samedayHelper::SERVICE_OPTIONAL_TAX_PDO_CODE;
         $data['calculated_weight'] = $this->calculatePackageWeight($orderInfo['order_id']);
-        $data['counties'] = $shippingSamedayModel->getCounties();
+        $data['counties'] = $shippingSamedayModel->getCounties(
+            $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO
+        );
 
         /*
          * Breadcrumbs
@@ -1124,11 +1133,11 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $request = new SamedayPostAwbRequest(
-            $params['sameday_pickup_point'],
+            (int) ($params['sameday_pickup_point'] ?? null),
             null,
             new \Sameday\Objects\Types\PackageType($params['sameday_package_type']),
             $parcelDimensions,
-            $params['sameday_service'],
+            (int) ($params['sameday_service'] ?? null),
             new \Sameday\Objects\Types\AwbPaymentType($params['sameday_awb_payment']),
             new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
                 $params['shipping_city'],
@@ -1535,7 +1544,7 @@ class ControllerExtensionShippingSameday extends Controller
         );
     }
 
-    private function isServiceEligibleToPDO($serviceOptionalTaxes)
+    private function isServiceEligibleToPDO($serviceOptionalTaxes): bool
     {
         $serviceOptionalTaxes = json_decode($serviceOptionalTaxes, true);
         foreach ($serviceOptionalTaxes as $tax) {

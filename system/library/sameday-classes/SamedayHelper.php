@@ -65,7 +65,7 @@ class SamedayHelper
 
     public static function getEAWBInstanceUrlByCountry($countryCode): string
     {
-        return self::getEawbInstances()[$countryCode];
+        return self::getEawbInstances()[$countryCode ?? self::API_HOST_LOCALE_RO];
     }
 
     /**
