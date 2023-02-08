@@ -59,7 +59,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/shipping_method.tpl">
+    <file path="catalog/view/theme/*/template/checkout/shipping_method.tpl">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
@@ -188,7 +188,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/payment_method.tpl">
+    <file path="catalog/view/theme/*/template/checkout/payment_method.tpl">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="payment_method" value="<?php echo $payment_method['code']; ?>" />

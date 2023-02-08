@@ -59,7 +59,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/shipping_method.twig">
+    <file path="catalog/view/theme/*/template/checkout/shipping_method.twig">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" />
@@ -182,7 +182,7 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/default/template/checkout/payment_method.twig">
+    <file path="catalog/view/theme/*/template/checkout/payment_method.twig">
         <operation>
             <search><![CDATA[
                 <input type="radio" name="payment_method" value="{{ payment_method.code }}" />
