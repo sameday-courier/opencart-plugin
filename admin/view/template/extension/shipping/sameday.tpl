@@ -74,33 +74,42 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_estimated_cost; ?></label>
+                        <label class="col-sm-2 control-label" for="input-status-estimated-cost"><?php echo $entry_estimated_cost; ?></label>
                         <div class="col-sm-10">
-                            <select name="sameday_estimated_cost" id="input-status" class="form-control">
+                            <select name="sameday_estimated_cost" id="input-status-estimated-cost" class="form-control">
                                 <option value="0" <?php if (!$sameday_estimated_cost) { ?>selected="selected"<?php } ?>><?php echo $text_disabled; ?></option>
                                 <option value="1" <?php if ($sameday_estimated_cost) { ?>selected="selected"<?php } ?>><?php echo $text_enabled; ?></option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-status"><?php echo $entry_show_lockers_map; ?></label>
+                        <label class="col-sm-2 control-label" for="input-status-show-locker-map"><?php echo $entry_show_lockers_map; ?></label>
                         <div class="col-sm-10">
-                            <select name="sameday_show_lockers_map" id="input-status" class="form-control">
+                            <select name="sameday_show_lockers_map" id="input-status-show-locker-map" class="form-control">
                                 <option value="0" <?php if (!$sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_enabled; ?></option>
                                 <option value="1" <?php if ($sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_disabled; ?></option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-sort-order"><?php echo $entry_locker_max_items; ?></label>
+                        <label class="col-sm-2 control-label" for="input-sort-order-locker-max-items"><?php echo $entry_locker_max_items; ?></label>
                         <div class="col-sm-10">
-                            <input type="text" name="sameday_locker_max_items" value="<?php echo $sameday_locker_max_items; ?>" placeholder="<?php echo $entry_locker_max_items; ?>" id="input-sort-order" class="form-control" />
+                            <input type="text" name="sameday_locker_max_items" value="<?php echo $sameday_locker_max_items; ?>" placeholder="<?php echo $entry_locker_max_items; ?>" id="input-sort-order-locker-max-items" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-sort-order"><?php echo $entry_sort_order; ?></label>
+                        <label class="col-sm-2 control-label" for="input-sort-order-sort-order"><?php echo $entry_sort_order; ?></label>
                         <div class="col-sm-10">
-                            <input type="text" name="sameday_sort_order" value="<?php echo $sameday_sort_order; ?>" placeholder="<?php echo $entry_sort_order; ?>" id="input-sort-order" class="form-control" />
+                            <input type="text" name="sameday_sort_order" value="<?php echo $sameday_sort_order; ?>" placeholder="<?php echo $entry_sort_order; ?>" id="input-sort-order-sort-order" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-import-local-data"><?php echo $entry_import_local_data; ?></label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="<?php echo $import_local_data_href; ?>" data-actions='<?php echo $import_local_data_actions; ?>'>
+                                <?php echo $entry_import_local_data; ?>
+                            </button>
+                            <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader">
                         </div>
                     </div>
                 </form>
@@ -234,3 +243,84 @@
     </div>
 </div>
 <?php echo $footer; ?>
+
+<script>
+$(document).ready(() => {
+   $(document).on('click', '#input-import-local-data', (element) => {
+       let _target = element.target;
+       let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
+       let _url = _target.getAttribute('data-href');
+
+       importLocalData(_url, _actions);
+   });
+
+   function importLocalData(_url = '', _actions = []) {
+       const _action = _actions.shift();
+
+       if (typeof _action === "undefined") {
+           window.location.reload();
+
+           return true;
+       }
+
+       doAjaxRequest(_url, _actions, _action);
+   }
+
+   const doAjaxRequest = (_url = '', _actions = [], _action = '') => {
+       $.ajax({
+           url: _url,
+           type: "POST",
+           dataType: "JSON",
+           data: jQuery.param({ 'action': _action}),
+           processData: false,
+           contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+           beforeSend: () => {
+               showSpinner(true);
+               document.getElementById('input-import-local-data').setAttribute('disabled', true);
+           },
+           success: (data) => {
+               showSpinner(false);
+
+               importLocalData(_url, _actions, _action);
+           },
+           error: (data) => {
+               showSpinner(false);
+
+               console.log(data);
+           }
+       });
+   }
+
+   const showSpinner = (isShow = false) => {
+       let spinner = document.getElementById('importLocalDataSpinner');
+       spinner.style.display = 'none'
+
+       if (true === isShow) {
+           spinner.style.display = 'inline-block';
+       }
+   }
+});
+</script>
+
+<style>
+    .loader {
+        margin: 5px;
+        width: 18px;
+        height: 18px;
+        border: 4px solid #515151;
+        border-bottom-color: #8fbb6c;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style
