@@ -575,13 +575,24 @@
     }
 
     .loader {
-        border: 3.2px solid #f3f3f3;
+        margin: 5px;
+        width: 18px;
+        height: 18px;
+        border: 4px solid #515151;
+        border-bottom-color: #8fbb6c;
         border-radius: 50%;
-        border-top: 3.2px solid #3498db;
-        width: 24px;
-        height: 24px;
-        -webkit-animation: spin 2s linear infinite; /* Safari */
-        animation: spin 2s linear infinite;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
     /* Locker Dimensions Tooltip */

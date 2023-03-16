@@ -55,6 +55,7 @@ $_['entry_estimated_cost'] = 'Estimated cost';
 $_['entry_show_lockers_map'] = 'Show Sameday easyBox map on checkout page';
 $_['entry_locker_change'] = 'Change locker';
 $_['entry_locker_max_items'] = 'Locker max. items';
+$_['entry_import_local_data'] = 'Import local data';
 $_['entry_sort_order'] = 'Sort Order';
 $_['entry_name'] = 'Display name';
 $_['entry_price'] = 'Price';
