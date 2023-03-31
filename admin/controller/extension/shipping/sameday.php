@@ -308,16 +308,20 @@ class ControllerExtensionShippingSameday extends Controller
     public function importLocalData()
     {
         $action = $this->request->post['action'] ?? null;
-        if (in_array($action, self::IMPORT_LOCAL_DATA_ACTIONS, true)) {
-            $this->{$action}();
-
-            $this->response->setOutput(json_encode($action));
+        if (! in_array($action, self::IMPORT_LOCAL_DATA_ACTIONS, true)) {
+            return $this->response->setOutput(json_encode(['error' => 'Invalid action!']));
         }
 
-        $this->response->setOutput(json_encode($action));
+        try {
+            $this->{$action}();
+        } catch (Exception $exception) {
+            return $this->response->setOutput(json_encode(['error' => $exception->getMessage()]));
+        }
+
+        return $this->response->setOutput(json_encode($action));
     }
 
-    private function importLockers()
+    private function importLockers($redirectToPage = false)
     {
         $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
@@ -328,10 +332,19 @@ class ControllerExtensionShippingSameday extends Controller
 
         try {
             $lockers = $sameday->getLockers($request)->getLockers();
-        } catch (\Exception $exception) {
-            $this->session->data['error_warning'] = $exception->getMessage();
+        } catch (\Exception $e) {
+            $errorMessage = sprintf('Import Lockers error: %s', $e->getMessage());
 
-            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+            $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
+                $this->session->data['error_warning'] ?? '',
+                $errorMessage
+            );
+
+            if ($redirectToPage) {
+                $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+            } else {
+                throw new \RuntimeException($errorMessage);
+            }
         }
 
         $remoteLockers = [];
@@ -365,9 +378,16 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->updateLastSyncTimestamp();
+
+        if ($redirectToPage) {
+            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        }
     }
 
-    private function importServices()
+    /**
+     * @throws SamedaySDKException
+     */
+    private function importServices($redirectToPage = false)
     {
         $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
@@ -388,9 +408,18 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $services = $sameday->getServices($request);
             } catch (\Exception $e) {
-                $this->session->data['error_warning'] = $e->getMessage();
+                $errorMessage = sprintf('Import Services error: %s', $e->getMessage());
 
-                $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
+                    $this->session->data['error_warning'] ?? '',
+                    $errorMessage
+                );
+
+                if ($redirectToPage) {
+                    $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                } else {
+                    throw new \RuntimeException($errorMessage);
+                }
             }
 
             foreach ($services->getServices() as $serviceObject) {
@@ -425,9 +454,13 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->model_extension_shipping_sameday->deleteService($localService['id']);
             }
         }
+
+        if ($redirectToPage) {
+            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        }
     }
 
-    private function importPickupPoint()
+    private function importPickupPoint($redirectToPage = false)
     {
         $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
@@ -442,9 +475,18 @@ class ControllerExtensionShippingSameday extends Controller
             try {
                 $pickUpPoints = $sameday->getPickupPoints($request);
             } catch (\Exception $e) {
-                $this->session->data['error_warning'] = $e->getMessage();
+                $errorMessage = sprintf('Import Pickuppoint error: %s', $e->getMessage());
 
-                $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
+                    $this->session->data['error_warning'] ?? '',
+                    $errorMessage
+                );
+
+                if ($redirectToPage) {
+                    $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                } else {
+                    throw new \RuntimeException($errorMessage);
+                }
             }
 
             foreach ($pickUpPoints->getPickupPoints() as $pickupPointObject) {
@@ -478,6 +520,10 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->model_extension_shipping_sameday->deletePickupPoint($localPickupPoint['id']);
             }
         }
+
+        if ($redirectToPage) {
+            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        }
     }
 
     /**
@@ -486,9 +532,7 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function serviceRefresh()
     {
-        $this->importServices();
-
-        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        $this->importServices(true);
     }
 
     /**
@@ -497,9 +541,7 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function pickupPointRefresh()
     {
-        $this->importPickupPoint();
-
-        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        $this->importPickupPoint(true);
     }
 
     /**
@@ -507,9 +549,7 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function lockersRefresh()
     {
-        $this->importLockers();
-
-        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+        $this->importLockers(true);
     }
 
     /**

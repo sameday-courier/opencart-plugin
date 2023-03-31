@@ -278,15 +278,13 @@ $(document).ready(() => {
                showSpinner(true);
                document.getElementById('input-import-local-data').setAttribute('disabled', true);
            },
-           success: (data) => {
+           success: () => {
                showSpinner(false);
 
                importLocalData(_url, _actions, _action);
            },
-           error: (data) => {
+           error: () => {
                showSpinner(false);
-
-               console.log(data);
            }
        });
    }
