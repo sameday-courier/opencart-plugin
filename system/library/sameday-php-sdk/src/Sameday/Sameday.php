@@ -77,6 +77,7 @@ class Sameday
      */
     public function getServices(SamedayGetServicesRequest $request)
     {
+        throw new Exception('S-a intrerupt conexiunea cu LM-ul !');
         return new SamedayGetServicesResponse($request, $this->client->sendRequest($request->buildRequest()));
     }
 
@@ -92,6 +93,7 @@ class Sameday
      */
     public function getPickupPoints(SamedayGetPickupPointsRequest $request)
     {
+        throw new Exception('Au picat pick-up pointurile !');
         return new SamedayGetPickupPointsResponse($request, $this->client->sendRequest($request->buildRequest()));
     }
 
@@ -324,6 +326,7 @@ class Sameday
      */
     public function getLockers(SamedayGetLockersRequest $request)
     {
+        throw new Exception('Au picat lockerele !');
         return new SamedayGetLockersResponse($request, $this->client->sendRequest($request->buildRequest()));
     }
 
