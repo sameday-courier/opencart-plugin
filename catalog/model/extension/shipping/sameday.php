@@ -119,11 +119,17 @@ class ModelExtensionShippingSameday extends Model
                         $this->getConfig('config_tax')
                     ),
                     $this->session->data['currency']
-                )
+                ),
+                'lockers' => $this->showLockersList(),
+                'hostCountry' => $this->getHostCountry(),
+                'apiUser' => $this->getApiUsername(),
             );
 
             // If client choose for Drop-down list
-            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE && $this->isShowLockersMap()) {
+            if (
+                ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) &&
+                (false === $this->isShowLockersMap())
+            ) {
                 $this->syncLockers();
             }
         }
@@ -252,17 +258,17 @@ class ModelExtensionShippingSameday extends Model
         return (array) $this->db->query($query)->rows;
     }
 
-    private function isShowLockersMap()
+    private function isShowLockersMap(): bool
     {
         $sameday_show_lockers_map = $this->getConfig('sameday_show_lockers_map');
 
-        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '1');
+        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '0');
     }
 
     /**
      * @return array
      */
-    public function showLockersList()
+    public function showLockersList(): array
     {
         // If client wants to show lockers map is not need any more the lockers list from local import
         if (!$this->isShowLockersMap()) {
