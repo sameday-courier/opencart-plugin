@@ -109,7 +109,7 @@
                             <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="<?php echo $import_local_data_href; ?>" data-actions='<?php echo $import_local_data_actions; ?>'>
                                 <?php echo $entry_import_local_data; ?>
                             </button>
-                            <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader">
+                            <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
                         </div>
                     </div>
                 </form>
