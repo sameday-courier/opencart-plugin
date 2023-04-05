@@ -123,17 +123,15 @@ class ModelExtensionShippingSameday extends Model
             );
 
             if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) {
-                $quote_data[$service['sameday_code']]['lockers'] = $this->showLockersList();
-                $quote_data[$service['sameday_code']]['hostCountry'] = $this->getHostCountry();
-                $quote_data[$service['sameday_code']]['apiUser'] = $this->getApiUsername();
-            }
+                if (true === $this->isShowLockersMap()) {
+                    $quote_data[$service['sameday_code']]['lockers'] = '';
+                    $quote_data[$service['sameday_code']]['hostCountry'] = $this->getHostCountry();
+                    $quote_data[$service['sameday_code']]['apiUser'] = $this->getApiUsername();
+                } else {
+                    $this->syncLockers();
 
-            // If client choose for Drop-down list
-            if (
-                ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) &&
-                (false === $this->isShowLockersMap())
-            ) {
-                $this->syncLockers();
+                    $quote_data[$service['sameday_code']]['lockers'] = $this->showLockersList();
+                }
             }
         }
 
@@ -273,11 +271,6 @@ class ModelExtensionShippingSameday extends Model
      */
     public function showLockersList(): array
     {
-        // If client wants to show lockers map is not need any more the lockers list from local import
-        if (!$this->isShowLockersMap()) {
-            return [];
-        }
-
         $lockers = array();
         foreach ($this->getLockers() as $locker) {
             if ('' !== $locker['city']) {
