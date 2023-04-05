@@ -119,12 +119,19 @@ class ModelExtensionShippingSameday extends Model
                         $this->getConfig('config_tax')
                     ),
                     $this->session->data['currency']
-                )
+                ),
             );
 
-            // If client choose for Drop-down list
-            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE && $this->isShowLockersMap()) {
-                $this->syncLockers();
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) {
+                if (true === $this->isShowLockersMap()) {
+                    $quote_data[$service['sameday_code']]['lockers'] = '';
+                    $quote_data[$service['sameday_code']]['hostCountry'] = $this->getHostCountry();
+                    $quote_data[$service['sameday_code']]['apiUser'] = $this->getApiUsername();
+                } else {
+                    $this->syncLockers();
+
+                    $quote_data[$service['sameday_code']]['lockers'] = $this->showLockersList();
+                }
             }
         }
 
@@ -252,23 +259,18 @@ class ModelExtensionShippingSameday extends Model
         return (array) $this->db->query($query)->rows;
     }
 
-    private function isShowLockersMap()
+    private function isShowLockersMap(): bool
     {
         $sameday_show_lockers_map = $this->getConfig('sameday_show_lockers_map');
 
-        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '1');
+        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '0');
     }
 
     /**
      * @return array
      */
-    public function showLockersList()
+    public function showLockersList(): array
     {
-        // If client wants to show lockers map is not need any more the lockers list from local import
-        if (!$this->isShowLockersMap()) {
-            return [];
-        }
-
         $lockers = array();
         foreach ($this->getLockers() as $locker) {
             if ('' !== $locker['city']) {

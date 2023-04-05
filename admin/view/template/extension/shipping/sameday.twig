@@ -103,6 +103,15 @@
                             <input type="number" step="1" min="0" name="shipping_sameday_sort_order" value="{{ sameday_sort_order }}" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" />
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-import-local-data">{{ entry_import_local_data }}</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="{{ import_local_data_href }}" data-actions='{{ import_local_data_actions }}'>
+                                {{ entry_import_local_data }}
+                            </button>
+                            <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -234,3 +243,82 @@
     </div>
 </div>
 {{ footer }}
+
+<script>
+    $(document).ready(() => {
+        $(document).on('click', '#input-import-local-data', (element) => {
+            let _target = element.target;
+            let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
+            let _url = _target.getAttribute('data-href');
+
+            importLocalData(_url, _actions);
+        });
+
+        function importLocalData(_url = '', _actions = []) {
+            const _action = _actions.shift();
+
+            if (typeof _action === "undefined") {
+                window.location.reload();
+
+                return true;
+            }
+
+            doAjaxRequest(_url, _actions, _action);
+        }
+
+        const doAjaxRequest = (_url = '', _actions = [], _action = '') => {
+            $.ajax({
+                url: _url,
+                type: "POST",
+                dataType: "JSON",
+                data: jQuery.param({ 'action': _action}),
+                processData: false,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                beforeSend: () => {
+                    showSpinner(true);
+                    document.getElementById('input-import-local-data').setAttribute('disabled', true);
+                },
+                success: () => {
+                    showSpinner(false);
+
+                    importLocalData(_url, _actions, _action);
+                },
+                error: () => {
+                    showSpinner(false);
+                }
+            });
+        }
+
+        const showSpinner = (isShow = false) => {
+            let spinner = document.getElementById('importLocalDataSpinner');
+            spinner.style.display = 'none'
+
+            if (true === isShow) {
+                spinner.style.display = 'inline-block';
+            }
+        }
+    });
+</script>
+
+<style>
+    .loader {
+        margin: 5px;
+        width: 18px;
+        height: 18px;
+        border: 4px solid #515151;
+        border-bottom-color: #8fbb6c;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>

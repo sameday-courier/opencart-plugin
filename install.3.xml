@@ -2,7 +2,7 @@
 <modification>
     <name>OCMOD EDITOR for OpenCart v3</name>
     <code>ocmod-editor</code>
-    <version>1.3.1</version>
+    <version>1.4.0</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -16,18 +16,6 @@
         </operation>
     </file>
     <file path="catalog/controller/checkout/shipping_method.php">
-        <operation>
-            <search><![CDATA[
-                $this->response->setOutput($this->load->view('checkout/shipping_method', $data));
-            ]]></search>
-            <add position="before"><![CDATA[
-                if ($result['code'] === 'sameday' && isset($data['shipping_methods']['sameday']['quote']['LN'])) {
-                    $data['shipping_methods']['sameday']['quote']['LN']['lockers'] = $this->{'model_extension_shipping_' . $result['code']}->showLockersList();
-                    $data['shipping_methods']['sameday']['quote']['LN']['hostCountry'] = $this->{'model_extension_shipping_' . $result['code']}->getHostCountry();
-                    $data['shipping_methods']['sameday']['quote']['LN']['apiUsername'] = $this->{'model_extension_shipping_' . $result['code']}->getApiUsername();
-                }
-            ]]></add>
-        </operation>
         <operation>
             <search><![CDATA[
                 $this->session->data['shipping_method'] = $this->session->data['shipping_methods'][$shipping[0]]['quote'][$shipping[1]];
