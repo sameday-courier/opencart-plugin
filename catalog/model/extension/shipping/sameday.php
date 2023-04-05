@@ -120,10 +120,13 @@ class ModelExtensionShippingSameday extends Model
                     ),
                     $this->session->data['currency']
                 ),
-                'lockers' => $this->showLockersList(),
-                'hostCountry' => $this->getHostCountry(),
-                'apiUser' => $this->getApiUsername(),
             );
+
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) {
+                $quote_data[$service['sameday_code']]['lockers'] = $this->showLockersList();
+                $quote_data[$service['sameday_code']]['hostCountry'] = $this->getHostCountry();
+                $quote_data[$service['sameday_code']]['apiUser'] = $this->getApiUsername();
+            }
 
             // If client choose for Drop-down list
             if (
