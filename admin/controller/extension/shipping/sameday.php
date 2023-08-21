@@ -330,34 +330,39 @@ class ControllerExtensionShippingSameday extends Controller
 
         $request = new SamedayGetLockersRequest();
 
-        try {
-            $lockers = $sameday->getLockers($request)->getLockers();
-        } catch (\Exception $e) {
-            $errorMessage = sprintf('Import Lockers error: %s', $e->getMessage());
-
-            $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
-                $this->session->data['error_warning'] ?? '',
-                $errorMessage
-            );
-
-            if ($redirectToPage) {
-                $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
-            } else {
-                throw new \RuntimeException($errorMessage);
-            }
-        }
-
         $remoteLockers = [];
-        foreach ($lockers as $lockerObject) {
-            $locker = $this->model_extension_shipping_sameday->getLockerSameday($lockerObject->getId(), $this->isTesting());
-            if (!$locker) {
-                $this->model_extension_shipping_sameday->addLocker($lockerObject, $this->isTesting());
-            } else {
-                $this->model_extension_shipping_sameday->updateLocker($lockerObject, $locker['id']);
+        $page = 1;
+
+        do {
+            $request->setPage($page++);
+            try {
+                $lockers = $sameday->getLockers($request);
+            } catch (\Exception $e) {
+                $errorMessage = sprintf('Import Lockers error: %s', $e->getMessage());
+
+                $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
+                    $this->session->data['error_warning'] ?? '',
+                    $errorMessage
+                );
+
+                if ($redirectToPage) {
+                    $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                } else {
+                    throw new \RuntimeException($errorMessage);
+                }
             }
 
-            $remoteLockers[] = $lockerObject->getId();
-        }
+            foreach ($lockers->getLockers() as $lockerObject) {
+                $locker = $this->model_extension_shipping_sameday->getLockerSameday($lockerObject->getId(), $this->isTesting());
+                if (!$locker) {
+                    $this->model_extension_shipping_sameday->addLocker($lockerObject, $this->isTesting());
+                } else {
+                    $this->model_extension_shipping_sameday->updateLocker($lockerObject, $locker['id']);
+                }
+
+                $remoteLockers[] = $lockerObject->getId();
+            }
+        } while ($page < $lockers->getPages());
 
         // Build array of local lockers.
         $localLockers = array_map(
