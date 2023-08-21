@@ -680,6 +680,28 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function getConfig($key)
+    {
+        return $this->config->get("{$this->getPrefix()}$key");
+    }
+
+    /**
+     * @return string
+     */
+    private function getPrefix(): string
+    {
+        if (strpos(VERSION, '2') === 0) {
+            return '';
+        }
+
+        return 'shipping_';
+    }
+
+    /**
      * @param $code
      * @param $data
      * @param int $store_id

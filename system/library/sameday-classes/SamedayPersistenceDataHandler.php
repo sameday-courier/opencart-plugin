@@ -16,45 +16,53 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
     protected $loader;
     protected $prefix;
 
-    public function __construct($registry, $prefix) {
+    public function __construct($registry, $prefix)
+    {
         $this->registry = $registry;
         $this->prefix = $prefix;
         $this->loader = new Loader($this->registry);
     }
 
     /**
-     * @param string $key
+     * @param $key
+     * @return mixed
      *
-     * @return mixed string
+     * @throws Exception
      */
     public function get($key)
     {
-        $this->loader->model('setting/setting');
-        $model = $this->registry->get('model_setting_setting');
-        $key = $this->getKeyFormat($key);
-        return $model->getSetting($key);
+        return $this->getModel()->getConfig($this->getKeyFormat($key));
     }
 
     /**
      * @param string $key
      *
      * @param mixed $value
+     *
+     * @throws Exception
      */
     public function set($key, $value)
     {
-        $this->loader->model('extension/shipping/sameday');
-        $model = $this->registry->get('model_extension_shipping_sameday');
-        $key = $this->getKeyFormat($key);
-        $data[$key] = $value;
-        $model->addAdditionalSetting(self::OC_SETTING_SAMEDAY_CODE, $data);
+        $this->getModel()->addAdditionalSetting(self::OC_SETTING_SAMEDAY_CODE, [$this->getKeyFormat($key) => $value]);
     }
 
     /**
      * @param $key
+     *
      * @return string
      */
-    private function getKeyFormat($key)
+    private function getKeyFormat($key): string
     {
-        return $this->prefix.strtolower(self::KEYS[$key]);
+        return $this->prefix . strtolower(self::KEYS[$key]);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function getModel()
+    {
+        $this->loader->model('extension/shipping/sameday');
+
+        return $this->registry->get('model_extension_shipping_sameday');
     }
 }

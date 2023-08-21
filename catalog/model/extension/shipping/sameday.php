@@ -473,7 +473,7 @@ class ModelExtensionShippingSameday extends Model
      *
      * @return mixed
      */
-    private function getConfig($key)
+    public function getConfig($key)
     {
         return $this->config->get("{$this->getPrefix()}$key");
     }
