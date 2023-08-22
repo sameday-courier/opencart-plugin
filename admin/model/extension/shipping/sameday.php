@@ -686,13 +686,18 @@ class ModelExtensionShippingSameday extends Model
      */
     public function getConfig($key)
     {
-        return $this->config->get("{$this->getPrefix()}$key");
+        return $this->config->get($this->getKey($key));
+    }
+
+    public function getKey($key)
+    {
+        return $this->getPrefix() . $key;
     }
 
     /**
      * @return string
      */
-    private function getPrefix(): string
+    public function getPrefix()
     {
         if (strpos(VERSION, '2') === 0) {
             return '';
