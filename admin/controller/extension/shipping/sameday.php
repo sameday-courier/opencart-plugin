@@ -203,7 +203,6 @@ class ControllerExtensionShippingSameday extends Controller
             $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
         }
 
-        $this->load->model('extension/shipping/sameday');
         $this->load->model('localisation/tax_class');
         $this->load->model('localisation/geo_zone');
 
@@ -338,7 +337,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     private function importLockers($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -409,7 +407,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     private function importServices($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -482,7 +479,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     private function importPickupPoint($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -597,7 +593,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function service()
     {
-        $this->load->model('extension/shipping/sameday');
         $service = $this->model_extension_shipping_sameday->getService($this->request->get['id']);
 
         $this->load->language('extension/shipping/sameday');
@@ -694,7 +689,6 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->load->language('extension/shipping/sameday');
-        $this->load->model('extension/shipping/sameday');
         $data = array(
             'EAWB_country_instance' => $this->samedayHelper::getEAWBInstanceUrlByCountry($this->getConfig('sameday_host_country')),
             'samedayAwb' => $this->language->get('text_sameday_awb'),
@@ -731,7 +725,6 @@ class ControllerExtensionShippingSameday extends Controller
             return new Action('error/not_found');
         }
 
-        $this->load->model('extension/shipping/sameday');
         $shippingSamedayModel = $this->model_extension_shipping_sameday;
 
         $awb = $shippingSamedayModel->getAwbForOrderId($orderInfo['order_id']);
@@ -1039,7 +1032,6 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->document->setTitle($this->language->get('heading_title_awb_history'));
 
-        $this->load->model('extension/shipping/sameday');
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($this->request->get['order_id']);
 
         if (!$awb) {
@@ -1146,7 +1138,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function showAsPdf()
     {
-        $this->load->model('extension/shipping/sameday');
         $orderId = (int) $this->request->get['order_id'];
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderId);
 
@@ -1412,7 +1403,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function deleteAwb()
     {
-        $this->load->model('extension/shipping/sameday');
         $orderId = $this->request->get['order_id'];
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderId);
         $sameday = new Sameday($this->samedayHelper->initClient());
