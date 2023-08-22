@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <modification>
-    <name>OCMOD EDITOR for OpenCart v2</name>
-    <code>ocmode-editor</code>
-    <version>1.4.0</version>
+    <name>Samedaycourier Plugin OC v2</name>
+    <code>ocmod-editor</code>
+    <version>1.4.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">

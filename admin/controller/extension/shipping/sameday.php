@@ -146,21 +146,33 @@ class ControllerExtensionShippingSameday extends Controller
     {
         parent::__construct($registry);
 
-        $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(self::SAMEDAY_CONFIGS), $registry, $this->getPrefix());
+        $this->load->model('extension/shipping/sameday');
+
+        $this->samedayHelper = Samedayclasses::getSamedayHelper(
+            $this->buildRequest(self::SAMEDAY_CONFIGS),
+            $registry,
+            $this->model_extension_shipping_sameday->getPrefix()
+        );
     }
 
     public function install()
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
+
         $this->load->model('setting/setting');
-        $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", array("{$this->getPrefix()}sameday_sync_until_ts" => time()));
-        $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", array("{$this->getPrefix()}sameday_sync_lockers_ts" => 0));
+        $this->model_setting_setting->editSetting(
+            $this->model_extension_shipping_sameday->getPrefix() . "sameday",
+            [$this->model_extension_shipping_sameday->getKey('sameday_sync_until_ts') => time()]
+        );
+
+        $this->model_setting_setting->editSetting(
+            $this->model_extension_shipping_sameday->getPrefix() . "sameday",
+            [$this->model_extension_shipping_sameday->getKey('sameday_sync_lockers_ts') => 0]
+        );
     }
 
     public function uninstall()
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->uninstall();
     }
 
@@ -171,24 +183,26 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->model('setting/setting');
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
-            $this->request->post["{$this->getPrefix()}sameday_sync_until_ts"] = $this->getConfig('sameday_sync_until_ts');
-            $this->request->post["{$this->getPrefix()}sameday_sync_lockers_ts"] = $this->getConfig('sameday_sync_lockers_ts');
-            $this->request->post["{$this->getPrefix()}sameday_testing"] = $this->getConfig('sameday_testing');
-            $this->request->post["{$this->getPrefix()}sameday_host_country"] = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_sync_until_ts')] = $this->getConfig('sameday_sync_until_ts');
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_sync_lockers_ts')] = $this->getConfig('sameday_sync_lockers_ts');
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_testing')] = $this->getConfig('sameday_testing');
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_host_country')] = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
 
             if (null !== $this->testing && null !== $this->hostCountry) {
-                $this->request->post["{$this->getPrefix()}sameday_testing"] = $this->testing;
-                $this->request->post["{$this->getPrefix()}sameday_host_country"] = $this->hostCountry;
+                $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_testing')] = $this->testing;
+                $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_host_country')] = $this->hostCountry;
             }
 
-            $this->model_setting_setting->editSetting("{$this->getPrefix()}sameday", $this->request->post);
+            $this->model_setting_setting->editSetting(
+                $this->model_extension_shipping_sameday->getPrefix() . "sameday",
+                $this->request->post
+            );
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
             $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
         }
 
-        $this->load->model('extension/shipping/sameday');
         $this->load->model('localisation/tax_class');
         $this->load->model('localisation/geo_zone');
 
@@ -323,41 +337,45 @@ class ControllerExtensionShippingSameday extends Controller
 
     private function importLockers($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
 
         $request = new SamedayGetLockersRequest();
 
-        try {
-            $lockers = $sameday->getLockers($request)->getLockers();
-        } catch (\Exception $e) {
-            $errorMessage = sprintf('Import Lockers error: %s', $e->getMessage());
-
-            $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
-                $this->session->data['error_warning'] ?? '',
-                $errorMessage
-            );
-
-            if ($redirectToPage) {
-                $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
-            } else {
-                throw new \RuntimeException($errorMessage);
-            }
-        }
-
         $remoteLockers = [];
-        foreach ($lockers as $lockerObject) {
-            $locker = $this->model_extension_shipping_sameday->getLockerSameday($lockerObject->getId(), $this->isTesting());
-            if (!$locker) {
-                $this->model_extension_shipping_sameday->addLocker($lockerObject, $this->isTesting());
-            } else {
-                $this->model_extension_shipping_sameday->updateLocker($lockerObject, $locker['id']);
+        $page = 1;
+
+        do {
+            $request->setPage($page++);
+            try {
+                $lockers = $sameday->getLockers($request);
+            } catch (\Exception $e) {
+                $errorMessage = sprintf('Import Lockers error: %s', $e->getMessage());
+
+                $this->session->data['error_warning'] = sprintf('%s &#8226; %s',
+                    $this->session->data['error_warning'] ?? '',
+                    $errorMessage
+                );
+
+                if ($redirectToPage) {
+                    $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                } else {
+                    throw new \RuntimeException($errorMessage);
+                }
             }
 
-            $remoteLockers[] = $lockerObject->getId();
-        }
+            foreach ($lockers->getLockers() as $lockerObject) {
+                $locker = $this->model_extension_shipping_sameday->getLockerSameday($lockerObject->getId(), $this->isTesting());
+                if (!$locker) {
+                    $this->model_extension_shipping_sameday->addLocker($lockerObject, $this->isTesting());
+                } else {
+                    $this->model_extension_shipping_sameday->updateLocker($lockerObject, $locker['id']);
+                }
+
+                $remoteLockers[] = $lockerObject->getId();
+            }
+        } while ($page < $lockers->getPages());
 
         // Build array of local lockers.
         $localLockers = array_map(
@@ -389,7 +407,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     private function importServices($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -462,7 +479,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     private function importPickupPoint($redirectToPage = false)
     {
-        $this->load->model('extension/shipping/sameday');
         $this->model_extension_shipping_sameday->install();
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -558,8 +574,9 @@ class ControllerExtensionShippingSameday extends Controller
     private function updateLastSyncTimestamp()
     {
         $store_id = 0;
-        $code = $this->getKey('sameday');
-        $key =  $this->getKey('sameday_sync_lockers_ts');
+        $code = $this->model_extension_shipping_sameday->getKey('sameday');
+        $key =  $this->model_extension_shipping_sameday->getKey('sameday_sync_lockers_ts');
+
         $time = time();
 
         $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
@@ -576,7 +593,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function service()
     {
-        $this->load->model('extension/shipping/sameday');
         $service = $this->model_extension_shipping_sameday->getService($this->request->get['id']);
 
         $this->load->language('extension/shipping/sameday');
@@ -673,7 +689,6 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->load->language('extension/shipping/sameday');
-        $this->load->model('extension/shipping/sameday');
         $data = array(
             'EAWB_country_instance' => $this->samedayHelper::getEAWBInstanceUrlByCountry($this->getConfig('sameday_host_country')),
             'samedayAwb' => $this->language->get('text_sameday_awb'),
@@ -710,7 +725,6 @@ class ControllerExtensionShippingSameday extends Controller
             return new Action('error/not_found');
         }
 
-        $this->load->model('extension/shipping/sameday');
         $shippingSamedayModel = $this->model_extension_shipping_sameday;
 
         $awb = $shippingSamedayModel->getAwbForOrderId($orderInfo['order_id']);
@@ -1018,7 +1032,6 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->language('extension/shipping/sameday');
         $this->document->setTitle($this->language->get('heading_title_awb_history'));
 
-        $this->load->model('extension/shipping/sameday');
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($this->request->get['order_id']);
 
         if (!$awb) {
@@ -1125,7 +1138,6 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function showAsPdf()
     {
-        $this->load->model('extension/shipping/sameday');
         $orderId = (int) $this->request->get['order_id'];
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderId);
 
@@ -1391,7 +1403,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function deleteAwb()
     {
-        $this->load->model('extension/shipping/sameday');
         $orderId = $this->request->get['order_id'];
         $awb = $this->model_extension_shipping_sameday->getAwbForOrderId($orderId);
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -1489,19 +1500,19 @@ class ControllerExtensionShippingSameday extends Controller
         $needLogin = false;
 
         $username = $this->getConfig('sameday_username');
-        if ($this->request->post["{$this->getPrefix()}sameday_username"] !== $username) {
+        if ($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')] !== $username) {
             // Username changed.
-            $username = $this->request->post["{$this->getPrefix()}sameday_username"];
+            $username = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')];
             $needLogin = true;
         }
 
         $password = $this->getConfig('sameday_password');
-        if (!empty($this->request->post["{$this->getPrefix()}sameday_password"])) {
+        if (!empty($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')])) {
             // Password updated.
-            $password = $this->request->post["{$this->getPrefix()}sameday_password"];
+            $password = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')];
             $needLogin = true;
         } else {
-            $this->request->post["{$this->getPrefix()}sameday_password"] = $password;
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')] = $password;
         }
 
         if ($needLogin) {
@@ -1559,7 +1570,8 @@ class ControllerExtensionShippingSameday extends Controller
     {
         $entries = array();
         foreach ($keys as $key) {
-            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"] ?? $this->getConfig("sameday_$key");
+            $requestKey = sprintf("%ssameday_%s", $this->model_extension_shipping_sameday->getPrefix(), $key);
+            $entries["sameday_$key"] = $this->request->post[$requestKey] ?? $this->getConfig("sameday_$key");
         }
 
         return $entries;
@@ -1657,24 +1669,7 @@ class ControllerExtensionShippingSameday extends Controller
      */
     private function getConfig($key)
     {
-        return $this->config->get("{$this->getPrefix()}$key");
-    }
-
-    private function getKey($key): string
-    {
-        return $this->getPrefix() . $key;
-    }
-
-    /**
-     * @return string
-     */
-    private function getPrefix(): string
-    {
-        if (strpos(VERSION, '2') === 0) {
-            return '';
-        }
-
-        return 'shipping_';
+        return $this->model_extension_shipping_sameday->getConfig($key);
     }
 
     private function getRouteExtension()
