@@ -194,7 +194,7 @@ class ControllerExtensionShippingSameday extends Controller
             }
 
             $this->model_setting_setting->editSetting(
-                $this->model_extension_shipping_sameday->getPrefix. "sameday",
+                $this->model_extension_shipping_sameday->getPrefix() . "sameday",
                 $this->request->post
             );
 
@@ -1500,19 +1500,19 @@ class ControllerExtensionShippingSameday extends Controller
         $needLogin = false;
 
         $username = $this->getConfig('sameday_username');
-        if ($this->request->post["{$this->getPrefix()}sameday_username"] !== $username) {
+        if ($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')] !== $username) {
             // Username changed.
-            $username = $this->request->post["{$this->getPrefix()}sameday_username"];
+            $username = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')];
             $needLogin = true;
         }
 
         $password = $this->getConfig('sameday_password');
-        if (!empty($this->request->post["{$this->getPrefix()}sameday_password"])) {
+        if (!empty($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')])) {
             // Password updated.
-            $password = $this->request->post["{$this->getPrefix()}sameday_password"];
+            $password = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')];
             $needLogin = true;
         } else {
-            $this->request->post["{$this->getPrefix()}sameday_password"] = $password;
+            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')] = $password;
         }
 
         if ($needLogin) {
