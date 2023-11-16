@@ -694,6 +694,11 @@ class ModelExtensionShippingSameday extends Model
         return $this->getPrefix() . $key;
     }
 
+    public static function sanitizeInput(string $input): string
+    {
+        return stripslashes(strip_tags(str_replace(["'", "\""], '&#39;', $input)));
+    }
+
     /**
      * @return string
      */
