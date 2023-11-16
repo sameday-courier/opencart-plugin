@@ -1507,7 +1507,6 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $password = $this->getConfig('sameday_password');
-
         if ('' !== $newPassword = $this->model_extension_shipping_sameday->sanitizeInput(
             $_POST[$this->model_extension_shipping_sameday->getKey('sameday_password')])
         ) {
