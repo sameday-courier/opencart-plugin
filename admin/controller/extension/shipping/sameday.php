@@ -193,6 +193,10 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_host_country')] = $this->hostCountry;
             }
 
+            // Add custom sanitization for password
+            $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
+            $this->request->post[$passKey] = $this->model_extension_shipping_sameday->sanitizeInput($_POST[$passKey]);
+
             $this->model_setting_setting->editSetting(
                 $this->model_extension_shipping_sameday->getPrefix() . "sameday",
                 $this->request->post
