@@ -43,7 +43,10 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function set($key, $value)
     {
-        $this->getModel()->addAdditionalSetting(self::OC_SETTING_SAMEDAY_CODE, [$this->getKeyFormat($key) => $value]);
+        $this->getModel()->addAdditionalSetting(
+            $this->getKeyFormat(self::OC_SETTING_SAMEDAY_CODE),
+            [$this->getKeyFormat(self::KEYS[$key]) => $value]
+        );
     }
 
     /**
@@ -53,7 +56,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     private function getKeyFormat($key): string
     {
-        return $this->prefix . strtolower(self::KEYS[$key]);
+        return $this->prefix . strtolower($key);
     }
 
     /**

@@ -124,7 +124,7 @@ class ControllerExtensionShippingSameday extends Controller
     const IMPORT_LOCAL_DATA_ACTIONS = [
         'importServices',
         'importPickupPoint',
-        'importLockers',
+        //'importLockers',
     ];
 
     /**
