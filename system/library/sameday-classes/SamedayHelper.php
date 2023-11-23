@@ -124,7 +124,7 @@ class SamedayHelper
             'opencart',
             VERSION,
             'curl',
-            Samedayclasses::getSamedayPersistenceDataHandler($this->registry, $this->prefix)
+            Samedayclasses::getSamedayPersistenceDataHandler($this->registry)
         );
     }
 }

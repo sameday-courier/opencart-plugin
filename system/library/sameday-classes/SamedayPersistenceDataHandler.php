@@ -6,20 +6,18 @@ use Sameday\PersistentData\SamedayPersistentDataInterface;
 class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 {
     const KEYS = [
-        SamedayClient::KEY_TOKEN => 'SAMEDAY_TOKEN',
-        SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT',
+        SamedayClient::KEY_TOKEN => 'sameday_token',
+        SamedayClient::KEY_TOKEN_EXPIRES => 'sameday_token_expire_at',
     ];
 
     const OC_SETTING_SAMEDAY_CODE = "sameday";
 
     protected $registry;
     protected $loader;
-    protected $prefix;
 
-    public function __construct($registry, $prefix)
+    public function __construct($registry)
     {
         $this->registry = $registry;
-        $this->prefix = $prefix;
         $this->loader = new Loader($this->registry);
     }
 
@@ -31,7 +29,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function get($key)
     {
-        return $this->getModel()->getConfig($this->getKeyFormat($key));
+        return $this->getModel()->getConfig(self::KEYS[$key]);
     }
 
     /**
@@ -43,20 +41,25 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function set($key, $value)
     {
-        $this->getModel()->addAdditionalSetting(self::OC_SETTING_SAMEDAY_CODE, [$this->getKeyFormat($key) => $value]);
+        $this->getModel()->addAdditionalSetting(
+            $this->getKeyFormat(self::OC_SETTING_SAMEDAY_CODE),
+            [$this->getKeyFormat(self::KEYS[$key]) => $value]
+        );
     }
 
     /**
      * @param $key
      *
      * @return string
+     * @throws Exception
      */
     private function getKeyFormat($key): string
     {
-        return $this->prefix . strtolower(self::KEYS[$key]);
+        return $this->getModel()->getPrefix() . $key;
     }
 
     /**
+     * @return mixed
      * @throws Exception
      */
     private function getModel()

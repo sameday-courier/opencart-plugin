@@ -176,6 +176,9 @@ class ControllerExtensionShippingSameday extends Controller
         $this->model_extension_shipping_sameday->uninstall();
     }
 
+    /**
+     * @throws SamedaySDKException
+     */
     public function index()
     {
         $this->load->language('extension/shipping/sameday');
@@ -193,6 +196,19 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_host_country')] = $this->hostCountry;
             }
 
+            // Add custom sanitization for password
+            $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
+            $password = $this->model_extension_shipping_sameday->sanitizeInput($_POST[$passKey]);
+            if ('' === $password) {
+                $password = $this->getConfig('sameday_password');
+                if ('' === $password || null === $password) {
+                    $this->session->data['error_warning'] = $this->language->get('error_username_password');
+
+                    return $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                }
+            }
+            $this->request->post[$passKey] = $password;
+
             $this->model_setting_setting->editSetting(
                 $this->model_extension_shipping_sameday->getPrefix() . "sameday",
                 $this->request->post
@@ -200,7 +216,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
-            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+            return $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
         }
 
         $this->load->model('localisation/tax_class');
@@ -1487,11 +1503,10 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @return bool
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
      */
-    private function validate()
+    private function validate(): bool
     {
         if (!$this->validatePermissions()) {
             return false;
@@ -1507,12 +1522,12 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $password = $this->getConfig('sameday_password');
-        if (!empty($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')])) {
+        if ('' !== $newPassword = $this->model_extension_shipping_sameday->sanitizeInput(
+            $_POST[$this->model_extension_shipping_sameday->getKey('sameday_password')])
+        ) {
             // Password updated.
-            $password = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')];
+            $password = $newPassword;
             $needLogin = true;
-        } else {
-            $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_password')] = $password;
         }
 
         if ($needLogin) {
