@@ -6,8 +6,8 @@ use Sameday\PersistentData\SamedayPersistentDataInterface;
 class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 {
     const KEYS = [
-        SamedayClient::KEY_TOKEN => 'SAMEDAY_TOKEN',
-        SamedayClient::KEY_TOKEN_EXPIRES => 'SAMEDAY_TOKEN_EXPIRES_AT',
+        SamedayClient::KEY_TOKEN => 'sameday_token',
+        SamedayClient::KEY_TOKEN_EXPIRES => 'sameday_token_expire_at',
     ];
 
     const OC_SETTING_SAMEDAY_CODE = "sameday";
@@ -29,7 +29,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function get($key)
     {
-        return $this->getModel()->getConfig($key);
+        return $this->getModel()->getConfig(self::KEYS[$key]);
     }
 
     /**
@@ -55,7 +55,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     private function getKeyFormat($key): string
     {
-        return $this->getModel()->getPrefix() . strtolower($key);
+        return $this->getModel()->getPrefix() . $key;
     }
 
     /**
