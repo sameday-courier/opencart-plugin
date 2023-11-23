@@ -481,7 +481,7 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return string
      */
-    private function getPrefix()
+    public function getPrefix(): string
     {
         if (strpos(VERSION, '2') === 0) {
             return '';
