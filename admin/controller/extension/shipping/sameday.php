@@ -124,7 +124,7 @@ class ControllerExtensionShippingSameday extends Controller
     const IMPORT_LOCAL_DATA_ACTIONS = [
         'importServices',
         'importPickupPoint',
-        'importLockers',
+        //'importLockers',
     ];
 
     /**
@@ -176,6 +176,9 @@ class ControllerExtensionShippingSameday extends Controller
         $this->model_extension_shipping_sameday->uninstall();
     }
 
+    /**
+     * @throws SamedaySDKException
+     */
     public function index()
     {
         $this->load->language('extension/shipping/sameday');
@@ -195,7 +198,16 @@ class ControllerExtensionShippingSameday extends Controller
 
             // Add custom sanitization for password
             $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
-            $this->request->post[$passKey] = $this->model_extension_shipping_sameday->sanitizeInput($_POST[$passKey]);
+            $password = $this->model_extension_shipping_sameday->sanitizeInput($_POST[$passKey]);
+            if ('' === $password) {
+                $password = $this->getConfig('sameday_password');
+                if ('' === $password || null === $password) {
+                    $this->session->data['error_warning'] = $this->language->get('error_username_password');
+
+                    return $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+                }
+            }
+            $this->request->post[$passKey] = $password;
 
             $this->model_setting_setting->editSetting(
                 $this->model_extension_shipping_sameday->getPrefix() . "sameday",
@@ -204,7 +216,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
-            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+            return $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
         }
 
         $this->load->model('localisation/tax_class');
@@ -1491,11 +1503,10 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @return bool
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
      */
-    private function validate()
+    private function validate(): bool
     {
         if (!$this->validatePermissions()) {
             return false;

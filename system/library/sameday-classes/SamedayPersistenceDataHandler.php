@@ -14,12 +14,10 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 
     protected $registry;
     protected $loader;
-    protected $prefix;
 
-    public function __construct($registry, $prefix)
+    public function __construct($registry)
     {
         $this->registry = $registry;
-        $this->prefix = $prefix;
         $this->loader = new Loader($this->registry);
     }
 
@@ -31,7 +29,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     public function get($key)
     {
-        return $this->getModel()->getConfig($this->getKeyFormat($key));
+        return $this->getModel()->getConfig($key);
     }
 
     /**
@@ -53,13 +51,15 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      * @param $key
      *
      * @return string
+     * @throws Exception
      */
     private function getKeyFormat($key): string
     {
-        return $this->prefix . strtolower($key);
+        return $this->getModel()->getPrefix() . strtolower($key);
     }
 
     /**
+     * @return mixed
      * @throws Exception
      */
     private function getModel()
