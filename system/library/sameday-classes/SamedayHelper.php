@@ -24,6 +24,14 @@ class SamedayHelper
 
     const LOCKER_NEXT_DAY_CODE = 'LN';
 
+    const LOCKER_NEXT_DAY_CODE_CROSSBORDER = 'XL';
+
+    const ELIGIBLE_SAMEDAY_SERVICES = ['6H', '24', 'LN'];
+
+    const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = ['XB', 'XL'];
+
+    const ELIGIBLE_TO_LOCKER = ['LN', 'XL'];
+
     const AFTER_48_HOURS = 172800;
 
     // PDO stands for Personal Delivery Option and is an additional tax that apply to Service

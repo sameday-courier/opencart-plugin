@@ -59,11 +59,11 @@
                     disabled="disabled"
                     title="Please, choose your easybox using lockers map!"
                 <?php } ?>
-                <?php if (isset($quote['hostCountry'])) { ?>
-                    data-host_country="<?php echo $quote['hostCountry']; ?>"
+                <?php if (isset($quote['destCountry'])) { ?>
+                    data-dest_country="<?php echo $quote['destCountry']; ?>"
                 <?php } ?>
                 <?php if (isset($quote['apiUsername'])) { ?>
-                    data-host_country="<?php echo $quote['apiUsername']; ?>"
+                    data-api_username="<?php echo $quote['apiUsername']; ?>"
                 <?php } ?> />
             ]]></add>
         </operation>
@@ -78,11 +78,11 @@
                         disabled="disabled"
                         title="Please choose your easybox!"
                     <?php } ?>
-                    <?php if (isset($quote['hostCountry'])) { ?>
-                        data-host_country="<?php echo $quote['hostCountry']; ?>"
+                    <?php if (isset($quote['destCountry'])) { ?>
+                        data-dest_country="<?php echo $quote['destCountry']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['apiUsername'])) { ?>
-                        data-host_country="<?php echo $quote['apiUsername']; ?>"
+                        data-api_username="<?php echo $quote['apiUsername']; ?>"
                     <?php } ?>
                 />
             ]]></add>
@@ -140,15 +140,16 @@
                         jQuery(document).ready(function ($) {
                             const ln = $("#locker_nextday");
                             const nextDayVal = ln.val() + ".";
-                            const hostCountry = ln.data('host_country');
+                            const destCountry = ln.data('dest_country');
                             const apiUsername = ln.data('api_username');
                             $(document).on("click", "#showLockerMap", function () {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
                                 const lockerInit = {
-                                    'clientId': clientId,
-                                    'countryCode': hostCountry,
-                                    'langCode': hostCountry.toLowerCase(),
                                     'apiUsername': apiUsername,
+                                    'clientId': clientId,
+                                    'countryCode': destCountry,
+                                    'langCode': destCountry.toLowerCase(),
+                                    'city': destCity,
                                 };
 
                                 window.LockerPlugin.init(lockerInit);

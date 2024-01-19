@@ -47,7 +47,6 @@ class ModelExtensionShippingSameday extends Model
         $countryId = (int) $address['country_id'];
         $zoneId = (int) $address['zone_id'];
 
-
         $query = $this->db->query(
             "SELECT * FROM $table WHERE 
             geo_zone_id='{$this->getConfig('sameday_geo_zone_id')}'
@@ -71,8 +70,20 @@ class ModelExtensionShippingSameday extends Model
         }
 
         $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
+        $hostCountry = $this->getHostCountry();
+        $destCountry = $address['iso_code_2'];
 
-        $availableService = $this->getAvailableServices($this->getConfig('sameday_testing'));
+        $eligibleServices = $hostCountry === $destCountry
+            ? SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES
+            : SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER
+        ;
+        $availableService = array_filter(
+            $this->getAvailableServices($this->getConfig('sameday_testing')),
+            static function(array $service) use ($eligibleServices) {
+                return in_array($service['sameday_code'], $eligibleServices);
+            }
+        );
+
         $lockerMaxItems = (int) $this->getConfig('sameday_locker_max_items');
         $quote_data = array();
 
@@ -81,20 +92,17 @@ class ModelExtensionShippingSameday extends Model
         }
 
         foreach ($availableService as $service) {
-            if ($service['sameday_code'] === "LS") {
+            if ($service['sameday_code'] === "6H" && $address['zone'] !== "Bucuresti") {
                 continue;
             }
 
-            if ($service['sameday_code'] === "2H" && $address['zone'] !== "Bucuresti") {
-                continue;
-            }
-
-            if ($service['sameday_code'] === "LN" && (count($this->cart->getProducts()) > $lockerMaxItems)) {
+            if ($this->isEligibleToLocker($service['sameday_code'])
+                && (count($this->cart->getProducts()) > $lockerMaxItems)
+            ) {
                 continue;
             }
 
             $price = $service['price'];
-
             if ($service['price_free'] !== null && $this->cart->getSubTotal() >= $service['price_free']) {
                 $price = 0;
             }
@@ -122,11 +130,11 @@ class ModelExtensionShippingSameday extends Model
                 ),
             );
 
-            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE) {
+            if ($this->isEligibleToLocker($service['sameday_code'])) {
                 if (true === $this->isShowLockersMap()) {
                     $quote_data[$service['sameday_code']]['lockers'] = '';
-                    $quote_data[$service['sameday_code']]['hostCountry'] = $this->getHostCountry();
-                    $quote_data[$service['sameday_code']]['apiUser'] = $this->getApiUsername();
+                    $quote_data[$service['sameday_code']]['destCountry'] = $destCountry;
+                    $quote_data[$service['sameday_code']]['apiUsername'] = $this->getApiUsername();
                 } else {
                     $this->syncLockers();
 
@@ -213,7 +221,6 @@ class ModelExtensionShippingSameday extends Model
 
                 return false;
             },
-
             $this->getLockers()
         );
 
@@ -351,6 +358,16 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param string $samedayCode
+     *
+     * @return bool
+     */
+    private function isEligibleToLocker(string $samedayCode): bool
+    {
+        return in_array($samedayCode, SamedayHelper::ELIGIBLE_TO_LOCKER, true);
+    }
+
+    /**
      * @return mixed
      */
     private function isTesting()
@@ -438,12 +455,16 @@ class ModelExtensionShippingSameday extends Model
      */
     private function getAvailableServices($testing)
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_service WHERE testing='{$this->db->escape($testing)}' AND status>0";
-        $services = $this->db->query($query)->rows;
+        $services = $this->db->query(sprintf(
+                "SELECT * FROM %s WHERE testing='%s' AND status > 0",
+                DB_PREFIX . "sameday_service",
+                $this->db->escape($testing)
+            )
+        )->rows;
 
         $availableServices = array();
         foreach ($services as $service) {
-            if ($service['status'] == 1) {
+            if (1 === (int) $service['status']) {
                 $availableServices[] = $service;
             }
         }
