@@ -81,6 +81,9 @@
                     <?php if (isset($quote['destCountry'])) { ?>
                         data-dest_country="<?php echo $quote['destCountry']; ?>"
                     <?php } ?>
+                    <?php if (isset($quote['destCity'])) { ?>
+                        data-dest_city="<?php echo $quote['destCity']; ?>"
+                    <?php } ?>
                     <?php if (isset($quote['apiUsername'])) { ?>
                         data-api_username="<?php echo $quote['apiUsername']; ?>"
                     <?php } ?>
@@ -141,6 +144,7 @@
                             const ln = $("#locker_nextday");
                             const nextDayVal = ln.val() + ".";
                             const destCountry = ln.data('dest_country');
+                            const destCity = ln.data('dest_city');
                             const apiUsername = ln.data('api_username');
                             $(document).on("click", "#showLockerMap", function () {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
