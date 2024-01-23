@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.4.7</version>
+    <version>1.4.8</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -158,8 +158,9 @@
                             const destCountry = ln.data('dest_country');
                             const destCity = ln.data('dest_city');
                             const apiUsername = ln.data('api_username');
-                            $(document).on("click", "#showLockerMap", function () {
+                            $(document).on("click", "#showLockerMap", () => {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+                                const LockerPlugin = window['LockerPlugin'];
                                 const lockerInit = {
                                     'apiUsername': apiUsername,
                                     'clientId': clientId,
@@ -168,23 +169,31 @@
                                     'city': destCity,
                                 };
 
-                                window.LockerPlugin.init(lockerInit);
+                                LockerPlugin.init(lockerInit);
 
-                                let plugin = window.LockerPlugin.getInstance();
+                                if (
+                                    LockerPlugin.countryCode !== destCountry
+                                    || LockerPlugin.city !== destCity
+                                ) {
+                                    lockerInit.countryCode = destCountry;
+                                    lockerInit.city = destCity;
 
-                                plugin.open();
+                                    LockerPlugin.reinitializePlugin(lockerInit);
+                                }
 
-                                plugin.subscribe((message) => {
-                                    let locker = `${message.lockerId}.${message.name}`;
+                                let pluginInstance = LockerPlugin.getInstance();
 
-                                    let lockerValue = message.lockerId;
+                                pluginInstance.open();
+
+                                pluginInstance.subscribe((lockerData) => {
+                                    let locker = `${lockerData.lockerId}.${lockerData.name}`;
 
                                     $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
                                     $('#locker_nextday').prop('disabled', false);
-                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
+                                    $('#showLockerDetails').html('<strong>' + lockerData.name + ' - ' + lockerData.address + '</strong>');
 
-                                    plugin.close();
+                                    pluginInstance.close();
                                 });
                             });
                         });

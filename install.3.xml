@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.4.2</version>
+    <version>1.4.8</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -57,9 +57,11 @@
                      {% if quote.lockers is not null %}
                             id="locker_nextday"
                             disabled="disabled"
-                            title="Please choose your easybox!"
+                            title="Click on button below and choose your easybox!"
                      {% endif %}
-                     {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
                      {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
                  />
             ]]></add>
@@ -69,15 +71,17 @@
                 <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="{{ quote.code }}" checked="checked"
-                    {% if quote.lockers is not null %}
-                        id="locker_nextday"
-                        disabled="disabled"
-                        title="Please, choose your easybox using lockers map!"
-                    {% endif %}
-                    {% if quote.hostCountry is not null %} data-host_country={{ quote.hostCountry }} {% endif %}
-                    {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
-                />
+                <input type="radio" name="shipping_method" value="{{ quote.code }}"
+                     {% if quote.lockers is not null %}
+                            id="locker_nextday"
+                            disabled="disabled"
+                            title="Click on button below and choose your easybox!"
+                     {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                 />
             ]]></add>
         </operation>
         <operation>
@@ -133,34 +137,45 @@
                         jQuery(document).ready(function ($) {
                             const ln = $("#locker_nextday");
                             const nextDayVal = ln.val() + ".";
-                            const hostCountry = ln.data('host_country');
+                            const destCountry = ln.data('dest_country');
+                            const destCity = ln.data('dest_city');
                             const apiUsername = ln.data('api_username');
-                            $(document).on("click", "#showLockerMap", function () {
+                            $(document).on("click", "#showLockerMap", () => {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+                                const LockerPlugin = window['LockerPlugin'];
                                 const lockerInit = {
-                                    'clientId': clientId,
-                                    'countryCode': hostCountry,
-                                    'langCode': hostCountry.toLowerCase(),
                                     'apiUsername': apiUsername,
+                                    'clientId': clientId,
+                                    'countryCode': destCountry,
+                                    'langCode': destCountry.toLowerCase(),
+                                    'city': destCity,
                                 };
 
-                                window.LockerPlugin.init(lockerInit);
+                                LockerPlugin.init(lockerInit);
 
-                                let plugin = window.LockerPlugin.getInstance();
+                                if (
+                                    LockerPlugin.countryCode !== destCountry
+                                    || LockerPlugin.city !== destCity
+                                ) {
+                                    lockerInit.countryCode = destCountry;
+                                    lockerInit.city = destCity;
 
-                                plugin.open();
+                                    LockerPlugin.reinitializePlugin(lockerInit);
+                                }
 
-                                plugin.subscribe((message) => {
-                                    let locker = `${message.lockerId}.${message.name}`;
+                                let pluginInstance = LockerPlugin.getInstance();
 
-                                    let lockerValue = message.lockerId;
+                                pluginInstance.open();
+
+                                pluginInstance.subscribe((lockerData) => {
+                                    let locker = `${lockerData.lockerId}.${lockerData.name}`;
 
                                     $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
                                     $('#locker_nextday').prop('disabled', false);
-                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
+                                    $('#showLockerDetails').html('<strong>' + lockerData.name + ' - ' + lockerData.address + '</strong>');
 
-                                    plugin.close();
+                                    pluginInstance.close();
                                 });
                             });
                         });
