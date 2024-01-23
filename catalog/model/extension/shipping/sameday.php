@@ -135,6 +135,7 @@ class ModelExtensionShippingSameday extends Model
                     $quote_data[$service['sameday_code']]['lockers'] = '';
                     $quote_data[$service['sameday_code']]['destCountry'] = $destCountry;
                     $quote_data[$service['sameday_code']]['destCity'] = $address['city'];
+                    $quote_data[$service['sameday_code']]['destCounty'] = $address['zone'];
                     $quote_data[$service['sameday_code']]['apiUsername'] = $this->getApiUsername();
                 } else {
                     $this->syncLockers();
