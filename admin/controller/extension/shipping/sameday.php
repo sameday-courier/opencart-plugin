@@ -954,10 +954,11 @@ class ControllerExtensionShippingSameday extends Controller
 
         $repayment = 0;
         if ($orderInfo['payment_code'] === $this->samedayHelper::CASH_ON_DELIVERY_CODE) {
-            $repayment = (float) $this->currency->format(
+            $repayment = $this->currency->format(
                 $orderInfo['total'],
                 $orderInfo['currency_code'],
-                $orderInfo['currency_value']
+                $orderInfo['currency_value'],
+                false
             );
         }
 
