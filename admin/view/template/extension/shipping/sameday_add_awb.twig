@@ -98,9 +98,20 @@
 
                         <!-- Ramburs //-->
                         <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_ramburs_title }}">{{ entry_ramburs }}</span></label>
+                            <label class="col-sm-2 control-label" for="sameday_ramburs">
+                                <span data-toggle="tooltip" title="{{ entry_ramburs_title }}">
+                                    <?php echo $entry_ramburs; ?> <strong>({{ sameday_currency }})</strong>
+                                </span>
+                            </label>
                             <div class="col-sm-10">
-                                <input type="number" step="any" name="sameday_ramburs" value="{{ sameday_ramburs }}" class="form-control"/>
+                                <input type="number" step="any" name="sameday_ramburs" id="sameday_ramburs" value="{{ sameday_ramburs }}" class="form-control"/>
+                                {% if repaymentCurrencyAlert is not null %}
+                                <span>
+                                        <strong style="font-weight: bolder; color: #9f0101">
+                                            {{ repaymentCurrencyAlert }}
+                                        </strong>
+                                    </span>
+                                {% endif %}
                             </div>
                         </div>
 
