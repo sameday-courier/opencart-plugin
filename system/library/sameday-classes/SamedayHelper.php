@@ -44,6 +44,12 @@ class SamedayHelper
     const API_HOST_LOCAL_HU = 'HU';
     const API_HOST_LOCAL_BG = 'BG';
 
+    const SAMEDAY_ELIGIBLE_CURRENCIES = [
+        self::API_HOST_LOCALE_RO => 'RON',
+        self::API_HOST_LOCAL_HU => 'HUF',
+        self::API_HOST_LOCAL_BG => 'BGN',
+    ];
+
     public static function getEnvModes(): array
     {
         return [

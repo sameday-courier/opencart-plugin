@@ -102,9 +102,20 @@
 
                         <!-- Ramburs //-->
                         <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>"><?php echo $entry_ramburs; ?></span></label>
+                            <label class="col-sm-2 control-label" for="sameday_ramburs">
+                                <span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>">
+                                    <?php echo $entry_ramburs; ?> <strong>(<?php echo $sameday_currency; ?>)</strong>
+                                </span>
+                            </label>
                             <div class="col-sm-10">
-                                <input type="number" step="any" name="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
+                                <input type="number" step="any" name="sameday_ramburs" id="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
+                                <?php if (null !== $repaymentCurrencyAlert) { ?>
+                                    <span>
+                                        <strong style="font-weight: bolder; color: #9f0101">
+                                            <?php echo $repaymentCurrencyAlert; ?>
+                                        </strong>
+                                    </span>
+                                <?php } ?>
                             </div>
                         </div>
 
@@ -165,7 +176,6 @@
                                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
                                         <button type="button" class="btn btn-warning"
                                                 id="changeLocker"
-                                                data-url="<?php echo $lockerPluginData['url']; ?>"
                                                 data-country="<?php echo $lockerPluginData['country']; ?>"
                                                 data-apiUsername="<?php echo $lockerPluginData['apiUsername'] ;?>"
                                                 data-city="<?php echo $lockerPluginData['city']; ?>"

@@ -855,9 +855,9 @@ class ControllerExtensionShippingSameday extends Controller
             $lockerPluginData = [
                 'lockerId' => $parts[3],
                 'lockerAddress' => $parts[4],
-                'country' => $this->getConfig('sameday_host_country'),
+                'country' => $orderInfo['shipping_iso_code_2'],
+                'city' => $orderInfo['shipping_city'] ?? null,
                 'apiUsername' => $this->getConfig('sameday_username'),
-                'city' => $orderInfo['shipping_city'] ?? null
             ];
 
             $showLockerDetails = $this->toggleHtmlElement(true);
@@ -954,7 +954,11 @@ class ControllerExtensionShippingSameday extends Controller
 
         $repayment = 0;
         if ($orderInfo['payment_code'] === $this->samedayHelper::CASH_ON_DELIVERY_CODE) {
-            $repayment = round($orderInfo['total'], 2);
+            $repayment = (float) $this->currency->format(
+                $orderInfo['total'],
+                $orderInfo['currency_code'],
+                $orderInfo['currency_value']
+            );
         }
 
         $availableServices = [];
@@ -981,7 +985,22 @@ class ControllerExtensionShippingSameday extends Controller
             }
         }
 
+        $orderCurrency = $orderInfo['currency_code'];
+        $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']];
+
+        $repaymentCurrencyAlert = null;
+        if ($orderCurrency !== $destCurrency) {
+            $repaymentCurrencyAlert = sprintf(
+                "Be aware that the intended currency is %s but the Repayment value is expressed in %s. 
+                Please consider a conversion !!",
+                $destCurrency,
+                $orderCurrency
+            );
+        }
+
         $data['sameday_ramburs'] = $repayment;
+        $data['sameday_currency'] = $orderInfo['currency_code'];
+        $data['repaymentCurrencyAlert'] = $repaymentCurrencyAlert;
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $shippingSamedayModel->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $availableServices;
@@ -1230,6 +1249,7 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $address = trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
+        $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$params['shipping_iso_code_2']];
 
         $serviceTaxes = [];
         if (isset($params['sameday_locker_first_mile'])) {
@@ -1264,7 +1284,8 @@ class ControllerExtensionShippingSameday extends Controller
             '',
             '',
             null,
-            $params['sameday_locker_id']
+            $params['sameday_locker_id'],
+            $destCurrency
         );
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -1341,6 +1362,8 @@ class ControllerExtensionShippingSameday extends Controller
                 $serviceTaxes[] = $params['sameday_locker_first_mile'];
             }
 
+            $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']];
+
             $estimateCostRequest = new \Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
@@ -1365,7 +1388,8 @@ class ControllerExtensionShippingSameday extends Controller
                 $params['sameday_insured_value'],
                 $params['sameday_ramburs'],
                 null,
-                $serviceTaxes
+                $serviceTaxes,
+                $destCurrency
             );
 
             $sameday =  new \Sameday\Sameday($this->samedayHelper->initClient());
