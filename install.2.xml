@@ -172,8 +172,8 @@
                                 LockerPlugin.init(lockerInit);
 
                                 if (
-                                    LockerPlugin.countryCode !== destCountry
-                                    || LockerPlugin.city !== destCity
+                                    LockerPlugin.options.countryCode !== destCountry
+                                    || LockerPlugin.options.city !== destCity
                                 ) {
                                     lockerInit.countryCode = destCountry;
                                     lockerInit.city = destCity;
