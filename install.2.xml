@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.4.2</version>
+    <version>1.5.0</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -53,18 +53,26 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
-                <?php if (isset($quote['lockers'])) { ?>
-                    id="locker_nextday"
-                    disabled="disabled"
-                    title="Please, choose your easybox using lockers map!"
-                <?php } ?>
-                <?php if (isset($quote['hostCountry'])) { ?>
-                    data-host_country="<?php echo $quote['hostCountry']; ?>"
-                <?php } ?>
-                <?php if (isset($quote['apiUsername'])) { ?>
-                    data-host_country="<?php echo $quote['apiUsername']; ?>"
-                <?php } ?> />
+                <input
+                    type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
+                    <?php if (isset($quote['lockers'])) { ?>
+                        id="locker_nextday"
+                        disabled="disabled"
+                        title="Please, choose your easybox using lockers map!"
+                    <?php } ?>
+                    <?php if (isset($quote['destCountry'])) { ?>
+                        data-dest_country="<?php echo $quote['destCountry']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['apiUsername'])) { ?>
+                        data-dest_country="<?php echo $quote['apiUsername']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['destCity'])) { ?>
+                        data-dest_city="<?php echo $quote['destCity']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['destCounty'])) { ?>
+                        data-dest_county="<?php echo $quote['destCounty']; ?>"
+                    <?php } ?>
+                />
             ]]></add>
         </operation>
         <operation>
@@ -72,17 +80,24 @@
                 <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>" checked="checked" />
             ]]></search>
             <add position="replace"><![CDATA[
-                <input type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
+                <input
+                    type="radio" name="shipping_method" value="<?php echo $quote['code']; ?>"
                     <?php if (isset($quote['lockers'])) { ?>
                         id="locker_nextday"
                         disabled="disabled"
-                        title="Please choose your easybox!"
+                        title="Please, choose your easybox using lockers map!"
                     <?php } ?>
-                    <?php if (isset($quote['hostCountry'])) { ?>
-                        data-host_country="<?php echo $quote['hostCountry']; ?>"
+                    <?php if (isset($quote['destCountry'])) { ?>
+                        data-dest_country="<?php echo $quote['destCountry']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['apiUsername'])) { ?>
-                        data-host_country="<?php echo $quote['apiUsername']; ?>"
+                        data-dest_country="<?php echo $quote['apiUsername']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['destCity'])) { ?>
+                        data-dest_city="<?php echo $quote['destCity']; ?>"
+                    <?php } ?>
+                    <?php if (isset($quote['destCounty'])) { ?>
+                        data-dest_county="<?php echo $quote['destCounty']; ?>"
                     <?php } ?>
                 />
             ]]></add>
@@ -140,34 +155,45 @@
                         jQuery(document).ready(function ($) {
                             const ln = $("#locker_nextday");
                             const nextDayVal = ln.val() + ".";
-                            const hostCountry = ln.data('host_country');
+                            const destCountry = ln.data('dest_country');
+                            const destCity = ln.data('dest_city');
                             const apiUsername = ln.data('api_username');
-                            $(document).on("click", "#showLockerMap", function () {
+                            $(document).on("click", "#showLockerMap", () => {
                                 const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
+                                const LockerPlugin = window['LockerPlugin'];
                                 const lockerInit = {
-                                    'clientId': clientId,
-                                    'countryCode': hostCountry,
-                                    'langCode': hostCountry.toLowerCase(),
                                     'apiUsername': apiUsername,
+                                    'clientId': clientId,
+                                    'countryCode': destCountry,
+                                    'langCode': destCountry.toLowerCase(),
+                                    'city': destCity,
                                 };
 
-                                window.LockerPlugin.init(lockerInit);
+                                LockerPlugin.init(lockerInit);
 
-                                let plugin = window.LockerPlugin.getInstance();
+                                if (
+                                    LockerPlugin.options.countryCode !== destCountry
+                                    || LockerPlugin.options.city !== destCity
+                                ) {
+                                    lockerInit.countryCode = destCountry;
+                                    lockerInit.city = destCity;
 
-                                plugin.open();
+                                    LockerPlugin.reinitializePlugin(lockerInit);
+                                }
 
-                                plugin.subscribe((message) => {
-                                    let locker = `${message.lockerId}.${message.name}`;
+                                let pluginInstance = LockerPlugin.getInstance();
 
-                                    let lockerValue = message.lockerId;
+                                pluginInstance.open();
+
+                                pluginInstance.subscribe((lockerData) => {
+                                    let locker = `${lockerData.lockerId}.${lockerData.name}`;
 
                                     $("#locker_nextday").val(nextDayVal + locker);
                                     $('#locker_nextday').prop('checked', true);
                                     $('#locker_nextday').prop('disabled', false);
-                                    $('#showLockerDetails').html('<strong>' + message.name + ' - ' + message.address + '</strong>');
+                                    $('#showLockerDetails').html('<strong>' + lockerData.name + ' - ' + lockerData.address + '</strong>');
 
-                                    plugin.close();
+                                    pluginInstance.close();
                                 });
                             });
                         });

@@ -22,7 +22,24 @@ class SamedayHelper
 
     const CASH_ON_DELIVERY_CODE = 'cod';
 
+    const SAMEDAY_6H_SERVICE = '6H';
+    const DEFAULT_SAMEDAY_SERVICE = '24';
     const LOCKER_NEXT_DAY_CODE = 'LN';
+
+    const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
+    const LOCKER_NEXT_DAY_CODE_CROSSBORDER = 'XL';
+
+    const ELIGIBLE_SAMEDAY_SERVICES = [
+        self::SAMEDAY_6H_SERVICE,
+        self::DEFAULT_SAMEDAY_SERVICE,
+        self::LOCKER_NEXT_DAY_CODE
+    ];
+    const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = [
+        self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
+        self::LOCKER_NEXT_DAY_CODE_CROSSBORDER
+    ];
+
+    const ELIGIBLE_TO_LOCKER = [self::LOCKER_NEXT_DAY_CODE, self::LOCKER_NEXT_DAY_CODE_CROSSBORDER];
 
     const AFTER_48_HOURS = 172800;
 
@@ -35,6 +52,12 @@ class SamedayHelper
     const API_HOST_LOCALE_RO = 'RO';
     const API_HOST_LOCAL_HU = 'HU';
     const API_HOST_LOCAL_BG = 'BG';
+
+    const SAMEDAY_ELIGIBLE_CURRENCIES = [
+        self::API_HOST_LOCALE_RO => 'RON',
+        self::API_HOST_LOCAL_HU => 'HUF',
+        self::API_HOST_LOCAL_BG => 'BGN',
+    ];
 
     public static function getEnvModes(): array
     {
