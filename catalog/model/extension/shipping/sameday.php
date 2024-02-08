@@ -106,22 +106,7 @@ class ModelExtensionShippingSameday extends Model
 
             $price = $service['price'];
 
-            $priceFree = $service['price_free'];
-            if (null !== $priceFree && $priceFree > 0) {
-                $priceFree = $this->currency->convert(
-                    $service['price_free'],
-                    $this->config->get('config_currency'),
-                    $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$destCountry]
-                );
-            }
-
-            $totalPrice = $this->currency->convert(
-                $this->cart->getSubtotal(),
-                $this->config->get('config_currency'),
-                $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$destCountry]
-            );
-
-            if ($priceFree !== null && $totalPrice >= $priceFree) {
+            if ($priceFree !== null && $this->cart->getSubtotal() >= $service['price_free']) {
                 $price = 0;
             }
 
