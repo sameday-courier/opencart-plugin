@@ -92,7 +92,9 @@ class ModelExtensionShippingSameday extends Model
         }
 
         foreach ($availableService as $service) {
-            if ($service['sameday_code'] === "6H" && $address['zone'] !== "Bucuresti") {
+            if ($service['sameday_code'] === $this->samedayHelper::SAMEDAY_6H_SERVICE
+                && $address['zone'] !== "Bucuresti"
+            ) {
                 continue;
             }
 
@@ -103,7 +105,23 @@ class ModelExtensionShippingSameday extends Model
             }
 
             $price = $service['price'];
-            if ($service['price_free'] !== null && $this->cart->getSubTotal() >= $service['price_free']) {
+
+            $priceFree = $service['price_free'];
+            if (null !== $priceFree && $priceFree > 0) {
+                $priceFree = $this->currency->convert(
+                    $service['price_free'],
+                    $this->config->get('config_currency'),
+                    $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$destCountry]
+                );
+            }
+
+            $totalPrice = $this->currency->convert(
+                $this->cart->getSubtotal(),
+                $this->config->get('config_currency'),
+                $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$destCountry]
+            );
+
+            if ($priceFree !== null && $totalPrice >= $priceFree) {
                 $price = 0;
             }
 
