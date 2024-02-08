@@ -106,7 +106,7 @@ class ModelExtensionShippingSameday extends Model
 
             $price = $service['price'];
 
-            if ($priceFree !== null && $this->cart->getSubtotal() >= $service['price_free']) {
+            if ($service['price_free'] !== null && $this->cart->getSubtotal() >= $service['price_free']) {
                 $price = 0;
             }
 
