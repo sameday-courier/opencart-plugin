@@ -128,8 +128,13 @@
                         </script>
                     {% endif %}
                     {% if (quote.lockers is empty) %}
+                        {% if checkout.sameday_show_lockers_map is not defined %}
+                            {{ 'Show Lockers Map' }}  
+                        {% else %}
+                            {{ checkout.sameday_show_lockers_map }}
+                        {% endif %}
                         <div class="lockers">
-                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
+                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="{{ sameday_show_lockers_map }}" id="showLockerMap">
                             <span id="showLockerDetails"></span>
                         </div>
                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
