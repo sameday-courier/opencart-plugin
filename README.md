@@ -17,7 +17,7 @@
 <h3>Instalare</h3>
 <ol>
 <li>Descarcă fișierul ocmod.zip, generat in urma rularii scriptului build.sh. Mergi pe pagina de admin la extensions installer. Dupa care mergi la extensions modification si apasa butonul refresh.</li>
-  !(imagine)[https://imgur.com/a/NBh6hDC]
+  ![alt text](https://github.com/takegabriel08/sameday-opencart-plugin/blob/master/image.jpg?raw=true)
 <li>Accesează panoul de administrare Opencart și activează plugin-ul în secțiunea <strong>Extensions &gt; Shipping</strong>.</li>
 </ol>
 <h3>Configurare</h3>
