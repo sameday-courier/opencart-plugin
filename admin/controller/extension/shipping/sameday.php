@@ -868,26 +868,32 @@ class ControllerExtensionShippingSameday extends Controller
             (int) ($data['default_service_id'] ?? null),
             $this->isTesting()
         );
-        if (isset($currentService['service_optional_taxes']) && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])) {
+
+        if (isset($currentService['service_optional_taxes'])
+            && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])
+        ) {
             $showPDO = $this->toggleHtmlElement(true);
         }
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validateFormBeforeAwbGeneration()) {
             $postRequestData = $this->request->post;
 
+            $service = $shippingSamedayModel->getServiceSameday(
+                (int) $postRequestData['sameday_service'],
+                $this->isTesting()
+            );
+
+            $serviceCode = $service['sameday_code'] ?? null;
+
             if ('' === $postRequestData['sameday_locker_id']
                 || '' === $postRequestData['sameday_locker_address']
-                || $this->samedayHelper::LOCKER_NEXT_DAY_CODE !== $shippingSamedayModel->getServiceSameday(
-                    (int) $postRequestData['sameday_service'],
-                    $this->isTesting())['sameday_code'] ?? null
-                )
-            {
+                || false === $this->samedayHelper->isEligibleToLocker($serviceCode)
+            ) {
                 $postRequestData['sameday_locker_id'] = null;
                 $postRequestData['sameday_locker_address'] = null;
             }
 
             $params = array_merge($postRequestData, $orderInfo);
-            $service = $shippingSamedayModel->getServiceSameday((int) ($params['sameday_service'] ?? null), $this->isTesting());
 
             $postAwb = $this->postAwb($params);
 
@@ -968,18 +974,16 @@ class ControllerExtensionShippingSameday extends Controller
             if ($service['status'] > 0) {
                 $service['service_eligible_to_locker'] = $this->toggleHtmlElement(false);
                 if (isset($service['sameday_code'])) {
-                    $service['service_eligible_to_locker'] = $service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CODE
-                        ? $this->toggleHtmlElement(true)
-                        : $this->toggleHtmlElement(false)
-                    ;
+                    $service['service_eligible_to_locker'] = $this->toggleHtmlElement(
+                        $this->samedayHelper->isEligibleToLocker($service['sameday_code'])
+                    );
                 }
 
                 $service['service_eligible_to_pdo'] = $this->toggleHtmlElement(false);
                 if (isset($service['service_optional_taxes'])) {
-                    $service['service_eligible_to_pdo'] = $this->isServiceEligibleToPDO($service['service_optional_taxes'])
-                        ? $this->toggleHtmlElement(true)
-                        : $this->toggleHtmlElement(false)
-                    ;
+                    $service['service_eligible_to_pdo'] = $this->toggleHtmlElement(
+                        $this->isServiceEligibleToPDO($service['service_optional_taxes'])
+                    );
                 }
 
                 $availableServices[] = $service;
