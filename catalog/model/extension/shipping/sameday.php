@@ -362,16 +362,6 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
-//    /**
-//     * @param string $samedayCode
-//     *
-//     * @return bool
-//     */
-//    private function isEligibleToLocker(string $samedayCode): bool
-//    {
-//        return in_array($samedayCode, SamedayHelper::ELIGIBLE_TO_LOCKER, true);
-//    }
-
     /**
      * @return mixed
      */
