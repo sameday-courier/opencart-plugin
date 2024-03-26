@@ -150,4 +150,14 @@ class SamedayHelper
             Samedayclasses::getSamedayPersistenceDataHandler($this->registry)
         );
     }
+
+    /**
+     * @param string $samedayCode
+     *
+     * @return bool
+     */
+    public function isEligibleToLocker(string $samedayCode): bool
+    {
+        return in_array($samedayCode, self::ELIGIBLE_TO_LOCKER, true);
+    }
 }

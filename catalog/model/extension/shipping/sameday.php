@@ -98,7 +98,7 @@ class ModelExtensionShippingSameday extends Model
                 continue;
             }
 
-            if ($this->isEligibleToLocker($service['sameday_code'])
+            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])
                 && (count($this->cart->getProducts()) > $lockerMaxItems)
             ) {
                 continue;
@@ -363,16 +363,6 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param string $samedayCode
-     *
-     * @return bool
-     */
-    private function isEligibleToLocker(string $samedayCode): bool
-    {
-        return in_array($samedayCode, SamedayHelper::ELIGIBLE_TO_LOCKER, true);
-    }
-
-    /**
      * @return mixed
      */
     private function isTesting()
@@ -524,11 +514,12 @@ class ModelExtensionShippingSameday extends Model
     public function addAdditionalSetting($code, $data, $store_id = 0) {
         foreach ($data as $key => $value) {
             if (substr($key, 0, strlen($code)) == $code) {
-                $this->db->query("DELETE FROM `" . DB_PREFIX . "setting` WHERE store_id = '" . (int)$store_id . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '".$this->db->escape($key)."'");
+                $tableName = DB_PREFIX . "setting";
+                $this->db->query("DELETE FROM $tableName WHERE store_id = '" . (int) $store_id . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '".$this->db->escape($key)."'");
                 if (!is_array($value)) {
-                    $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int) $store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
                 } else {
-                    $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
+                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int) $store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
                 }
             }
         }
