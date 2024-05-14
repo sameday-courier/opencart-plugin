@@ -133,7 +133,7 @@ class ModelExtensionShippingSameday extends Model
                 ),
             );
 
-            if ($this->isEligibleToLocker($service['sameday_code'])) {
+            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
                 if (true === $this->isShowLockersMap()) {
                     $quote_data[$service['sameday_code']]['lockers'] = '';
                     $quote_data[$service['sameday_code']]['destCountry'] = $destCountry;
