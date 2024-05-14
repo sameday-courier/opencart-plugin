@@ -122,6 +122,7 @@ $_['entry_third_party_person_iban_title'] = 'Choose iban';
 // Column
 $_['column_internal_id'] = 'Internal id';
 $_['column_internal_name'] = 'Internal name';
+$_['column_ooh_label'] = 'Aceasta optiune contine ambele servicii: Locker NextDay, respectiv PUDO';
 $_['column_name'] = 'Name';
 $_['column_price'] = 'Price';
 $_['column_price_free'] = 'Free delivery price';

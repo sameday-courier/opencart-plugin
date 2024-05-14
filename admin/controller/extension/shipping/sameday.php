@@ -177,6 +177,8 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
+     * @return mixed
+     *
      * @throws SamedaySDKException
      */
     public function index()
@@ -257,6 +259,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             'column_internal_id',
             'column_internal_name',
+            'column_ooh_label',
             'column_name',
             'column_price',
             'column_price_free',
@@ -301,7 +304,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['statuses'] = $this->getStatuses();
         $data['action'] = $this->url->link('extension/shipping/sameday', $this->addToken(), true);
         $data['cancel'] = $this->url->link($this->getRouteExtension(), $this->addToken(array('type' => 'shipping')), true);
-        $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $data['services'] = $this->displayServices();
         $data['import_local_data_actions'] = json_encode(self::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link('extension/shipping/sameday/importLocalData', $this->addToken(), true);
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
@@ -324,7 +327,44 @@ class ControllerExtensionShippingSameday extends Controller
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
+        return $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
+    }
+
+    /**
+     * @return array
+     */
+    private function displayServices(): array
+    {
+        $services = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $samedayHelper = $this->samedayHelper;
+
+        $services = array_filter(
+            $services,
+            static function (array $service) use ($samedayHelper){
+                return in_array($service['sameday_code'], $samedayHelper::SAMEDAY_IN_USE_SERVICES, true);
+            }
+        );
+
+        $oohService = array_values(array_filter(
+            $services,
+            static function (array $service) use ($samedayHelper){
+                return $service['sameday_code'] === $samedayHelper::LOCKER_NEXT_DAY_SERVICE;
+            },
+            true
+        ))[0] ?? null;
+
+
+        if (null !== $oohService) {
+            $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
+            $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE;
+
+            $services = array_merge([$oohService], $services);
+        }
+
+        return array_filter($services, static function($service) use ($samedayHelper) {
+            return !$samedayHelper->isOohDeliveryOption($service['sameday_code']);
+
+        });
     }
 
     /**
