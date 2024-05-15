@@ -140,7 +140,7 @@
                                         <option
                                                 data-service_eligible_to_locker="<?php echo $service['service_eligible_to_locker']; ?>"
                                                 data-service_eligible_to_pdo="<?php echo $service['service_eligible_to_pdo']; ?>"
-                                                value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['name']; ?>
+                                                value="<?php echo $service['sameday_id']; ?>" <?php if ($service['sameday_id'] == $default_service_id) { ?> selected="selected" <?php } ?>><?php echo $service['sameday_name']; ?>
                                         </option>
                                     <?php } ?>
                                 </select>
