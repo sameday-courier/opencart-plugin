@@ -142,8 +142,8 @@
                                     <tr>
                                         <td>
                                             <a href="{{ service_links[key] }}"
-                                               {% if service.column_ooh_label is not same as null %}
-                                                    title="{{ column_ooh_label }}"
+                                               {% if service.column_ooh_label is not null %}
+                                                    title="{{ service.column_ooh_label }}"
                                                {% endif %}
                                             >{{ service.sameday_name }}
                                             </a>
