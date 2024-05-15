@@ -259,7 +259,6 @@ class ControllerExtensionShippingSameday extends Controller
 
             'column_internal_id',
             'column_internal_name',
-            'column_ooh_label',
             'column_name',
             'column_price',
             'column_price_free',
@@ -357,9 +356,12 @@ class ControllerExtensionShippingSameday extends Controller
         if (null !== $oohService) {
             $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
             $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE;
+            $oohService['column_ooh_label'] = $this->buildLanguage('column_ooh_label');
 
             $services = array_merge([$oohService], $services);
         }
+
+        $s = $services;
 
         return array_filter($services, static function($service) use ($samedayHelper) {
             return !$samedayHelper->isOohDeliveryOption($service['sameday_code']);
@@ -656,11 +658,20 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->model('setting/setting');
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validatePermissions()) {
+            if (null === $this->request->post['name'] ?? null) {
+                $this->request->post['name'] = $this->samedayHelper::OOH_SERVICES_LABELS[
+                    $this->samedayHelper->getHostCountry()
+                ];
+            }
+
             $this->model_extension_shipping_sameday->updateService($service['id'], $this->request->post);
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
-            $this->response->redirect($this->url->link('extension/shipping/sameday/service', $this->addToken(array('id' => $service['id'])), true));
+            $this->response->redirect($this->url->link(
+                'extension/shipping/sameday/service',
+                $this->addToken(array('id' => $service['id'])), true)
+            );
         }
 
         $data = $this->buildLanguage(array(
@@ -1644,14 +1655,23 @@ class ControllerExtensionShippingSameday extends Controller
         return !$this->error;
     }
 
-    private function buildLanguage(array $keys)
+    /**
+     * @param string|array $keyOrKeys
+     *
+     * @return string|array
+     */
+    private function buildLanguage($keyOrKeys)
     {
-        $entries = array();
-        foreach ($keys as $key) {
-            $entries[$key] = $this->language->get($key);
+        if (is_array($keyOrKeys)) {
+            $entries = [];
+            foreach ($keyOrKeys as $key) {
+                $entries[$key] = $this->language->get($key);
+            }
+
+            return $entries;
         }
 
-        return $entries;
+        return $this->language->get($keyOrKeys);
     }
 
     private function buildRequest(array $keys): array
@@ -1668,13 +1688,11 @@ class ControllerExtensionShippingSameday extends Controller
     private function buildRequestService($keys, $service): array
     {
         $entries = array();
+        $entries['disabled'] = '';
         foreach ($keys as $key) {
             if ($key === 'name' && $this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 $entries['disabled'] = 'disabled';
                 $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
-                if (!isset($this->request->post[$key])) {
-                    $this->request->post[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
-                }
             } else {
                 $entries[$key] = $this->request->post[$key] ?? $service[$key];
             }

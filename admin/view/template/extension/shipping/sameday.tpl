@@ -125,7 +125,6 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <td class="text-left"><?php echo $column_internal_id; ?></td>
                                 <td class="text-left"><?php echo $column_internal_name; ?></td>
                                 <td class="text-left"><?php echo $column_name; ?></td>
                                 <td class="text-left"><?php echo $column_price; ?></td>
@@ -140,8 +139,15 @@
                             </tr>
                             <?php } else { foreach ($services as $idx => $service) { ?>
                             <tr>
-                                <td><?php echo $service['sameday_id']; ?></td>
-                                <td><a href="<?php echo $service_links[$idx]; ?>"><?php echo $service['sameday_name']; ?></a></td>
+                                <td>
+                                    <a href="<?php echo $service_links[$idx]; ?>"
+                                    <?php if (isset($service['column_ooh_label'])) { ?>
+                                        title="<?php echo $service['column_ooh_label']; ?>"
+                                    <?php } ?>
+                                    >
+                                        <?php echo $service['sameday_name']; ?>
+                                    </a>
+                                </td>
                                 <td><?php echo $service['name']; ?></td>
                                 <td><?php echo $service['price']; ?></td>
                                 <td><?php echo $service['price_free']; ?></td>

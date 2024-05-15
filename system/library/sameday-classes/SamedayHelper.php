@@ -20,17 +20,17 @@ class SamedayHelper
      */
     private $samedayConfigs;
 
-    public const CASH_ON_DELIVERY_CODE = 'cod';
+    const CASH_ON_DELIVERY_CODE = 'cod';
 
-    public const SAMEDAY_6H_SERVICE = '6H';
-    public const DEFAULT_SAMEDAY_SERVICE = '24';
-    public const LOCKER_NEXT_DAY_SERVICE = 'LN';
-    public const SAMEDAY_PUDO_SERVICE = 'PD';
-    public const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
-    public const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
-    public const OOH_SERVICE = 'OOH';
+    const SAMEDAY_6H_SERVICE = '6H';
+    const DEFAULT_SAMEDAY_SERVICE = '24';
+    const LOCKER_NEXT_DAY_SERVICE = 'LN';
+    const SAMEDAY_PUDO_SERVICE = 'PD';
+    const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
+    const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
+    const OOH_SERVICE = 'OOH';
 
-    public const SAMEDAY_IN_USE_SERVICES = [
+    const SAMEDAY_IN_USE_SERVICES = [
         self::SAMEDAY_6H_SERVICE,
         self::DEFAULT_SAMEDAY_SERVICE,
         self::LOCKER_NEXT_DAY_SERVICE,
@@ -39,46 +39,46 @@ class SamedayHelper
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
     ];
 
-    public const ELIGIBLE_SAMEDAY_SERVICES = [
+    const ELIGIBLE_SAMEDAY_SERVICES = [
         self::SAMEDAY_6H_SERVICE,
         self::DEFAULT_SAMEDAY_SERVICE,
         self::LOCKER_NEXT_DAY_SERVICE
     ];
 
-    public const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = [
+    const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = [
         self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE
     ];
 
-    public const OOH_SERVICES = [
+    const OOH_SERVICES = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::SAMEDAY_PUDO_SERVICE,
     ];
 
-    public const ELIGIBLE_TO_LOCKER = [
+    const ELIGIBLE_TO_LOCKER = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
     ];
 
-    public const OOH_SERVICES_LABELS = [
+    const OOH_SERVICES_LABELS = [
         self::API_HOST_LOCALE_RO => 'Ridicare personala',
         self::API_HOST_LOCALE_BG => 'Персонален асансьор',
         self::API_HOST_LOCALE_HU => 'Személyi lift',
     ];
 
-    public const AFTER_48_HOURS = 172800;
+    const AFTER_48_HOURS = 172800;
 
     // PDO stands for Personal Delivery Option and is an additional tax that apply to Service
-    public const SERVICE_OPTIONAL_TAX_PDO_CODE = 'PDO';
+    const SERVICE_OPTIONAL_TAX_PDO_CODE = 'PDO';
 
-    public const API_PROD = 0;
-    public const API_DEMO = 1;
+    const API_PROD = 0;
+    const API_DEMO = 1;
 
-    public const API_HOST_LOCALE_RO = 'RO';
-    public const API_HOST_LOCALE_HU = 'HU';
-    public const API_HOST_LOCALE_BG = 'BG';
+    const API_HOST_LOCALE_RO = 'RO';
+    const API_HOST_LOCALE_HU = 'HU';
+    const API_HOST_LOCALE_BG = 'BG';
 
-    public const SAMEDAY_ELIGIBLE_CURRENCIES = [
+    const SAMEDAY_ELIGIBLE_CURRENCIES = [
         self::API_HOST_LOCALE_RO => 'RON',
         self::API_HOST_LOCALE_HU => 'HUF',
         self::API_HOST_LOCALE_BG => 'BGN',
