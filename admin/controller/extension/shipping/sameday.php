@@ -355,7 +355,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         if (null !== $oohService) {
             $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
-            $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE;
+            $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE_CODE;
             $oohService['column_ooh_label'] = $this->buildLanguage('column_ooh_label');
 
             $services = array_merge([$oohService], $services);

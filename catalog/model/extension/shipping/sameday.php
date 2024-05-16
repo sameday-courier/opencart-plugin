@@ -117,9 +117,15 @@ class ModelExtensionShippingSameday extends Model
                 }
             }
 
+            $serviceCode = $service['sameday_code'];
+            if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
+                $serviceCode = $this->samedayHelper::OOH_SERVICE_CODE;
+            }
+
             $quote_data[$service['sameday_code']] = array(
                 'sameday_name' => $service['name'],
-                'code' => 'sameday.' . $service['sameday_code'] . '.' . $service['sameday_id'],
+                'code' => 'sameday.' . $serviceCode,
+                'service_id' => $service['sameday_id'],
                 'title' => $service['name'],
                 'cost' => $price,
                 'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
@@ -133,7 +139,7 @@ class ModelExtensionShippingSameday extends Model
                 ),
             );
 
-            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
+            if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 if (true === $this->isShowLockersMap()) {
                     $quote_data[$service['sameday_code']]['lockers'] = '';
                     $quote_data[$service['sameday_code']]['destCountry'] = $destCountry;

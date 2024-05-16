@@ -28,7 +28,7 @@ class SamedayHelper
     const SAMEDAY_PUDO_SERVICE = 'PD';
     const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
-    const OOH_SERVICE = 'OOH';
+    const OOH_SERVICE_CODE = 'OOH';
 
     const SAMEDAY_IN_USE_SERVICES = [
         self::SAMEDAY_6H_SERVICE,
