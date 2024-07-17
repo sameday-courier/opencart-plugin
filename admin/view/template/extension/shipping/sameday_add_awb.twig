@@ -70,7 +70,8 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_calculated_weight_title }}">{{ entry_calculated_weight }}</span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
-                                    <input type="number" step="any" value="{{ calculated_weight }}" readonly="readonly" class="form-control input-number"/>
+                                    <input type="hidden" id="calculatedWeight" value="{{ calculated_weight }}">
+                                    <input type="number" id="totalWeight" step="any" value="{{ calculated_weight }}" readonly="readonly" class="form-control input-number"/>
                                 </div>
                             </div>
                         </div>
@@ -373,6 +374,19 @@
 </div>
 
 <script>
+    $('body').on('click', () => {
+        updateTotalWeight();
+    });
+
+    function updateTotalWeight() {
+        let totalWeight = 0;
+        document.getElementsByName("sameday_package_weight[]").forEach((element) => {
+            totalWeight += parseInt(element.value);
+        });
+
+        $('#totalWeight').val(totalWeight);
+    }
+
     $(document).on('click', '#changeLocker', (element) => {
         const clientId="b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
 
@@ -484,27 +498,30 @@
             $('#sameday_package_qty').val(10);
         }
 
-        createPackageDimensionField('+');
+        createPackageDimensionField();
     });
 
     $(document).on('click','#removePackageDimensionField', function(){
         if (parseInt($('#sameday_package_qty').val()) > 1) {
             $(this).parents('.parcel').remove();
             $('#sameday_package_qty').val(parseInt($('#sameday_package_qty').val()) -1 );
+
+            updateTotalWeight();
         }
     });
 
     $('#plus-btn').trigger('click');
 
-    function createPackageDimensionField(){
-        var qty = parseInt($('#sameday_package_qty').val());
-
-        var field = createField();
+    function createPackageDimensionField() {
+        let calculatedWeight = parseInt($('#calculatedWeight').val());
+        let field = createField(calculatedWeight);
 
         $('.package_dimension_field').append(field);
+
+        updateTotalWeight();
     }
 
-    function createField(weightValue = '', error_weight_class = '') {
+    function createField(weightValue = 0, error_weight_class = '') {
         entry_package_dimension = "{{ entry_package_dimension }}";
         entry_weight = "{{ entry_weight }}";
         entry_width = "{{ entry_width }}";
