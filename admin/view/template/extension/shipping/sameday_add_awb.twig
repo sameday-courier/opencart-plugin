@@ -378,6 +378,15 @@
         updateTotalWeight();
     });
 
+    function updateTotalWeight() {
+        let totalWeight = 0;
+        document.getElementsByName("sameday_package_weight[]").forEach((element) => {
+            totalWeight += parseInt(element.value);
+        });
+
+        $('#totalWeight').val(totalWeight);
+    }
+
     $(document).on('click', '#changeLocker', (element) => {
         const clientId="b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
 
@@ -502,15 +511,6 @@
     });
 
     $('#plus-btn').trigger('click');
-
-    function updateTotalWeight() {
-        let totalWeight = 0;
-        document.getElementsByName("sameday_package_weight[]").forEach((element) => {
-            totalWeight += parseInt(element.value);
-        });
-
-        $('#totalWeight').val(totalWeight);
-    }
 
     function createPackageDimensionField() {
         let calculatedWeight = parseInt($('#calculatedWeight').val());
