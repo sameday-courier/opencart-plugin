@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.5.5</version>
+    <version>1.6.0</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -59,6 +59,11 @@
                         id="locker_nextday"
                         disabled="disabled"
                         title="Please, choose your easybox using lockers map!"
+                    <?php } ?>
+                    <?php
+                        if (isset($quote['service_id'])) {
+                    ?>
+                        data-service_id="<?php $quote['service_id']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['destCountry'])) { ?>
                         data-dest_country="<?php echo $quote['destCountry']; ?>"

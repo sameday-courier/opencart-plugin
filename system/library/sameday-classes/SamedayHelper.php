@@ -19,27 +19,50 @@ class SamedayHelper
      * @var array $samedayConfigs
      */
     private $samedayConfigs;
-
     const CASH_ON_DELIVERY_CODE = 'cod';
-
     const SAMEDAY_6H_SERVICE = '6H';
     const DEFAULT_SAMEDAY_SERVICE = '24';
-    const LOCKER_NEXT_DAY_CODE = 'LN';
-
+    const LOCKER_NEXT_DAY_SERVICE = 'LN';
+    const SAMEDAY_PUDO_SERVICE = 'PP';
     const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
-    const LOCKER_NEXT_DAY_CODE_CROSSBORDER = 'XL';
+    const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
+    const OOH_SERVICE_CODE = 'OOH';
+
+    const SAMEDAY_IN_USE_SERVICES = [
+        self::SAMEDAY_6H_SERVICE,
+        self::DEFAULT_SAMEDAY_SERVICE,
+        self::LOCKER_NEXT_DAY_SERVICE,
+        self::SAMEDAY_PUDO_SERVICE,
+        self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+    ];
 
     const ELIGIBLE_SAMEDAY_SERVICES = [
         self::SAMEDAY_6H_SERVICE,
         self::DEFAULT_SAMEDAY_SERVICE,
-        self::LOCKER_NEXT_DAY_CODE
-    ];
-    const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = [
-        self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
-        self::LOCKER_NEXT_DAY_CODE_CROSSBORDER
+        self::LOCKER_NEXT_DAY_SERVICE
     ];
 
-    const ELIGIBLE_TO_LOCKER = [self::LOCKER_NEXT_DAY_CODE, self::LOCKER_NEXT_DAY_CODE_CROSSBORDER];
+    const ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER = [
+        self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE
+    ];
+
+    const OOH_SERVICES = [
+        self::LOCKER_NEXT_DAY_SERVICE,
+        self::SAMEDAY_PUDO_SERVICE,
+    ];
+
+    const ELIGIBLE_TO_LOCKER = [
+        self::LOCKER_NEXT_DAY_SERVICE,
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+    ];
+
+    const OOH_SERVICES_LABELS = [
+        self::API_HOST_LOCALE_RO => 'Ridicare personala',
+        self::API_HOST_LOCALE_BG => 'Персонален асансьор',
+        self::API_HOST_LOCALE_HU => 'Személyi lift',
+    ];
 
     const AFTER_48_HOURS = 172800;
 
@@ -50,13 +73,13 @@ class SamedayHelper
     const API_DEMO = 1;
 
     const API_HOST_LOCALE_RO = 'RO';
-    const API_HOST_LOCAL_HU = 'HU';
-    const API_HOST_LOCAL_BG = 'BG';
+    const API_HOST_LOCALE_HU = 'HU';
+    const API_HOST_LOCALE_BG = 'BG';
 
     const SAMEDAY_ELIGIBLE_CURRENCIES = [
         self::API_HOST_LOCALE_RO => 'RON',
-        self::API_HOST_LOCAL_HU => 'HUF',
-        self::API_HOST_LOCAL_BG => 'BGN',
+        self::API_HOST_LOCALE_HU => 'HUF',
+        self::API_HOST_LOCALE_BG => 'BGN',
     ];
 
     public static function getEnvModes(): array
@@ -66,11 +89,11 @@ class SamedayHelper
                 self::API_PROD => 'https://api.sameday.ro',
                 self::API_DEMO => 'https://sameday-api.demo.zitec.com',
             ],
-            self::API_HOST_LOCAL_HU => [
+            self::API_HOST_LOCALE_HU => [
                 self::API_PROD => 'https://api.sameday.hu',
                 self::API_DEMO => 'https://sameday-api-hu.demo.zitec.com',
             ],
-            self::API_HOST_LOCAL_BG => [
+            self::API_HOST_LOCALE_BG => [
                 self::API_PROD => 'https://api.sameday.bg',
                 self::API_DEMO => 'https://sameday-api-bg.demo.zitec.com',
             ]
@@ -81,8 +104,8 @@ class SamedayHelper
     {
         return [
             self::API_HOST_LOCALE_RO => 'https://eawb.sameday.ro/',
-            self::API_HOST_LOCAL_HU => 'https://eawb.sameday.hu/',
-            self::API_HOST_LOCAL_BG => 'https://eawb.sameday.bg/',
+            self::API_HOST_LOCALE_HU => 'https://eawb.sameday.hu/',
+            self::API_HOST_LOCALE_BG => 'https://eawb.sameday.bg/',
         ];
     }
 
@@ -104,10 +127,7 @@ class SamedayHelper
      */
     public function getApiUrl(): string
     {
-        // Default host will be always RO
-        $countryHost = $this->samedayConfigs['sameday_host_country'] ?? self::API_HOST_LOCALE_RO;
-
-        return self::getEnvModes()[$countryHost][$this->isTesting()];
+        return self::getEnvModes()[$this->getHostCountry()][$this->isTesting()];
     }
 
     /**
@@ -160,5 +180,15 @@ class SamedayHelper
     public function isEligibleToLocker(string $samedayCode): bool
     {
         return in_array($samedayCode, self::ELIGIBLE_TO_LOCKER, true);
+    }
+
+    public function isOohDeliveryOption(string $samedayCode): bool
+    {
+        return in_array($samedayCode, self::OOH_SERVICES);
+    }
+
+    public function getHostCountry(): string
+    {
+        return $this->samedayConfigs['sameday_host_country'] ?? self::API_HOST_LOCALE_RO;
     }
 }

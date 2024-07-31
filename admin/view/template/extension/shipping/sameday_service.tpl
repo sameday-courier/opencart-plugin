@@ -33,19 +33,19 @@
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-name"><?php echo $entry_name; ?></label>
                         <div class="col-sm-10">
-                            <input type="text" name="name" value="<?php echo $name; ?>" placeholder="<?php echo $entry_name; ?>" id="input-name" class="form-control" />
+                            <input type="text" name="name" value="<?php echo $name; ?>" <?php echo $disabled; ?> placeholder="<?php echo $entry_name; ?>" id="input-name" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-price"><?php echo $entry_price; ?></label>
                         <div class="col-sm-10">
-                            <input type="number" name="price" value="<?php echo $price; ?>" placeholder="<?php echo $entry_price; ?>" min="0" id="input-price" class="form-control" />
+                            <input type="number" name="price" step="any" value="<?php echo $price; ?>" placeholder="<?php echo $entry_price; ?>" min="0" id="input-price" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-price"><?php echo $entry_price_free; ?></label>
                         <div class="col-sm-10">
-                            <input type="number" name="price_free" value="<?php echo $price_free; ?>" placeholder="<?php echo $entry_price_free; ?>" min="0" id="input-price" class="form-control" />
+                            <input type="number" name="price_free" step="any" value="<?php echo $price_free; ?>" placeholder="<?php echo $entry_price_free; ?>" min="0" id="input-price" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group">

@@ -179,6 +179,8 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
+     * @return mixed
+     *
      * @throws SamedaySDKException
      */
     public function index()
@@ -303,7 +305,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['statuses'] = $this->getStatuses();
         $data['action'] = $this->url->link('extension/shipping/sameday', $this->addToken(), true);
         $data['cancel'] = $this->url->link($this->getRouteExtension(), $this->addToken(array('type' => 'shipping')), true);
-        $data['services'] = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $data['services'] = $this->displayServices();
         $data['import_local_data_actions'] = json_encode(self::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link('extension/shipping/sameday/importLocalData', $this->addToken(), true);
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
@@ -326,7 +328,47 @@ class ControllerExtensionShippingSameday extends Controller
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
+        return $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
+    }
+
+    /**
+     * @return array
+     */
+    private function displayServices(): array
+    {
+        $services = $this->model_extension_shipping_sameday->getServices($this->getConfig('sameday_testing'));
+        $samedayHelper = $this->samedayHelper;
+
+        $services = array_filter(
+            $services,
+            static function (array $service) use ($samedayHelper){
+                return in_array($service['sameday_code'], $samedayHelper::SAMEDAY_IN_USE_SERVICES, true);
+            }
+        );
+
+        $oohService = array_values(array_filter(
+            $services,
+            static function (array $service) use ($samedayHelper){
+                return $service['sameday_code'] === $samedayHelper::LOCKER_NEXT_DAY_SERVICE;
+            },
+            true
+        ))[0] ?? null;
+
+
+        if (null !== $oohService) {
+            $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
+            $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE_CODE;
+            $oohService['column_ooh_label'] = $this->buildLanguage('column_ooh_label');
+
+            $services = array_merge([$oohService], $services);
+        }
+
+        $s = $services;
+
+        return array_filter($services, static function($service) use ($samedayHelper) {
+            return !$samedayHelper->isOohDeliveryOption($service['sameday_code']);
+
+        });
     }
 
     /**
@@ -437,6 +479,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $remoteServices = [];
         $page = 1;
+        $lockerNextDayService = null;
         do {
             $request = new SamedayGetServicesRequest();
             $request->setPage($page++);
@@ -465,6 +508,11 @@ class ControllerExtensionShippingSameday extends Controller
                 } else {
                     // Service already exist, update it.
                     $this->model_extension_shipping_sameday->editService($service['id'], $serviceObject);
+
+                    // Keep in mind lockerService:
+                    if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_SERVICE) {
+                        $lockerNextDayService = $service;
+                    }
                 }
 
                 // Save as current sameday service.
@@ -488,6 +536,20 @@ class ControllerExtensionShippingSameday extends Controller
             if (!in_array($localService['sameday_id'], $remoteServices, true)) {
                 $this->model_extension_shipping_sameday->deleteService($localService['id']);
             }
+        }
+
+        // Update Pudo Service status to be same as LN
+        if (null !== $lockerNextDayService) {
+            $pudoService = $this->model_extension_shipping_sameday->getSamedayServiceByCode(
+                $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
+                $this->isTesting()
+            );
+
+            $pudoService['status'] = $lockerNextDayService['status'];
+            $this->model_extension_shipping_sameday->updateServiceStatus(
+                $pudoService['id'],
+                $lockerNextDayService['status']
+            );
         }
 
         if ($redirectToPage) {
@@ -618,11 +680,35 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->model('setting/setting');
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validatePermissions()) {
+            if (null === $this->request->post['name'] ?? null) {
+                $this->request->post['name'] = $this->samedayHelper::OOH_SERVICES_LABELS[
+                    $this->samedayHelper->getHostCountry()
+                ];
+            }
+
             $this->model_extension_shipping_sameday->updateService($service['id'], $this->request->post);
+
+            // Update Pudo Service status to be same as LN
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_SERVICE) {
+                $pudoService = $this->model_extension_shipping_sameday->getSamedayServiceByCode(
+                    $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
+                    $this->isTesting()
+                );
+
+                if (!empty($pudoService)) {
+                    $this->model_extension_shipping_sameday->updateServiceStatus(
+                        $pudoService['id'],
+                        $this->request->post['status']
+                    );
+                }
+            }
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
-            $this->response->redirect($this->url->link('extension/shipping/sameday/service', $this->addToken(array('id' => $service['id'])), true));
+            $this->response->redirect($this->url->link(
+                'extension/shipping/sameday/service',
+                $this->addToken(array('id' => $service['id'])), true)
+            );
         }
 
         $data = $this->buildLanguage(array(
@@ -645,7 +731,11 @@ class ControllerExtensionShippingSameday extends Controller
 
             'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
         ));
-        $data['text_edit_service'] = sprintf($this->language->get('text_edit_service'), $service['sameday_name']);
+        $serviceName = $service['sameday_name'];
+        if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
+            $serviceName = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+        }
+        $data['text_edit_service'] = sprintf($this->language->get('text_edit_service'), $serviceName);
 
         $data['error_warning'] = $this->buildError('warning');
         $data['error_success'] = $this->buildError('success');
@@ -1602,14 +1692,23 @@ class ControllerExtensionShippingSameday extends Controller
         return !$this->error;
     }
 
-    private function buildLanguage(array $keys)
+    /**
+     * @param string|array $keyOrKeys
+     *
+     * @return string|array
+     */
+    private function buildLanguage($keyOrKeys)
     {
-        $entries = array();
-        foreach ($keys as $key) {
-            $entries[$key] = $this->language->get($key);
+        if (is_array($keyOrKeys)) {
+            $entries = [];
+            foreach ($keyOrKeys as $key) {
+                $entries[$key] = $this->language->get($key);
+            }
+
+            return $entries;
         }
 
-        return $entries;
+        return $this->language->get($keyOrKeys);
     }
 
     private function buildRequest(array $keys): array
@@ -1630,8 +1729,14 @@ class ControllerExtensionShippingSameday extends Controller
     private function buildRequestService($keys, $service): array
     {
         $entries = array();
+        $entries['disabled'] = '';
         foreach ($keys as $key) {
-            $entries[$key] = $this->request->post[$key] ?? $service[$key];
+            if ($key === 'name' && $this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
+                $entries['disabled'] = 'disabled';
+                $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+            } else {
+                $entries[$key] = $this->request->post[$key] ?? $service[$key];
+            }
         }
 
         return $entries;

@@ -125,7 +125,6 @@
                     <table class="table table-bordered table-hover">
                         <thead>
                             <tr>
-                                <td class="text-left">{{ column_internal_id }}</td>
                                 <td class="text-left">{{ column_internal_name }}</td>
                                 <td class="text-left">{{ column_name }}</td>
                                 <td class="text-left">{{ column_price }}</td>
@@ -141,8 +140,14 @@
                             {% else  %}
                                 {% for key, service in services %}
                                     <tr>
-                                        <td>{{ service.sameday_id }}</td>
-                                        <td><a href="{{ service_links[key] }}">{{ service.sameday_name }}</a></td>
+                                        <td>
+                                            <a href="{{ service_links[key] }}"
+                                               {% if service.column_ooh_label is not null %}
+                                                    title="{{ service.column_ooh_label }}"
+                                               {% endif %}
+                                            >{{ service.sameday_name }}
+                                            </a>
+                                        </td>
                                         <td>{{ service.name }}</td>
                                         <td>{{ service.price }}</td>
                                         <td>{{ service.price_free }}</td>
