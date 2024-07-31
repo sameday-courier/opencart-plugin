@@ -153,6 +153,25 @@ class ModelExtensionShippingSameday extends Model
         return $this->db->query($query)->row;
     }
 
+    /**
+     * @param string $samedayCode
+     * @param bool $testing
+     *
+     * @return void
+     */
+    public function getSamedayServiceByCode(string $samedayCode, bool $testing)
+    {
+        $table = DB_PREFIX . "sameday_service";
+
+        $query = sprintf("SELECT * FROM %s WHERE sameday_code='%s' AND testing='%s'",
+            $table,
+            $this->db->escape($samedayCode),
+            $this->db->escape($testing)
+        );
+
+        return $this->db->query($query)->row;
+    }
+
     public function ensureSamedayServiceCodeColumn()
     {
         $query = 'SHOW COLUMNS FROM ' . DB_PREFIX . "sameday_service LIKE 'sameday_code'";
@@ -194,6 +213,15 @@ class ModelExtensionShippingSameday extends Model
             WHERE 
                 id = '{$this->db->escape($id)}'
         ");
+    }
+
+    public function updateServiceStatus($id, $status)
+    {
+        $this->db->query(sprintf(
+            "UPDATE %s SET status='%s' WHERE id = '%s'", DB_PREFIX. "sameday_service",
+            $status,
+            $id
+        ));
     }
 
     /**

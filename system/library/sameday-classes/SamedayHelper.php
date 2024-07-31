@@ -19,13 +19,11 @@ class SamedayHelper
      * @var array $samedayConfigs
      */
     private $samedayConfigs;
-
     const CASH_ON_DELIVERY_CODE = 'cod';
-
     const SAMEDAY_6H_SERVICE = '6H';
     const DEFAULT_SAMEDAY_SERVICE = '24';
     const LOCKER_NEXT_DAY_SERVICE = 'LN';
-    const SAMEDAY_PUDO_SERVICE = 'PD';
+    const SAMEDAY_PUDO_SERVICE = 'PP';
     const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
     const OOH_SERVICE_CODE = 'OOH';

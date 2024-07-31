@@ -479,6 +479,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $remoteServices = [];
         $page = 1;
+        $lockerNextDayService = null;
         do {
             $request = new SamedayGetServicesRequest();
             $request->setPage($page++);
@@ -507,6 +508,11 @@ class ControllerExtensionShippingSameday extends Controller
                 } else {
                     // Service already exist, update it.
                     $this->model_extension_shipping_sameday->editService($service['id'], $serviceObject);
+
+                    // Keep in mind lockerService:
+                    if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_SERVICE) {
+                        $lockerNextDayService = $service;
+                    }
                 }
 
                 // Save as current sameday service.
@@ -530,6 +536,20 @@ class ControllerExtensionShippingSameday extends Controller
             if (!in_array($localService['sameday_id'], $remoteServices, true)) {
                 $this->model_extension_shipping_sameday->deleteService($localService['id']);
             }
+        }
+
+        // Update Pudo Service status to be same as LN
+        if (null !== $lockerNextDayService) {
+            $pudoService = $this->model_extension_shipping_sameday->getSamedayServiceByCode(
+                $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
+                $this->isTesting()
+            );
+
+            $pudoService['status'] = $lockerNextDayService['status'];
+            $this->model_extension_shipping_sameday->updateServiceStatus(
+                $pudoService['id'],
+                $lockerNextDayService['status']
+            );
         }
 
         if ($redirectToPage) {
@@ -667,6 +687,21 @@ class ControllerExtensionShippingSameday extends Controller
             }
 
             $this->model_extension_shipping_sameday->updateService($service['id'], $this->request->post);
+
+            // Update Pudo Service status to be same as LN
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_SERVICE) {
+                $pudoService = $this->model_extension_shipping_sameday->getSamedayServiceByCode(
+                    $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
+                    $this->isTesting()
+                );
+
+                if (!empty($pudoService)) {
+                    $this->model_extension_shipping_sameday->updateServiceStatus(
+                        $pudoService['id'],
+                        $this->request->post['status']
+                    );
+                }
+            }
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
