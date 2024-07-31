@@ -147,11 +147,12 @@ class SamedayHelper
     }
 
     /**
-     * @param null $username
-     * @param null $password
-     * @param null $testing
+     * @param $username
+     * @param $password
+     * @param $apiUrl
      *
      * @return SamedayClient
+     *
      * @throws SamedaySDKException
      */
     public function initClient($username = null, $password = null, $apiUrl = null): SamedayClient

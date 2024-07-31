@@ -74,6 +74,7 @@
                             <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="<?php echo $entry_calculated_weight_title; ?>"><?php echo $entry_calculated_weight; ?></span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
+                                    <input type="hidden" id="calculatedWeight" value="<?php echo $calculated_weight; ?>">
                                     <input type="number" step="any" value="<?php echo $calculated_weight; ?>" readonly="readonly" class="form-control input-number"/>
                                 </div>
                             </div>
@@ -371,6 +372,23 @@
 </div>
 
 <script>
+    $('body').on('click', () => {
+        updateTotalWeight();
+    });
+
+    $('body').on('click', () => {
+        updateTotalWeight();
+    });
+
+    function updateTotalWeight() {
+        let totalWeight = 0;
+        document.getElementsByName("sameday_package_weight[]").forEach((element) => {
+            totalWeight += parseInt(element.value);
+        });
+
+        $('#totalWeight').val(totalWeight);
+    }
+
     $(document).on('click', '#changeLocker', (element) => {
         const clientId="b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
 
@@ -481,7 +499,7 @@
             $('#sameday_package_qty').val(10);
         }
 
-        createPackageDimensionField('+');
+        createPackageDimensionField();
     });
 
     $(document).on('click','#removePackageDimensionField', function(){
@@ -489,24 +507,27 @@
             $(this).parents('.parcel').remove();
             $('#sameday_package_qty').val(parseInt($('#sameday_package_qty').val()) -1 );
         }
+
+        updateTotalWeight();
     });
 
     $('#plus-btn').trigger('click');
 
     function createPackageDimensionField(){
-        var qty = parseInt($('#sameday_package_qty').val());
-
-        var field = createField();
+        let calculatedWeight = parseInt($('#calculatedWeight').val());
+        let field = createField(calculatedWeight);
 
         $('.package_dimension_field').append(field);
+
+        updateTotalWeight();
     }
 
-    function createField(weightValue = '', error_weight_class = '') {
+    function createField(weightValue = 0, error_weight_class = '') {
         field = "<div class='parcel'><label class=\"col-sm-2 control-label\" for=\"input-length\"><?php echo $entry_package_dimension; ?></label>\n" +
             "<div class=\"col-sm-10\" style='padding-bottom: 5px;'>\n" +
             "<div class=\"row\">\n" +
             "<div class=\"col-sm-2\">\n" +
-            "<input type=\"number\" step=\"any\" name=\"sameday_package_weight[]\" value=\""+weightValue+"\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
+            "<input type=\"number\" step=\"any\" name=\"sameday_package_weight[]\" value=\"" + weightValue + "\" min=\"1\" placeholder=\"<?php echo $entry_weight; ?>\" id=\"input-length\" class=\"form-control input-number\" />\n" +
             "</div>\n" +
             "<div class=\"col-sm-2\">\n" +
             "<input type=\"number\" step=\"any\" name=\"sameday_package_width[]\" value=\"\" min=\"0\" placeholder=\"<?php echo $entry_width; ?>\" id=\"input-width\" class=\"form-control input-number\" />\n" +
@@ -521,7 +542,7 @@
             "<span id='removePackageDimensionField'><i class='fa fa-remove pull-left' style='vertical-align: bottom; cursor: pointer; padding-top: 12px;'></i></span>\n" +
             "</div>\n" +
             "</div>\n" +
-            "<div class=\""+error_weight_class+" text-danger\"></div>\n" +
+            "<div class=\"" + error_weight_class + " text-danger\"></div>\n" +
             "</div>" +
             "</div>";
 

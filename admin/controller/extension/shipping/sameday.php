@@ -102,18 +102,20 @@ class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
 
+    private const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+
     const SAMEDAY_CONFIGS = [
-        'username',
-        'password',
-        'testing',
-        'tax_class_id',
-        'geo_zone_id',
-        'status',
-        'estimated_cost',
-        'show_lockers_map',
-        'locker_max_items',
-        'sort_order',
-        'host_country',
+        'username' => null,
+        'password' => null,
+        'testing' => null,
+        'tax_class_id' => null,
+        'geo_zone_id' => null,
+        'status' => null,
+        'estimated_cost' => null,
+        'show_lockers_map' => null,
+        'locker_max_items' => self::DEFAULT_VALUE_LOCKER_MAX_ITEMS,
+        'sort_order' => 0,
+        'host_country' => null,
     ];
 
     const TOGGLE_HTML_ELEMENT = [
@@ -1677,9 +1679,13 @@ class ControllerExtensionShippingSameday extends Controller
     private function buildRequest(array $keys): array
     {
         $entries = array();
-        foreach ($keys as $key) {
+        foreach ($keys as $key => $value) {
             $requestKey = sprintf("%ssameday_%s", $this->model_extension_shipping_sameday->getPrefix(), $key);
-            $entries["sameday_$key"] = $this->request->post[$requestKey] ?? $this->getConfig("sameday_$key");
+            if ('' === $valueOfKey = ($this->getConfig("sameday_$key") ?? '')) {
+                $valueOfKey = $value;
+            }
+
+            $entries["sameday_$key"] = $this->request->post[$requestKey] ?? $valueOfKey;
         }
 
         return $entries;

@@ -17,6 +17,8 @@ class ModelExtensionShippingSameday extends Model
      */
     private $samedayHelper;
 
+    private const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+
     const SAMEDAY_CONFIGS = [
         'username',
         'password',
@@ -84,7 +86,6 @@ class ModelExtensionShippingSameday extends Model
             }
         );
 
-        $lockerMaxItems = (int) $this->getConfig('sameday_locker_max_items');
         $quote_data = array();
 
         if (empty($availableService)) {
@@ -98,10 +99,14 @@ class ModelExtensionShippingSameday extends Model
                 continue;
             }
 
-            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])
-                && (count($this->cart->getProducts()) > $lockerMaxItems)
-            ) {
-                continue;
+            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
+                if ('' === $lockerMaxItems = ($this->getConfig('sameday_locker_max_items') ?? '')) {
+                    $lockerMaxItems = self::DEFAULT_VALUE_LOCKER_MAX_ITEMS;
+                }
+
+                if ((count($this->cart->getProducts()) > $lockerMaxItems)) {
+                    continue;
+                }
             }
 
             $price = $service['price'];

@@ -86,8 +86,8 @@
                         <label class="col-sm-2 control-label" for="input-status-show-locker-map"><?php echo $entry_show_lockers_map; ?></label>
                         <div class="col-sm-10">
                             <select name="sameday_show_lockers_map" id="input-status-show-locker-map" class="form-control">
-                                <option value="0" <?php if (!$sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_enabled; ?></option>
-                                <option value="1" <?php if ($sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $text_disabled; ?></option>
+                                <option value="0" <?php if (!$sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $entry_interactive_map; ?></option>
+                                <option value="1" <?php if ($sameday_show_lockers_map) { ?> selected="selected" <?php } ?> > <?php echo $entry_drop_down_list; ?></option>
                             </select>
                         </div>
                     </div>
