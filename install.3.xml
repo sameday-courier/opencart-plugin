@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -129,7 +129,7 @@
                     {% endif %}
                     {% if (quote.lockers is empty) %}
                         <div class="lockers">
-                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap">
+                            <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show Sameday locations" id="showLockerMap">
                             <span id="showLockerDetails"></span>
                         </div>
                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>

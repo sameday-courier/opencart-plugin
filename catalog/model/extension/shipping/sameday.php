@@ -127,9 +127,14 @@ class ModelExtensionShippingSameday extends Model
                 $serviceCode = $this->samedayHelper::OOH_SERVICE_CODE;
             }
 
-            $quote_data[$service['sameday_code']] = array(
+            $quote_data[$serviceCode] = array(
                 'sameday_name' => $service['name'],
-                'code' => 'sameday.' . $serviceCode,
+                'code' => sprintf(
+                    '%s.%s.%s',
+                    'sameday',
+                    $serviceCode,
+                    $service['sameday_id']
+                ),
                 'service_id' => $service['sameday_id'],
                 'title' => $service['name'],
                 'cost' => $price,
@@ -146,11 +151,11 @@ class ModelExtensionShippingSameday extends Model
 
             if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 if (true === $this->isShowLockersMap()) {
-                    $quote_data[$service['sameday_code']]['lockers'] = '';
-                    $quote_data[$service['sameday_code']]['destCountry'] = $destCountry;
-                    $quote_data[$service['sameday_code']]['destCity'] = $address['city'];
-                    $quote_data[$service['sameday_code']]['destCounty'] = $address['zone'];
-                    $quote_data[$service['sameday_code']]['apiUsername'] = $this->getApiUsername();
+                    $quote_data[$serviceCode]['lockers'] = '';
+                    $quote_data[$serviceCode]['destCountry'] = $destCountry;
+                    $quote_data[$serviceCode]['destCity'] = $address['city'];
+                    $quote_data[$serviceCode]['destCounty'] = $address['zone'];
+                    $quote_data[$serviceCode]['apiUsername'] = $this->getApiUsername();
                 } else {
                     $this->syncLockers();
 

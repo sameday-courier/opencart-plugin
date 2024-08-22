@@ -101,15 +101,15 @@
                             </div>
                         </div>
 
-                        <!-- Ramburs //-->
+                        <!-- Repayment //-->
                         <div class="form-group">
-                            <label class="col-sm-2 control-label" for="sameday_ramburs">
-                                <span data-toggle="tooltip" title="<?php echo $entry_ramburs_title; ?>">
-                                    <?php echo $entry_ramburs; ?> <strong>(<?php echo $sameday_currency; ?>)</strong>
+                            <label class="col-sm-2 control-label" for="sameday_repayment">
+                                <span data-toggle="tooltip" title="<?php echo $entry_repayment_title; ?>">
+                                    <?php echo $entry_repayment; ?> <strong>(<?php echo $sameday_currency; ?>)</strong>
                                 </span>
                             </label>
                             <div class="col-sm-10">
-                                <input type="number" step="any" name="sameday_ramburs" id="sameday_ramburs" value="<?php echo $sameday_ramburs; ?>" class="form-control"/>
+                                <input type="number" step="any" name="sameday_repayment" id="sameday_repayment" value="<?php echo $sameday_repayment; ?>" class="form-control"/>
                                 <?php if (null !== $repaymentCurrencyAlert) { ?>
                                     <span>
                                         <strong style="font-weight: bolder; color: #9f0101">
