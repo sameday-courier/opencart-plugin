@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -151,7 +151,7 @@
                 <?php } else if (isset($quote['lockers']) && empty($quote['lockers'])) { ?>
                     <div class="lockers">
                         <span style="text-align:center;">
-                             <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show lockers map" id="showLockerMap" > </span>
+                             <input type="button" class="btn btn-primary" data-loading-text="Loading..." value="Show Sameday locations" id="showLockerMap" > </span>
                              <span id="showLockerDetails"></span>
                         </span>
                     </div>

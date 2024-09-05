@@ -28,6 +28,11 @@ class SamedayHelper
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
     const OOH_SERVICE_CODE = 'OOH';
 
+    const OOH_TYPES = [
+        0 => self::LOCKER_NEXT_DAY_SERVICE,
+        1 => self::SAMEDAY_PUDO_SERVICE,
+    ];
+
     const SAMEDAY_IN_USE_SERVICES = [
         self::SAMEDAY_6H_SERVICE,
         self::DEFAULT_SAMEDAY_SERVICE,
@@ -56,12 +61,13 @@ class SamedayHelper
     const ELIGIBLE_TO_LOCKER = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+        self::SAMEDAY_PUDO_SERVICE,
     ];
 
     const OOH_SERVICES_LABELS = [
-        self::API_HOST_LOCALE_RO => 'Ridicare personala',
-        self::API_HOST_LOCALE_BG => 'Персонален асансьор',
-        self::API_HOST_LOCALE_HU => 'Személyi lift',
+        self::API_HOST_LOCALE_RO => 'Ridicare Sameday Point/Easybox',
+        self::API_HOST_LOCALE_BG => 'вземете от Sameday Point/Easybox',
+        self::API_HOST_LOCALE_HU => 'Felvenni től Sameday Point/Easybox',
     ];
 
     const AFTER_48_HOURS = 172800;
@@ -190,5 +196,19 @@ class SamedayHelper
     public function getHostCountry(): string
     {
         return $this->samedayConfigs['sameday_host_country'] ?? self::API_HOST_LOCALE_RO;
+    }
+
+    /**
+     * @param int $locationId
+     *
+     * @return string
+     */
+    public function checkOohLocationType(int $locationId): string
+    {
+        if ($locationId >= 500000) {
+            return self::OOH_TYPES[1];
+        }
+
+        return self::OOH_TYPES[0];
     }
 }

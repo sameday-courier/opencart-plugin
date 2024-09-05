@@ -2,8 +2,11 @@
 
 use Sameday\Exceptions\SamedayBadRequestException;
 use Sameday\Exceptions\SamedaySDKException;
+use Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject;
 use Sameday\Objects\PostAwb\Request\ThirdPartyPickupEntityObject;
+use Sameday\Objects\Types\AwbPaymentType;
 use Sameday\Objects\Types\AwbPdfType;
+use Sameday\Objects\Types\CodCollectorType;
 use Sameday\Requests\SamedayGetAwbPdfRequest;
 use Sameday\Requests\SamedayGetLockersRequest;
 use Sameday\Requests\SamedayGetPickupPointsRequest;
@@ -357,13 +360,12 @@ class ControllerExtensionShippingSameday extends Controller
 
         if (null !== $oohService) {
             $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
+            $oohService['name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
             $oohService['sameday_code'] = $samedayHelper::OOH_SERVICE_CODE;
             $oohService['column_ooh_label'] = $this->buildLanguage('column_ooh_label');
 
             $services = array_merge([$oohService], $services);
         }
-
-        $s = $services;
 
         return array_filter($services, static function($service) use ($samedayHelper) {
             return !$samedayHelper->isOohDeliveryOption($service['sameday_code']);
@@ -893,7 +895,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_length',
             'entry_height',
             'entry_observation',
-            'entry_ramburs',
+            'entry_repayment',
             'entry_pickup_point',
             'entry_pickup_point_title',
             'entry_locker_details',
@@ -901,7 +903,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_locker_change',
             'entry_observation_title',
             'entry_client_reference_title',
-            'entry_ramburs_title',
+            'entry_repayment_title',
             'entry_package_type',
             'entry_package_type_title',
             'entry_awb_payment',
@@ -956,10 +958,24 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $showPDO = $this->toggleHtmlElement(false);
-        $currentService = $shippingSamedayModel->getServiceSameday(
-            (int) ($data['default_service_id'] ?? null),
-            $this->isTesting()
-        );
+
+        if (null !== $locationId = $parts[3] ?? null) {
+            if (
+                ($this->samedayHelper::OOH_SERVICE_CODE === $parts[1] ?? null)
+                && $this->samedayHelper::SAMEDAY_PUDO_SERVICE === $this->samedayHelper->checkOohLocationType($locationId)
+            ) {
+                $currentService = $shippingSamedayModel->getSamedayServiceByCode(
+                    $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
+                    $this->isTesting()
+                );
+                $data['default_service_id'] = $currentService['sameday_id'];
+            } else {
+                $currentService = $shippingSamedayModel->getServiceSameday(
+                    (int) ($data['default_service_id'] ?? null),
+                    $this->isTesting()
+                );
+            }
+        }
 
         if (isset($currentService['service_optional_taxes'])
             && $this->isServiceEligibleToPDO($currentService['service_optional_taxes'])
@@ -1046,7 +1062,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['awbPaymentsType'] = array(
             array(
                 'name' => $this->language->get('text_client'),
-                'value' => \Sameday\Objects\Types\AwbPaymentType::CLIENT
+                'value' => AwbPaymentType::CLIENT
             )
         );
 
@@ -1095,7 +1111,7 @@ class ControllerExtensionShippingSameday extends Controller
             );
         }
 
-        $data['sameday_ramburs'] = $repayment;
+        $data['sameday_repayment'] = $repayment;
         $data['sameday_currency'] = $orderInfo['currency_code'];
         $data['repaymentCurrencyAlert'] = $repaymentCurrencyAlert;
         $data['sameday_client_reference'] = $orderInfo['order_id'];
@@ -1290,16 +1306,13 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     /**
-     * @param $orderInfo
+     * @param $params
+     *
      * @return array
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayNotFoundException
-     * @throws \Sameday\Exceptions\SamedayOtherException
+     *
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayServerException
      */
-    private function postAwb($params)
+    private function postAwb($params): array
     {
         $parcelDimensions = [];
         foreach ($this->request->post['sameday_package_weight'] as $k => $weight) {
@@ -1346,11 +1359,26 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $address = trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
-        $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$params['shipping_iso_code_2']];
 
         $serviceTaxes = [];
         if (isset($params['sameday_locker_first_mile'])) {
             $serviceTaxes[] = $params['sameday_locker_first_mile'];
+        }
+
+        $lockerLastMile = null;
+        $oohLastMile = null;
+        if (null !== $params['sameday_locker_id']) {
+            if ($this->samedayHelper::LOCKER_NEXT_DAY_SERVICE
+                === $this->samedayHelper->checkOohLocationType($params['sameday_locker_id'])
+            ) {
+                $lockerLastMile = $params['sameday_locker_id'];
+            }
+
+            if ($this->samedayHelper::SAMEDAY_PUDO_SERVICE
+                === $this->samedayHelper->checkOohLocationType($params['sameday_locker_id'])
+            ) {
+                $oohLastMile = $params['sameday_locker_id'];
+            }
         }
 
         $request = new SamedayPostAwbRequest(
@@ -1359,8 +1387,8 @@ class ControllerExtensionShippingSameday extends Controller
             new \Sameday\Objects\Types\PackageType($params['sameday_package_type']),
             $parcelDimensions,
             (int) ($params['sameday_service'] ?? null),
-            new \Sameday\Objects\Types\AwbPaymentType($params['sameday_awb_payment']),
-            new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
+            new AwbPaymentType($params['sameday_awb_payment']),
+            new AwbRecipientEntityObject(
                 $params['shipping_city'],
                 $params['shipping_zone'],
                 $address,
@@ -1371,8 +1399,8 @@ class ControllerExtensionShippingSameday extends Controller
                 $params['shipping_postcode']
             ),
             $params['sameday_insured_value'],
-            $params['sameday_ramburs'],
-            new \Sameday\Objects\Types\CodCollectorType(\Sameday\Objects\Types\CodCollectorType::CLIENT),
+            $params['sameday_repayment'],
+            new CodCollectorType(CodCollectorType::CLIENT),
             $thirdPartyPickUp,
             $serviceTaxes,
             null,
@@ -1381,8 +1409,10 @@ class ControllerExtensionShippingSameday extends Controller
             '',
             '',
             null,
-            $params['sameday_locker_id'],
-            $destCurrency
+            $lockerLastMile,
+            null,
+            $oohLastMile,
+            $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$params['shipping_iso_code_2']]
         );
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -1396,13 +1426,17 @@ class ControllerExtensionShippingSameday extends Controller
                 'key' => ['SDK Error'],
                 'errors' => [$e->getMessage()],
             ];
-
+        } catch (\Exception $e) {
+            $errors[] = [
+                'key' => ['Generic Error'],
+                'errors' => [$e->getMessage()],
+            ];
         }
 
-        return array(
-            'awb' => isset($awb) ? $awb : null,
-            'errors' => isset($errors) ? $errors : null
-        );
+        return [
+            'awb' => $awb ?? null,
+            'errors' => $errors ?? null
+        ];
     }
 
     /**
@@ -1459,8 +1493,6 @@ class ControllerExtensionShippingSameday extends Controller
                 $serviceTaxes[] = $params['sameday_locker_first_mile'];
             }
 
-            $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']];
-
             $estimateCostRequest = new \Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
@@ -1469,10 +1501,10 @@ class ControllerExtensionShippingSameday extends Controller
                 ),
                 $parcelDimensions,
                 $params['sameday_service'],
-                new \Sameday\Objects\Types\AwbPaymentType(
+                new AwbPaymentType(
                     $params['sameday_awb_payment']
                 ),
-                new \Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
+                new AwbRecipientEntityObject(
                     ucwords(strtolower($orderInfo['shipping_city'])) !== 'Bucuresti' ? $orderInfo['shipping_city'] : 'Sector 1',
                     $orderInfo['shipping_zone'],
                     $orderInfo['shipping_address_1'],
@@ -1483,10 +1515,10 @@ class ControllerExtensionShippingSameday extends Controller
                     $orderInfo['shipping_postcode']
                 ),
                 $params['sameday_insured_value'],
-                $params['sameday_ramburs'],
+                $params['sameday_repayment'],
                 null,
                 $serviceTaxes,
-                $destCurrency
+                $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']]
             );
 
             $sameday =  new \Sameday\Sameday($this->samedayHelper->initClient());

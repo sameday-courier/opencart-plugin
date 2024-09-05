@@ -59,7 +59,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $shippingCode = sprintf(
             'sameday.%s.%s',
-            $this->db->escape($service['name']),
+            $this->db->escape($service['sameday_code']),
             $this->db->escape($service['sameday_id'])
         );
 
