@@ -3,10 +3,12 @@
 use Sameday\Exceptions\SamedayBadRequestException;
 use Sameday\Exceptions\SamedaySDKException;
 use Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject;
+use Sameday\Objects\PostAwb\Request\CompanyEntityObject;
 use Sameday\Objects\PostAwb\Request\ThirdPartyPickupEntityObject;
 use Sameday\Objects\Types\AwbPaymentType;
 use Sameday\Objects\Types\AwbPdfType;
 use Sameday\Objects\Types\CodCollectorType;
+use Sameday\Objects\Types\PackageType;
 use Sameday\Requests\SamedayGetAwbPdfRequest;
 use Sameday\Requests\SamedayGetLockersRequest;
 use Sameday\Requests\SamedayGetPickupPointsRequest;
@@ -821,6 +823,9 @@ class ControllerExtensionShippingSameday extends Controller
         return $data;
     }
 
+    /**
+     * @return Action
+     */
     public function addAwb()
     {
         /**
@@ -841,7 +846,11 @@ class ControllerExtensionShippingSameday extends Controller
 
         if ($awb) {
             // Already generated.
-            $this->response->redirect($this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderInfo['order_id'])), true));
+            $this->response->redirect(
+                $this->url->link('sale/order/info',
+                $this->addToken(array('order_id' => $orderInfo['order_id'])),
+                true
+            ));
         }
 
         $data = $this->buildRequestAwb(array(
@@ -1005,10 +1014,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             $postAwb = $this->postAwb($params);
 
-            $awb = $postAwb['awb'];
-            $errors = $postAwb['errors'];
-
-            if (isset($awb)) {
+            if (null !== $awb = $postAwb['awb'] ?? null) {
                 $shippingSamedayModel->saveAwb(array(
                     'order_id' => $orderInfo['order_id'],
                     'awb_number' => $awb->getAwbNumber(),
@@ -1024,8 +1030,12 @@ class ControllerExtensionShippingSameday extends Controller
                 );
 
                 // Redirect to order page.
-                $this->response->redirect($this->url->link('sale/order/info', $this->addToken(array('order_id' => $orderInfo['order_id'])), true));
-            } elseif (isset($errors)) {
+                return $this->response->redirect(
+                    $this->url->link('sale/order/info',
+                    $this->addToken(array('order_id' => $orderInfo['order_id'])),
+                    true
+                ));
+            } else if (null !== $errors = $postAwb['errors'] ?? null) {
                 $data['awb_errors'] = [];
 
                 foreach ($errors as $error) {
@@ -1047,15 +1057,15 @@ class ControllerExtensionShippingSameday extends Controller
         $data['packageTypes'] = array(
             array(
                 'name' => $this->language->get('text_package_type_package'),
-                'value' => \Sameday\Objects\Types\PackageType::PARCEL
+                'value' => PackageType::PARCEL
             ),
             array(
                 'name' => $this->language->get('text_package_type_envelope'),
-                'value' => \Sameday\Objects\Types\PackageType::ENVELOPE
+                'value' => PackageType::ENVELOPE
             ),
             array(
                 'name' => $this->language->get('text_package_type_large_package'),
-                'value' => \Sameday\Objects\Types\PackageType::LARGE
+                'value' => PackageType::LARGE
             )
         );
 
@@ -1309,8 +1319,6 @@ class ControllerExtensionShippingSameday extends Controller
      * @param $params
      *
      * @return array
-     *
-     * @throws SamedaySDKException
      */
     private function postAwb($params): array
     {
@@ -1326,7 +1334,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $companyObject = null;
         if (strlen($params['payment_company'])) {
-            $companyObject = new \Sameday\Objects\PostAwb\Request\CompanyEntityObject(
+            $companyObject = new CompanyEntityObject(
                 $params['payment_company'],
                 '',
                 '',
@@ -1339,7 +1347,7 @@ class ControllerExtensionShippingSameday extends Controller
         if ($params['sameday_third_party_pickup']) {
             $thirdPartyCompany = null;
             if ($params['sameday_third_party_person_type']) {
-                $thirdPartyCompany = new \Sameday\Objects\PostAwb\Request\CompanyEntityObject(
+                $thirdPartyCompany = new CompanyEntityObject(
                     $params['sameday_third_party_person_company'],
                     $params['sameday_third_party_person_cif'],
                     $params['sameday_third_party_person_onrc'],
@@ -1359,6 +1367,26 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $address = trim($params['shipping_address_1'] . ' ' . $params['shipping_address_2']);
+
+        $fieldErrors = null;
+        if ('' === $phone = $params['telephone'] ?? '') {
+            $fieldErrors[] = 'Must complete phone number!';
+        }
+
+        if ('' === $email = $params['email'] ?? '') {
+            $fieldErrors[] = 'Must complete email address!';
+        }
+
+        if (null !== $fieldErrors) {
+            return [
+                'errors' => [
+                    'errors' => [
+                        'key' => ['Invalid field'],
+                        'errors' => $fieldErrors
+                    ]
+                ]
+            ];
+        }
 
         $serviceTaxes = [];
         if (isset($params['sameday_locker_first_mile'])) {
@@ -1384,7 +1412,7 @@ class ControllerExtensionShippingSameday extends Controller
         $request = new SamedayPostAwbRequest(
             (int) ($params['sameday_pickup_point'] ?? null),
             null,
-            new \Sameday\Objects\Types\PackageType($params['sameday_package_type']),
+            new PackageType($params['sameday_package_type']),
             $parcelDimensions,
             (int) ($params['sameday_service'] ?? null),
             new AwbPaymentType($params['sameday_awb_payment']),
@@ -1393,8 +1421,8 @@ class ControllerExtensionShippingSameday extends Controller
                 $params['shipping_zone'],
                 $address,
                 $params['shipping_firstname'] . ' ' . $params['shipping_lastname'],
-                $params['telephone'],
-                $params['email'],
+                $phone,
+                $email,
                 $companyObject,
                 $params['shipping_postcode']
             ),
@@ -1415,7 +1443,16 @@ class ControllerExtensionShippingSameday extends Controller
             $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$params['shipping_iso_code_2']]
         );
 
-        $sameday = new Sameday($this->samedayHelper->initClient());
+        try {
+            $sameday = new Sameday($this->samedayHelper->initClient());
+        } catch (SamedaySDKException $exception) {
+            return [
+                'errors' => [
+                    'key' => [$exception->getCode()],
+                    'errors' => [$exception->getMessage()]
+                ]
+            ];
+        }
 
         try{
             $awb = $sameday->postAwb($request);
@@ -1496,7 +1533,7 @@ class ControllerExtensionShippingSameday extends Controller
             $estimateCostRequest = new \Sameday\Requests\SamedayPostAwbEstimationRequest(
                 $params['sameday_pickup_point'],
                 null,
-                new \Sameday\Objects\Types\PackageType(
+                new PackageType(
                     $params['sameday_package_type']
                 ),
                 $parcelDimensions,
