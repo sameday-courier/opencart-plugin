@@ -1,5 +1,6 @@
 *
 !build.sh
+!build-windows.sh
 !install.*.xml
 !admin/controller/extension/shipping/sameday.php
 !admin/language/en-gb/extension/shipping/sameday.php
