@@ -370,12 +370,12 @@
         </div>
     </div>
 </div>
-
 <script>
-    $('body').on('click', () => {
-        updateTotalWeight();
+    $(document).ready(function() {
+        $('#input-status-sameday-pickup_point').select2();
     });
-
+</script>
+<script>
     $('body').on('click', () => {
         updateTotalWeight();
     });
