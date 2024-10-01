@@ -25,6 +25,7 @@ if [ $VERSION -eq 2 ]; then
         system/library/sameday-php-sdk/ \
         system/library/sameday-classes/ \
         system/library/samedayclasses.php \
+        admin/view/javascript/select2/ \
         upload
 
     cp install.$VERSION.xml install.xml
@@ -51,6 +52,7 @@ elif [ $VERSION -eq 3 ]; then
         system/library/sameday-php-sdk/ \
         system/library/sameday-classes/ \
         system/library/samedayclasses.php \
+        admin/view/javascript/select2/ \
         upload
 
     cp install.$VERSION.xml install.xml
