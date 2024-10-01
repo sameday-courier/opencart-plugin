@@ -5,7 +5,7 @@
     <version>1.6.3</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
-    <file path="admin/view/template/common/header.twig">
+    <file path="admin/view/template/common/header.tpl">
         <operation>
             <search><![CDATA[
                 <link type="text/css" href="view/stylesheet/stylesheet.css" rel="stylesheet" media="screen" />
