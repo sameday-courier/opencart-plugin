@@ -392,9 +392,9 @@
                     showSpinner(true);
                     document.getElementById('input-import-local-data').setAttribute('disabled', true);
                 },
-                success: () => {
+                success: (data) => {
                     showSpinner(false);
-
+                    console.log(data);
                     importLocalData(_url, _actions, _action);
                 },
                 error: () => {
