@@ -349,7 +349,7 @@
                 <h3 class="modal-title text-center" id="pickupPointDeleteLabel"><?php echo $text_pickupPoint_delete; ?></h3>
             </div>
             <div class="modal-body">
-                <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?>></h4>
+                <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?></h4>
                 <form action="<?php echo $url_deletePickupPoint; ?>" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
                     <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
                     <button class="btn btn-secondary" data-dismiss="modal"><?php echo $text_pickupPoint_delete_decline; ?></button>
@@ -360,59 +360,115 @@
     </div>
 </div>
 <script>
-$(document).ready(() => {
-   $(document).on('click', '#input-import-local-data', (element) => {
-       let _target = element.target;
-       let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
-       let _url = _target.getAttribute('data-href');
+    $(document).ready(() => {
+        $(document).on('click', '#input-import-local-data', (element) => {
+            let _target = element.target;
+            let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
+            let _url = _target.getAttribute('data-href');
 
-       importLocalData(_url, _actions);
-   });
+            importLocalData(_url, _actions);
+        });
 
-   function importLocalData(_url = '', _actions = []) {
-       const _action = _actions.shift();
+        function importLocalData(_url = '', _actions = []) {
+            const _action = _actions.shift();
 
-       if (typeof _action === "undefined") {
-           window.location.reload();
+            if (typeof _action === "undefined") {
+                window.location.reload();
 
-           return true;
-       }
+                return true;
+            }
 
-       doAjaxRequest(_url, _actions, _action);
-   }
+            doAjaxRequest(_url, _actions, _action);
+        }
 
-   const doAjaxRequest = (_url = '', _actions = [], _action = '') => {
-       $.ajax({
-           url: _url,
-           type: "POST",
-           dataType: "JSON",
-           data: jQuery.param({ 'action': _action}),
-           processData: false,
-           contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-           beforeSend: () => {
-               showSpinner(true);
-               document.getElementById('input-import-local-data').setAttribute('disabled', true);
-           },
-           success: () => {
-               showSpinner(false);
+        const doAjaxRequest = (_url = '', _actions = [], _action = '', _params = []) => {
+            $.ajax({
+                url: _url,
+                type: "POST",
+                dataType: "JSON",
+                data: jQuery.param({ 'action': _action}),
+                processData: false,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                beforeSend: () => {
+                    showSpinner(true);
+                    document.getElementById('input-import-local-data').setAttribute('disabled', true);
+                },
+                success: () => {
+                    showSpinner(false);
+                    importLocalData(_url, _actions, _action);
+                },
+                error: () => {
+                    showSpinner(false);
+                }
+            });
+        }
 
-               importLocalData(_url, _actions, _action);
-           },
-           error: () => {
-               showSpinner(false);
-           }
-       });
-   }
+        const showSpinner = (isShow = false) => {
+            let spinner = document.getElementById('importLocalDataSpinner');
+            spinner.style.display = 'none'
 
-   const showSpinner = (isShow = false) => {
-       let spinner = document.getElementById('importLocalDataSpinner');
-       spinner.style.display = 'none'
+            if (true === isShow) {
+                spinner.style.display = 'inline-block';
+            }
+        }
 
-       if (true === isShow) {
-           spinner.style.display = 'inline-block';
-       }
-   }
-});
+        $('#form-pickupPoints').on('submit', function(e){
+            e.preventDefault();
+            $('[type="submit"]', this).prop('disabled', true);
+            let url = $(this).attr('action');
+            let data = $(this).serializeArray();
+            // doAjaxRequest(url, [], '', data);
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: {data},
+                success: function(response) {
+                    console.log(response);
+                    window.location.reload();return true;
+                }
+            });
+        });
+
+        $(document).on('change', '#input-pickupPointCounty', function(){
+            let id = $(this).val();
+            let url = $(this).attr('data-url');
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {id: id},
+                success: function(result){
+                    let arr = JSON.parse(result);
+                    let html = '';
+                    arr.map(function(item){
+                        html += '<option value="' + item['id'] + '">' + item['name'] + '</option>';
+                    });
+                    $('#input-pickupPointCity').html("");
+                    $('#input-pickupPointCity').append(html);
+                    $('#input-pickupPointCity').prop('disabled', false);
+                }
+            });
+        });
+
+        $(document).on('shown.bs.modal', '#pickupPointDelete', function(){
+            $('#form-pickupPointDelete').on('submit', function(e){
+                e.preventDefault();
+                let url = $(this).attr('action');
+                let id = $('#deletePickUpPointId').val();
+                $.ajax({
+                    url: url,
+                    data: {id: id},
+                    type: "POST",
+                    success: function(){
+                        window.location.reload();return true;
+                    }
+                });
+            });
+        });
+
+        $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
+            document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
+        });
+    });
 </script>
 
 <style>

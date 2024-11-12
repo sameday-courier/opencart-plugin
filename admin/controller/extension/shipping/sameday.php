@@ -107,7 +107,7 @@ class ControllerExtensionShippingSameday extends Controller
 {
     private $error = array();
 
-    private const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+    const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
 
     const SAMEDAY_CONFIGS = [
         'username' => null,
@@ -268,6 +268,10 @@ class ControllerExtensionShippingSameday extends Controller
             'text_pickupPoint_delete_decline',
             'text_pickupPointAddFeedbackSuccess',
             'text_pickupPointAddFeedbackError',
+            'text_pickupPointAddress',
+            'text_pickupPointDefault',
+            'text_pickupPointDeleteWarning',
+            'text_pickupPointDeleteSuccess',
 
             'entry_username',
             'entry_password',
@@ -280,6 +284,8 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_locker_max_items',
             'entry_sort_order',
             'entry_import_local_data',
+            'entry_drop_down_list',
+            'entry_interactive_map',
 
             'column_internal_id',
             'column_internal_name',
@@ -363,8 +369,9 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function sendNewPickupPoint()
     {
+        $this->load->language('extension/shipping/sameday');
 
-        $actionKeys = $this->request->post['action'];
+        $actionKeys = $this->request->post['data'];
 
         $country = $actionKeys[0]['value'];
         $county = $actionKeys[1]['value'];
@@ -385,10 +392,14 @@ class ControllerExtensionShippingSameday extends Controller
         }
         try {
             $sameday->postPickupPoint(new \Sameday\Requests\SamedayPostPickupPointRequest($country, $county, $city, $address, $postalCode, $alias, $contact, $default));
+            $this->session->data['error_success'] = $this->buildLanguage('text_pickupPointAddFeedbackSuccess');
         } catch (Exception $exception) {
-            var_dump($exception);
+            $this->session->data['error_warning'] = $exception->getMessage();
         }
 
+//        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+
+        return json_encode('ceva');
     }
 
     public function get_counties(){
@@ -423,6 +434,8 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     public function deletePickupPoint(){
+        $this->load->language('extension/shipping/sameday');
+
         $sameday_id = $this->request->post['id'];
 
         try {
@@ -438,9 +451,9 @@ class ControllerExtensionShippingSameday extends Controller
             $pickupPoint = $this->model_extension_shipping_sameday->getPickupPointSameday($sameday_id, $testing);
             try{
                 $this->model_extension_shipping_sameday->deletePickupPoint($pickupPoint['id']);
-                echo true;
+                $this->session->data['error_success'] = $this->buildLanguage('text_pickupPointDeleteSuccess');
             }catch(Exception $exception){
-                var_dump($exception);
+                $this->session->data['error_warning'] = $this->buildLanguage('text_pickupPointDeleteWarning');
             }
 
         } catch (Exception $exception) {

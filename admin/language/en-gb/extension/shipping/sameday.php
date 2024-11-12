@@ -151,11 +151,13 @@ $_['column_pickupPoint_address'] = 'Address';
 $_['column_pickupPoint_default_address'] = 'Default address';
 $_['column_pickupPoint_action'] = 'Action';
 $_['text_pickupPoint_delete'] = 'Delete Pickup Point';
-$_['text_pickupPoint_delete_question'] = 'Esti sigur ca vrei sa elimini acest Pickup Point?';
-$_['text_pickupPoint_delete_confirm'] = 'Da!';
-$_['text_pickupPoint_delete_decline'] = 'Nu';
-$_['text_pickupPointAddFeedbackSuccess'] = 'Pickup Point a fost adaugat cu success!';
-$_['text_pickupPointAddFeedbackError'] = 'Eroare! Contacteaza un administrator!';
+$_['text_pickupPoint_delete_question'] = 'Are you sure you want to delete this Pickup Point?';
+$_['text_pickupPoint_delete_confirm'] = 'Yes!';
+$_['text_pickupPoint_delete_decline'] = 'No';
+$_['text_pickupPointAddFeedbackSuccess'] = 'Pickup Point was added successfully!';
+$_['text_pickupPointAddFeedbackError'] = 'Error! Contact an administrator!';
+$_['text_pickupPointDeleteSuccess'] = 'Pickup Point was deleted successfully!!';
+$_['text_pickupPointDeleteWarning'] = 'Pickup Point could not be deleted. Please contact an administrator!!';
 
 // Column Awb History Table
 $_['column_parcel_number'] = 'Parcel number';

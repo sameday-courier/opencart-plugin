@@ -6,7 +6,7 @@ use Sameday\Http\SamedayRawResponse;
 use Sameday\Objects\CountryObject;
 use Sameday\Objects\CountyObject;
 use Sameday\Objects\PickupPoint\CityObject;
-use Sameday\Objects\ContactPersonObject;
+use Sameday\Objects\PickupPoint\ContactPersonObject;
 use Sameday\Objects\PickupPoint\PickupPointObject;
 use Sameday\Requests\SamedayGetPickupPointsRequest;
 use Sameday\Responses\Traits\SamedayResponsePaginationTrait;
