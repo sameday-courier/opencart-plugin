@@ -354,7 +354,14 @@ class ControllerExtensionShippingSameday extends Controller
         $data['url_deletePickupPoint'] = $this->url->link('extension/shipping/sameday/deletePickupPoint', $this->addToken(), true);
 
         $data['pp_countries'] = SamedayHelper::SAMEDAY_COUNTRIES;
-        $data['pp_counties'] = $this->get_counties();
+
+        $username = $this->getConfig('sameday_username');
+        $password = $this->getConfig('sameday_password');
+
+        if (!empty($username) && !empty($password)) {
+            // Proceed with calling get_counties if the user is logged in
+            $data['pp_counties'] = $this->get_counties();
+        }
 
         $data = array_merge($data, $this->buildRequest(self::SAMEDAY_CONFIGS));
 
@@ -400,9 +407,11 @@ class ControllerExtensionShippingSameday extends Controller
 //        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
 
         return json_encode('ceva');
+
     }
 
     public function get_counties(){
+
         try {
             $sameday = new Sameday($this->samedayHelper->initClient());
         } catch (Exception $exception) {
@@ -415,9 +424,11 @@ class ControllerExtensionShippingSameday extends Controller
             array_push($countiesArray, ['name' => $county->getName(), 'id' => $county->getId()]);
         }
         return $countiesArray;
+
     }
 
     public function get_cities(){
+
         $id = $this->request->post['id'];
         try {
             $sameday = new Sameday($this->samedayHelper->initClient());
@@ -431,6 +442,7 @@ class ControllerExtensionShippingSameday extends Controller
             array_push($citiesArray, ['name' => $city->getName(), 'id' => $city->getId()]);
         }
         echo json_encode($citiesArray);
+
     }
 
     public function deletePickupPoint(){
