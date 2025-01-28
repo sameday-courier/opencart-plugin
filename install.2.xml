@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.6.2</version>
+    <version>1.6.4</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/controller/sale/order.php">
@@ -12,6 +12,146 @@
             ]]></search>
             <add position="after"><![CDATA[
                 $data['shipping_method_sameday'] = $this->load->controller('extension/shipping/sameday/info', $order_info);
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/guest.tpl">
+        <operation>
+            <search><![CDATA[
+               <input type="text" name="city" value="<?php echo $city; ?>" placeholder="<?php echo $entry_city; ?>" id="input-payment-city" class="form-control" />
+            ]]></search>
+            <add position="replace"><![CDATA[
+                <?php if($useNomenclator == true): ?>
+                    <select name="city" id="input-shipping-city" class="form-control">
+                        <option>- Alege un judet -</option>
+                    </select>
+                <?php else: ?>
+                    <input type="text" name="city" value="" placeholder="<?php echo $entry_city; ?>" id="input-payment-city" class="form-control" />
+                <?php endif; ?>
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+            <script type="text/javascript"><!--
+            ]]></search>
+            <add position="before"><![CDATA[
+                <script>
+                  $(document).ready(function(){
+                    $('#input-payment-zone').on('change', function(){
+                      let county_id = $(this).val();
+                      $.ajax({
+                        url: 'index.php?route=checkout/guest/get_cities',
+                        type: 'POST',
+                        data: { county_id },
+                        success: function(result){
+                          let arr = $.parseJSON(result);
+                          $('#input-shipping-city').html("");
+                          arr.map(function(item){
+                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
+                          });
+                        }
+                      });
+                    });
+                  });
+                </script>
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/checkout/guest.php">
+        <operation>
+            <search><![CDATA[
+                public function save() {
+            ]]></search>
+            <add position="before"><![CDATA[
+                public function get_cities() {
+
+                    $this->load->model('extension/shipping/sameday');
+                    $county_id = $this->request->post['county_id'];
+
+                    $cities = $this->model_extension_shipping_sameday->getCities($county_id);
+
+                    echo json_encode($cities);
+
+                }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                $this->response->setOutput($this->load->view('checkout/guest', $data));
+            ]]></search>
+            <add position="before"><![CDATA[
+                $this->load->model('extension/shipping/sameday');
+                $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/register.tpl">
+        <operation>
+            <search><![CDATA[
+               <input type="text" name="city" value="" placeholder="<?php echo $entry_city; ?>" id="input-payment-city" class="form-control" />
+            ]]></search>
+            <add position="replace"><![CDATA[
+                <?php if($useNomenclator == true): ?>
+                    <select name="city" id="input-shipping-city" class="form-control">
+                        <option>- Alege un judet -</option>
+                    </select>
+                <?php else: ?>
+                    <input type="text" name="city" value="" placeholder="<?php echo $entry_city; ?>" id="input-payment-city" class="form-control" />
+                <?php endif; ?>
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+            <script type="text/javascript"><!--
+            ]]></search>
+            <add position="before"><![CDATA[
+                <script>
+                  $(document).ready(function(){
+                    $('#input-payment-zone').on('change', function(){
+                      let county_id = $(this).val();
+                      $.ajax({
+                        url: 'index.php?route=checkout/register/get_cities',
+                        type: 'POST',
+                        data: { county_id },
+                        success: function(result){
+                          let arr = $.parseJSON(result);
+                          $('#input-shipping-city').html("");
+                          arr.map(function(item){
+                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
+                          });
+                        }
+                      });
+                    });
+                  });
+                </script>
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/checkout/register.php">
+        <operation>
+            <search><![CDATA[
+                public function save() {
+            ]]></search>
+            <add position="before"><![CDATA[
+                public function get_cities() {
+
+                    $this->load->model('extension/shipping/sameday');
+                    $county_id = $this->request->post['county_id'];
+
+                    $cities = $this->model_extension_shipping_sameday->getCities($county_id);
+
+                    echo json_encode($cities);
+
+                }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                $this->response->setOutput($this->load->view('checkout/register', $data));
+            ]]></search>
+            <add position="before"><![CDATA[
+                $this->load->model('extension/shipping/sameday');
+                $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
             ]]></add>
         </operation>
     </file>

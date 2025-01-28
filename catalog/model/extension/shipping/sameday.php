@@ -17,7 +17,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private $samedayHelper;
 
-    private const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+    const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
 
     const SAMEDAY_CONFIGS = [
         'username',
@@ -539,5 +539,11 @@ class ModelExtensionShippingSameday extends Model
                 }
             }
         }
+    }
+
+    public function getCities($zone_id){
+        $tableName = DB_PREFIX . "sameday_cities";
+        $query = "SELECT * FROM $tableName WHERE zone_id = " . (int) $zone_id;
+        return $this->db->query($query)->rows;
     }
 }
