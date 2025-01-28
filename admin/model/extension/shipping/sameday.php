@@ -736,10 +736,6 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
-    public function getCities(){
-
-    }
-
     public function getZoneId($countryId, $code){
 
         $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = $countryId AND code = '$code'";
