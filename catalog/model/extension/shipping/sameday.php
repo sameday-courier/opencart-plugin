@@ -540,4 +540,10 @@ class ModelExtensionShippingSameday extends Model
             }
         }
     }
+
+    public function getCities($zone_id){
+        $tableName = DB_PREFIX . "sameday_cities";
+        $query = "SELECT * FROM $tableName WHERE zone_id = " . (int) $zone_id;
+        return $this->db->query($query)->rows;
+    }
 }

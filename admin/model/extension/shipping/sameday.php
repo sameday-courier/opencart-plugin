@@ -16,6 +16,8 @@ class ModelExtensionShippingSameday extends Model
         $this->createPickUpPointTable();
         $this->createPackageTable();
         $this->createLockerTable();
+        $this->createCountiesTable();
+        $this->createCitiesTable();
     }
 
     public function uninstall()
@@ -25,6 +27,8 @@ class ModelExtensionShippingSameday extends Model
         $this->dropPickUpPointTable();
         $this->dropPackageTable();
         $this->dropLockerTable();
+        $this->dropCountiesTable();
+        $this->dropCitiesTable();
     }
 
     /**
@@ -577,6 +581,37 @@ class ModelExtensionShippingSameday extends Model
         return json_encode($data);
     }
 
+    public function addCounty($county){
+        $query = '
+            INSERT INTO ' . DB_PREFIX . "sameday_counties (
+                county_id,
+                county_name,
+                county_code
+            ) VALUES (
+                '{$this->db->escape($county->getId())}',
+                '{$this->db->escape($county->getName())}',
+                '{$this->db->escape($county->getCode())}')";
+
+        $this->db->query($query);
+    }
+
+    public function addCity($city, $zone_id){
+        $query = '
+            INSERT INTO ' . DB_PREFIX . "sameday_cities (
+                city_id,
+                city_name,
+                county_code,
+                zone_id
+            ) VALUES (
+                '{$this->db->escape($city->getId())}',
+                '{$this->db->escape($city->getName())}',
+                '{$this->db->escape($city->getCounty()->getCode())}',
+                '{$this->db->escape($zone_id)}'
+            )";
+
+        $this->db->query($query);
+    }
+
     private function createAwbTable()
     {
         $query = '
@@ -672,9 +707,75 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
+    private function createCountiesTable(){
+        $query = '
+            CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_counties (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                county_id INT(11),
+                county_name VARCHAR(255),
+                county_code VARCHAR(255),
+                PRIMARY KEY (id)
+            )  ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
+        ';
+
+        $this->db->query($query);
+    }
+
+    private function createCitiesTable(){
+        $query = '
+            CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_cities (
+                id INT(11) NOT NULL AUTO_INCREMENT,
+                city_id INT(11),
+                city_name VARCHAR(255),
+                county_code VARCHAR(255),
+                zone_id INT(11),
+                PRIMARY KEY (id)
+            ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
+        ';
+
+        $this->db->query($query);
+    }
+
+    public function getCities(){
+
+    }
+
+    public function getZoneId($countryId, $code){
+
+        $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = $countryId AND code = '$code'";
+
+        return $this->db->query($query)->row;
+
+    }
+
+    public function truncateNomenclator(){
+        $this->db->query('TRUNCATE TABLE ' . DB_PREFIX . 'sameday_cities');
+    }
+
+    public function getZone($isoCode){
+
+        $table = DB_PREFIX . "country";
+
+        $query = "SELECT * FROM $table WHERE iso_code_2 = '$isoCode'";
+
+        return $this->db->query($query)->row;
+    }
+
     private function dropPickUpPointTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_pickup_point';
+
+        $this->db->query($query);
+    }
+
+    private function dropCountiesTable(){
+        $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_counties';
+
+        $this->db->query($query);
+    }
+
+    private function dropCitiesTable(){
+        $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_cities';
 
         $this->db->query($query);
     }
@@ -715,6 +816,10 @@ class ModelExtensionShippingSameday extends Model
     public function getConfig($key)
     {
         return $this->config->get($this->getKey($key));
+    }
+
+    public function editConfig($code, $key, $value){
+        return $this->config->set($code, $key, $value);
     }
 
     public function getKey($key)
