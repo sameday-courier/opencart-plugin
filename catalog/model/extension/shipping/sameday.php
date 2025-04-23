@@ -17,7 +17,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private $samedayHelper;
 
-    private const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+    const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
 
     const SAMEDAY_CONFIGS = [
         'username',
