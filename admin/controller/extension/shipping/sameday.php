@@ -411,7 +411,6 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     public function get_counties(){
-
         try {
             $sameday = new Sameday($this->samedayHelper->initClient());
         } catch (Exception $exception) {
@@ -428,7 +427,6 @@ class ControllerExtensionShippingSameday extends Controller
     }
 
     public function get_cities(){
-
         $id = $this->request->post['id'];
         try {
             $sameday = new Sameday($this->samedayHelper->initClient());
@@ -447,7 +445,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function deletePickupPoint(){
         $this->load->language('extension/shipping/sameday');
-
         $sameday_id = $this->request->post['id'];
 
         try {
