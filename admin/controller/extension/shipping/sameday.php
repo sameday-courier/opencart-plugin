@@ -407,7 +407,6 @@ class ControllerExtensionShippingSameday extends Controller
 //        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
 
         return json_encode('ceva');
-
     }
 
     public function get_counties(){

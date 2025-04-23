@@ -350,10 +350,14 @@
             </div>
             <div class="modal-body">
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?></h4>
 =======
                 <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?>></h4>
 >>>>>>> 7813add (merged master into sip-720)
+=======
+                <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?></h4>
+>>>>>>> 240f2dd (remerged)
                 <form action="<?php echo $url_deletePickupPoint; ?>" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
                     <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
                     <button class="btn btn-secondary" data-dismiss="modal"><?php echo $text_pickupPoint_delete_decline; ?></button>
