@@ -70,6 +70,12 @@ class SamedayHelper
         self::API_HOST_LOCALE_HU => 'Felvenni től Sameday Point/Easybox',
     ];
 
+    const SAMEDAY_COUNTRIES = [
+        ['value' => 187, 'label' => 'Romania'],
+//        ['value' => 34, 'label' => 'Bulgaria'],
+//        ['value' => 237, 'label' => 'Hungary'],
+    ];
+
     const AFTER_48_HOURS = 172800;
 
     // PDO stands for Personal Delivery Option and is an additional tax that apply to Service

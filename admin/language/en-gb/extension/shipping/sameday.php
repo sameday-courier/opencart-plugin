@@ -30,6 +30,18 @@ $_['text_package_type_large_package'] = 'Large Package';
 $_['text_client'] = 'Client';
 $_['text_type_person_individual'] = 'Individual';
 $_['text_type_person_business'] = 'Business';
+$_['text_pickupPoint_add'] = 'Add Pickup Point';
+$_['text_pickupPointContactName'] = 'Fullname';
+$_['text_pickupPointAddress'] = 'Address';
+$_['text_pickupPointPo'] = 'PO Number';
+$_['text_pickupPointCountry'] = 'Country';
+$_['text_pickupPointCounty'] = 'County';
+$_['text_pickupPointCity'] = 'City';
+$_['text_pickupPointPhoneNumber'] = 'Phone Number';
+$_['text_pickupPointEmail'] = 'Email Address';
+$_['text_pickupPointWorkingHours'] = 'Working Hours';
+$_['text_pickupPointAlias'] = 'Alias';
+$_['text_pickupPointDefault'] = 'Default';
 
 $_['text_sameday_awb'] = 'Sameday AWB';
 $_['text_button_add_awb'] = 'Generate AWB';
@@ -137,6 +149,15 @@ $_['column_pickupPoint_city'] = 'City';
 $_['column_pickupPoint_county'] = 'County';
 $_['column_pickupPoint_address'] = 'Address';
 $_['column_pickupPoint_default_address'] = 'Default address';
+$_['column_pickupPoint_action'] = 'Action';
+$_['text_pickupPoint_delete'] = 'Delete Pickup Point';
+$_['text_pickupPoint_delete_question'] = 'Are you sure you want to delete this Pickup Point?';
+$_['text_pickupPoint_delete_confirm'] = 'Yes!';
+$_['text_pickupPoint_delete_decline'] = 'No';
+$_['text_pickupPointAddFeedbackSuccess'] = 'Pickup Point was added successfully!';
+$_['text_pickupPointAddFeedbackError'] = 'Error! Contact an administrator!';
+$_['text_pickupPointDeleteSuccess'] = 'Pickup Point was deleted successfully!!';
+$_['text_pickupPointDeleteWarning'] = 'Pickup Point could not be deleted. Please contact an administrator!!';
 
 // Column Awb History Table
 $_['column_parcel_number'] = 'Parcel number';
