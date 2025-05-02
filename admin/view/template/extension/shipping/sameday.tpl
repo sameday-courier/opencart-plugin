@@ -112,6 +112,19 @@
                             <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-import-nomenclator"><?php echo $entry_import_nomenclator; ?></label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary fa fa-download" id="input-import-nomenclator" data-href="<?php echo $import_geolocations; ?>">
+                                <?php echo $entry_import_nomenclator_button; ?>
+                            </button>
+                            <br>
+                            <div class="form-group" style="padding-left: 15px;">
+                                <input type="checkbox" id="input-nomenclator-use" name="sameday_nomenclator_use" class="form-check-input" <?php echo ($sameday_nomenclator_use) ? 'checked' : ''; ?>>
+                                <label role="button" for="input-nomenclator-use">Use imported locations</label>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -164,6 +177,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_pickup_points; ?></h3>
                 <a class="btn btn-primary" href="<?php echo $pickupPoint_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_services_refresh; ?>"><i class="fa fa-refresh"></i></a>
+                <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="<?php echo $text_pickupPoint_add; ?>"><i class="fa fa-plus"></i></a>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -177,6 +191,7 @@
                             <td class="text-left"><?php echo $column_pickupPoint_county; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_address; ?></td>
                             <td class="text-left"><?php echo $column_pickupPoint_default_address; ?></td>
+                            <td class="text-left"><?php echo $column_pickupPoint_action; ?></td>
                         </tr>
                         </thead>
                         <tbody>
@@ -185,7 +200,7 @@
                             <td class="text-center" colspan="6"><?php echo $text_pickup_points_empty; ?></td>
                         </tr>
                         <?php } else { $i=1;foreach ($pickupPoints as $pickupPoint) { ?>
-                        <tr>
+                        <tr data-sameday-id="<?php echo $pickupPoint['sameday_id']; ?>">
                             <td><?php echo $i++;?></td>
                             <td><?php echo $pickupPoint['sameday_id']; ?></td>
                             <td><?php echo $pickupPoint['sameday_alias']; ?></td>
@@ -193,6 +208,7 @@
                             <td><?php echo $pickupPoint['county']; ?></td>
                             <td><?php echo $pickupPoint['address']; ?></td>
                             <td><?php echo $pickupPoint['default_pickup_point'] == 1 ? $yes : $no; ?></td>
+                            <td><button data-id="<?php echo $pickupPoint['sameday_id']; ?>" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
                         </tr>
                         <?php } } ?>
                         </tbody>
@@ -249,64 +265,248 @@
     </div>
 </div>
 <?php echo $footer; ?>
+<div class="modal fade" id="addPickupPoint" tabindex="-1" aria-labelledby="addPickupPointLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="addPickupPointLabel"><?php echo $text_pickupPoint_add; ?></h3>
+            </div>
+            <div class="modal-body">
+                <form action="<?php echo $pickupPointsTest; ?>" method="post" enctype="multipart/form-data" id="form-pickupPoints" class="form-horizontal">
 
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCountry"><?php echo $text_pickupPointCountry; ?></label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCountry" id="input-pickupPointCountry" class="form-control">
+                                <?php foreach($pp_countries as $country): ?>
+                                    <option value="<?php echo $country['value']; ?>"><?php echo $country['label']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCounty"><?php echo $text_pickupPointCounty; ?></label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="<?php echo $url_cities_ajax; ?>">
+                                <?php foreach($pp_counties as $county): ?>
+                                    <option value="<?php echo $county['id']; ?>"><?php echo $county['name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCity"><?php echo $text_pickupPointCity; ?></label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCity" id="input-pickupPointCity" class="form-control" disabled>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointAddress"><?php echo $text_pickupPointAddress; ?></label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointAddress" id="input-pickupPointAddress" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointDefault"><?php echo $text_pickupPointDefault; ?></label>
+                        <div class="col-sm-9">
+                            <input type="checkbox" name="pickupPointDefault" id="input-pickupPointDefault" class="form-check-input" value="1" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointPo"><?php echo $text_pickupPointPo; ?></label>
+                        <div class="col-sm-9">
+                            <input type="number" name="pickupPointPo" id="input-pickupPointPo" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointAlias"><?php echo $text_pickupPointAlias; ?></label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointAlias" id="input-pickupPointAlias" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointContactName"><?php echo $text_pickupPointContactName; ?></label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointContactName" id="input-pickupPointContactName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointPhoneNumber"><?php echo $text_pickupPointPhoneNumber; ?></label>
+                        <div class="col-sm-9">
+                            <input type="tel" name="pickupPointPhoneNumber" id="input-pickupPointPhoneNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointEmail"><?php echo $text_pickupPointEmail; ?></label>
+                        <div class="col-sm-9">
+                            <input type="email" name="pickupPointEmail" id="input-pickupPointEmail" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-primary" value="Save">
+                    </div>
+                </form>
+                <div class="" id="pickupPointAddFeedback"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="pickupPointDelete" tabindex="-1" aria-labelledby="pickupPointDelete" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="pickupPointDeleteLabel"><?php echo $text_pickupPoint_delete; ?></h3>
+            </div>
+            <div class="modal-body">
+                <h4 class="text-center"><?php echo $text_pickupPoint_delete_question; ?>></h4>
+                <form action="<?php echo $url_deletePickupPoint; ?>" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
+                    <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
+                    <button class="btn btn-secondary" data-dismiss="modal"><?php echo $text_pickupPoint_delete_decline; ?></button>
+                    <input type="submit" class="btn btn-danger" value="<?php echo $text_pickupPoint_delete_confirm; ?>">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
-$(document).ready(() => {
-   $(document).on('click', '#input-import-local-data', (element) => {
-       let _target = element.target;
-       let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
-       let _url = _target.getAttribute('data-href');
+    $(document).ready(() => {
+        $(document).on('click', '#input-import-local-data', (element) => {
+            let _target = element.target;
+            let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
+            let _url = _target.getAttribute('data-href');
 
-       importLocalData(_url, _actions);
-   });
+            importLocalData(_url, _actions);
+        });
 
-   function importLocalData(_url = '', _actions = []) {
-       const _action = _actions.shift();
+        function importLocalData(_url = '', _actions = []) {
+            const _action = _actions.shift();
 
-       if (typeof _action === "undefined") {
-           window.location.reload();
+            if (typeof _action === "undefined") {
+                window.location.reload();
 
-           return true;
-       }
+                return true;
+            }
 
-       doAjaxRequest(_url, _actions, _action);
-   }
+            doAjaxRequest(_url, _actions, _action);
+        }
 
-   const doAjaxRequest = (_url = '', _actions = [], _action = '') => {
-       $.ajax({
-           url: _url,
-           type: "POST",
-           dataType: "JSON",
-           data: jQuery.param({ 'action': _action}),
-           processData: false,
-           contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-           beforeSend: () => {
-               showSpinner(true);
-               document.getElementById('input-import-local-data').setAttribute('disabled', true);
-           },
-           success: () => {
-               showSpinner(false);
+        const doAjaxRequest = (_url = '', _actions = [], _action = '', _params = []) => {
+            $.ajax({
+                url: _url,
+                type: "POST",
+                dataType: "JSON",
+                data: jQuery.param({ 'action': _action}),
+                processData: false,
+                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                beforeSend: () => {
+                    showSpinner(true);
+                    document.getElementById('input-import-local-data').setAttribute('disabled', true);
+                },
+                success: () => {
+                    showSpinner(false);
+                    importLocalData(_url, _actions, _action);
+                },
+                error: () => {
+                    showSpinner(false);
+                }
+            });
+        }
 
-               importLocalData(_url, _actions, _action);
-           },
-           error: () => {
-               showSpinner(false);
-           }
-       });
-   }
+        const showSpinner = (isShow = false) => {
+            let spinner = document.getElementById('importLocalDataSpinner');
+            spinner.style.display = 'none'
 
-   const showSpinner = (isShow = false) => {
-       let spinner = document.getElementById('importLocalDataSpinner');
-       spinner.style.display = 'none'
+            if (true === isShow) {
+                spinner.style.display = 'inline-block';
+            }
+        }
 
+<<<<<<< HEAD
        if (true === isShow) {
            spinner.style.display = 'inline-block';
        }
    }
+   $(document).on('click', '#input-import-nomenclator', function(){
+       let url = $('#input-import-nomenclator').attr('data-href');
+       $.ajax({
+           url: url,
+           success: function(result){
+               console.log(result);
+           }
+       });
+   });
 });
+=======
+        $('#form-pickupPoints').on('submit', function(e){
+            e.preventDefault();
+            $('[type="submit"]', this).prop('disabled', true);
+            let url = $(this).attr('action');
+            let data = $(this).serializeArray();
+            // doAjaxRequest(url, [], '', data);
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: {data},
+                success: function(response) {
+                    console.log(response);
+                    window.location.reload();return true;
+                }
+            });
+        });
+
+        $(document).on('change', '#input-pickupPointCounty', function(){
+            let id = $(this).val();
+            let url = $(this).attr('data-url');
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {id: id},
+                success: function(result){
+                    let arr = JSON.parse(result);
+                    let html = '';
+                    arr.map(function(item){
+                        html += '<option value="' + item['id'] + '">' + item['name'] + '</option>';
+                    });
+                    $('#input-pickupPointCity').html("");
+                    $('#input-pickupPointCity').append(html);
+                    $('#input-pickupPointCity').prop('disabled', false);
+                }
+            });
+        });
+
+        $(document).on('shown.bs.modal', '#pickupPointDelete', function(){
+            $('#form-pickupPointDelete').on('submit', function(e){
+                e.preventDefault();
+                let url = $(this).attr('action');
+                let id = $('#deletePickUpPointId').val();
+                $.ajax({
+                    url: url,
+                    data: {id: id},
+                    type: "POST",
+                    success: function(){
+                        window.location.reload();return true;
+                    }
+                });
+            });
+        });
+
+        $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
+            document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
+        });
+    });
+>>>>>>> be53301acd5967b34db3547a0fc13846264d912e
 </script>
 
 <style>
+    input[type="radio"], .radio input[type="radio"], .radio-inline input[type="radio"]{
+        top: 3px;
+        margin-left: 15px;
+        cursor: pointer;
+    }
     .loader {
         margin: 5px;
         width: 18px;
