@@ -425,22 +425,19 @@
             }
         }
 
-<<<<<<< HEAD
        if (true === isShow) {
            spinner.style.display = 'inline-block';
        }
-   }
-   $(document).on('click', '#input-import-nomenclator', function(){
-       let url = $('#input-import-nomenclator').attr('data-href');
-       $.ajax({
-           url: url,
-           success: function(result){
-               console.log(result);
-           }
+
+       $(document).on('click', '#input-import-nomenclator', function(){
+           let url = $('#input-import-nomenclator').attr('data-href');
+           $.ajax({
+               url: url,
+               success: function(result){
+                   console.log(result);
+               }
+           });
        });
-   });
-});
-=======
         $('#form-pickupPoints').on('submit', function(e){
             e.preventDefault();
             $('[type="submit"]', this).prop('disabled', true);
@@ -498,7 +495,6 @@
             document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
         });
     });
->>>>>>> be53301acd5967b34db3547a0fc13846264d912e
 </script>
 
 <style>
