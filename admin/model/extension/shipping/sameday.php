@@ -735,14 +735,6 @@ class ModelExtensionShippingSameday extends Model
 
         $this->db->query($query);
     }
-
-<<<<<<< HEAD
-    public function getCities(){
-
-    }
-
-=======
->>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
     public function getZoneId($countryId, $code){
 
         $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = $countryId AND code = '$code'";
@@ -807,18 +799,6 @@ class ModelExtensionShippingSameday extends Model
     private function dropLockerTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_locker';
-
-        $this->db->query($query);
-    }
-
-    private function dropCountiesTable(){
-        $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_counties';
-
-        $this->db->query($query);
-    }
-
-    private function dropCitiesTable(){
-        $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_cities';
 
         $this->db->query($query);
     }
