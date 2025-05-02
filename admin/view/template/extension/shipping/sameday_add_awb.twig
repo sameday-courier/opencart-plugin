@@ -1,5 +1,4 @@
 {{ header }}{{ column_left }}
-
 <div id="content">
     <div class="page-header">
         <div class="container-fluid">
@@ -373,6 +372,11 @@
     </div>
 </div>
 
+<script>
+    $(document).ready(function() {
+        $('#input-status-sameday-pickup_point').select2();
+    });
+</script>
 <script>
     $('body').on('click', () => {
         updateTotalWeight();

@@ -92,9 +92,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_locker_max_items }}</label>
+                        <label class="col-sm-2 control-label" for="input-locker-max-items">{{ entry_locker_max_items }}</label>
                         <div class="col-sm-10">
-                            <input type="number" step="1" min="1" name="shipping_sameday_locker_max_items" value="{{ sameday_locker_max_items }}" placeholder="{{ entry_locker_max_items }}" id="input-sort-order" class="form-control" />
+                            <input type="number" step="1" min="1" name="shipping_sameday_locker_max_items" value="{{ sameday_locker_max_items }}" placeholder="{{ entry_locker_max_items }}" id="input-locker-max-items" class="form-control" />
                         </div>
                     </div>
                     <div class="form-group">
@@ -164,6 +164,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_pickup_points }} </h3>
                 <a class="btn btn-primary" href="{{ pickupPoint_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
+                <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="{{ text_pickupPoint_add }}"><i class="fa fa-plus"></i></a>
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -176,6 +177,7 @@
                             <td class="text-left">{{ column_pickupPoint_county }}</td>
                             <td class="text-left">{{ column_pickupPoint_address }}</td>
                             <td class="text-left">{{ column_pickupPoint_default_address }}</td>
+                            <td class="text-left">{{ column_pickupPoint_action }}</td>
                         </tr>
                         </thead>
                         <tbody>
@@ -185,13 +187,14 @@
                         </tr>
                         {% else %}
                             {% for key, pickupPoint in pickupPoints %}
-                            <tr>
+                            <tr data-sameday-id="{{ pickupPoint.sameday_id }}">
                                 <td>{{ pickupPoint.sameday_id }}</td>
                                 <td>{{ pickupPoint.sameday_alias }}</td>
                                 <td>{{ pickupPoint.city }}</td>
                                 <td>{{ pickupPoint.county }}</td>
                                 <td>{{ pickupPoint.address }}</td>
                                 <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
+                                <td><button data-id="{{ pickupPoint.sameday_id }}" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
                             </tr>
                             {% endfor %}
                         {% endif %}
@@ -248,7 +251,113 @@
     </div>
 </div>
 {{ footer }}
+<div class="modal fade" id="addPickupPoint" tabindex="-1" aria-labelledby="addPickupPointLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="addPickupPointLabel">{{ text_pickupPoint_add }}</h3>
+            </div>
+            <div class="modal-body">
+                <form action="{{ pickupPointsTest }}" method="post" enctype="multipart/form-data" id="form-pickupPoints" class="form-horizontal">
 
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCountry">{{ text_pickupPointCountry }}</label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCountry" id="input-pickupPointCountry" class="form-control">
+                                {% for country in pp_countries %}
+                                    <option value="{{ country.value }}">{{ country.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCounty">{{ text_pickupPointCounty }}</label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="{{ url_cities_ajax }}">
+                                {% for county in pp_counties %}
+                                    <option value="{{ county.id }}">{{ county.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointCity">{{ text_pickupPointCity }}</label>
+                        <div class="col-sm-9">
+                            <select name="pickupPointCity" id="input-pickupPointCity" class="form-control" disabled>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointAddress">{{ text_pickupPointAddress }}</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointAddress" id="input-pickupPointAddress" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointDefault">{{ text_pickupPointDefault }}</label>
+                        <div class="col-sm-9">
+                            <input type="checkbox" name="pickupPointDefault" id="input-pickupPointDefault" class="form-check-input" value="1" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointPo">{{ text_pickupPointPo }}</label>
+                        <div class="col-sm-9">
+                            <input type="number" name="pickupPointPo" id="input-pickupPointPo" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointAlias">{{ text_pickupPointAlias }}</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointAlias" id="input-pickupPointAlias" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointContactName">{{ text_pickupPointContactName }}</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="pickupPointContactName" id="input-pickupPointContactName" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointPhoneNumber">{{ text_pickupPointPhoneNumber }}</label>
+                        <div class="col-sm-9">
+                            <input type="tel" name="pickupPointPhoneNumber" id="input-pickupPointPhoneNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="input-pickupPointEmail">{{ text_pickupPointEmail }}</label>
+                        <div class="col-sm-9">
+                            <input type="email" name="pickupPointEmail" id="input-pickupPointEmail" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <input type="submit" class="btn btn-primary" value="Save">
+                    </div>
+                </form>
+                <div class="" id="pickupPointAddFeedback"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="pickupPointDelete" tabindex="-1" aria-labelledby="pickupPointDelete" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title text-center" id="pickupPointDeleteLabel">{{ text_pickupPoint_delete }}</h3>
+            </div>
+            <div class="modal-body">
+                <h4 class="text-center">{{ text_pickupPoint_delete_question }}</h4>
+                <form action="{{ url_deletePickupPoint }}" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
+                    <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
+                    <button class="btn btn-secondary" data-dismiss="modal">{{ text_pickupPoint_delete_decline }}</button>
+                    <input type="submit" class="btn btn-danger" value="{{ text_pickupPoint_delete_confirm }}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
     $(document).ready(() => {
         $(document).on('click', '#input-import-local-data', (element) => {
@@ -271,7 +380,7 @@
             doAjaxRequest(_url, _actions, _action);
         }
 
-        const doAjaxRequest = (_url = '', _actions = [], _action = '') => {
+        const doAjaxRequest = (_url = '', _actions = [], _action = '', _params = []) => {
             $.ajax({
                 url: _url,
                 type: "POST",
@@ -283,9 +392,9 @@
                     showSpinner(true);
                     document.getElementById('input-import-local-data').setAttribute('disabled', true);
                 },
-                success: () => {
+                success: (data) => {
                     showSpinner(false);
-
+                    console.log(data);
                     importLocalData(_url, _actions, _action);
                 },
                 error: () => {
@@ -302,6 +411,66 @@
                 spinner.style.display = 'inline-block';
             }
         }
+
+        $('#form-pickupPoints').on('submit', function(e){
+            e.preventDefault();
+            $('[type="submit"]', this).prop('disabled', true);
+            let url = $(this).attr('action');
+            let data = $(this).serializeArray();
+            try{
+                doAjaxRequest(url, [], data);
+                $(this).hide(200);
+                $('#pickupPointAddFeedback').addClass('alert alert-success').text("{{ text_pickupPointAddFeedbackSuccess }}");
+            }catch(e){
+                console.log(e);
+                $(this).hide(200);
+                $('#pickupPointAddFeedback').addClass('alert alert-danger').text("{{ text_pickupPointAddFeedbackError }}");
+            }
+        });
+
+        $(document).on('change', '#input-pickupPointCounty', function(){
+            let id = $(this).val();
+            let url = $(this).attr('data-url');
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {id: id},
+                success: function(result){
+                    let arr = JSON.parse(result);
+                    let html = '';
+                    arr.map(function(item){
+                        html += '<option value="' + item['id'] + '">' + item['name'] + '</option>';
+                    });
+                    $('#input-pickupPointCity').html("");
+                    $('#input-pickupPointCity').append(html);
+                    $('#input-pickupPointCity').prop('disabled', false);
+                }
+            });
+        });
+
+        $(document).on('shown.bs.modal', '#pickupPointDelete', function(){
+            $('#form-pickupPointDelete').on('submit', function(e){
+                e.preventDefault();
+                let url = $(this).attr('action');
+                let id = $('#deletePickUpPointId').val();
+                console.log(url)
+                $.ajax({
+                    url: url,
+                    data: {id: id},
+                    type: "POST",
+                    success: function(result){
+                        if (result == true){
+                            $('[data-sameday-id="' + id + '"]').hide();
+                            $('#pickupPointDelete').modal('hide');
+                        }
+                    }
+                });
+            });
+        });
+
+        $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
+            document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
+        });
     });
 </script>
 
