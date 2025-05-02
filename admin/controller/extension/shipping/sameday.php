@@ -288,8 +288,11 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_import_local_data',
             'entry_import_nomenclator',
             'entry_import_nomenclator_button',
+<<<<<<< HEAD
+=======
             'entry_drop_down_list',
             'entry_interactive_map',
+>>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
 
             'column_internal_id',
             'column_internal_name',
@@ -368,6 +371,8 @@ class ControllerExtensionShippingSameday extends Controller
             $data['pp_counties'] = $this->get_counties();
         }
         $data['sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
+
+        $data['shipping_sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
 
         $data = array_merge($data, $this->buildRequest(self::SAMEDAY_CONFIGS));
 
@@ -1315,8 +1320,12 @@ class ControllerExtensionShippingSameday extends Controller
         return $this->response->setOutput($this->load->view('extension/shipping/sameday_add_awb', $data));
     }
 
+<<<<<<< HEAD
+    public function importGeolocations() {
+=======
     public function importGeolocations()
     {
+>>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
 
 
         $sameday = new Sameday($this->samedayHelper->initClient());
@@ -1732,7 +1741,11 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']]
             );
 
+<<<<<<< HEAD
+            $sameday = new Sameday($this->samedayHelper->initClient());
+=======
             $sameday =  new Sameday($this->samedayHelper->initClient());
+>>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
             $return = [];
 
             try {

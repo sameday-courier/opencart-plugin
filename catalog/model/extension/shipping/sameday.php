@@ -546,4 +546,8 @@ class ModelExtensionShippingSameday extends Model
         $query = "SELECT * FROM $tableName WHERE zone_id = " . (int) $zone_id;
         return $this->db->query($query)->rows;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
