@@ -425,10 +425,6 @@
             }
         }
 
-       if (true === isShow) {
-           spinner.style.display = 'inline-block';
-       }
-
        $(document).on('click', '#input-import-nomenclator', function(){
            let url = $('#input-import-nomenclator').attr('data-href');
            $.ajax({
