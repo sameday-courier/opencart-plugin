@@ -134,6 +134,8 @@ $_['entry_third_party_person_bank'] = 'Bank';
 $_['entry_third_party_person_bank_title'] = 'Choose bank';
 $_['entry_third_party_person_iban'] = 'Iban';
 $_['entry_third_party_person_iban_title'] = 'Choose iban';
+$_['entry_import_nomenclator'] = 'Importa nomenclatorul de locatii - Sameday';
+$_['entry_import_nomenclator_button'] = 'Importa locatii - Sameday';
 
 // Column
 $_['column_internal_id'] = 'Internal id';

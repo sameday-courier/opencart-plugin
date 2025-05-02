@@ -112,6 +112,19 @@
                             <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-import-nomenclator"><?php echo $entry_import_nomenclator; ?></label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-primary fa fa-download" id="input-import-nomenclator" data-href="<?php echo $import_geolocations; ?>">
+                                <?php echo $entry_import_nomenclator_button; ?>
+                            </button>
+                            <br>
+                            <div class="form-group" style="padding-left: 15px;">
+                                <input type="checkbox" id="input-nomenclator-use" name="sameday_nomenclator_use" class="form-check-input" <?php echo ($sameday_nomenclator_use) ? 'checked' : ''; ?>>
+                                <label role="button" for="input-nomenclator-use">Use imported locations</label>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -412,6 +425,22 @@
             }
         }
 
+<<<<<<< HEAD
+       if (true === isShow) {
+           spinner.style.display = 'inline-block';
+       }
+   }
+   $(document).on('click', '#input-import-nomenclator', function(){
+       let url = $('#input-import-nomenclator').attr('data-href');
+       $.ajax({
+           url: url,
+           success: function(result){
+               console.log(result);
+           }
+       });
+   });
+});
+=======
         $('#form-pickupPoints').on('submit', function(e){
             e.preventDefault();
             $('[type="submit"]', this).prop('disabled', true);
@@ -469,9 +498,15 @@
             document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
         });
     });
+>>>>>>> be53301acd5967b34db3547a0fc13846264d912e
 </script>
 
 <style>
+    input[type="radio"], .radio input[type="radio"], .radio-inline input[type="radio"]{
+        top: 3px;
+        margin-left: 15px;
+        cursor: pointer;
+    }
     .loader {
         margin: 5px;
         width: 18px;

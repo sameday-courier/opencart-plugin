@@ -10,6 +10,8 @@ use Sameday\Objects\Types\AwbPdfType;
 use Sameday\Objects\Types\CodCollectorType;
 use Sameday\Objects\Types\PackageType;
 use Sameday\Requests\SamedayGetAwbPdfRequest;
+use Sameday\Requests\SamedayGetCitiesRequest;
+use Sameday\Requests\SamedayGetCountiesRequest;
 use Sameday\Requests\SamedayGetLockersRequest;
 use Sameday\Requests\SamedayGetPickupPointsRequest;
 use Sameday\Requests\SamedayGetServicesRequest;
@@ -284,6 +286,8 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_locker_max_items',
             'entry_sort_order',
             'entry_import_local_data',
+            'entry_import_nomenclator',
+            'entry_import_nomenclator_button',
             'entry_drop_down_list',
             'entry_interactive_map',
 
@@ -337,6 +341,7 @@ class ControllerExtensionShippingSameday extends Controller
         $data['services'] = $this->displayServices();
         $data['import_local_data_actions'] = json_encode(self::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link('extension/shipping/sameday/importLocalData', $this->addToken(), true);
+        $data['import_geolocations'] = $this->url->link('extension/shipping/sameday/importGeolocations', $this->addToken(), true);
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['lockers'] = $this->model_extension_shipping_sameday->getLockers($this->getConfig('sameday_testing'));
@@ -362,6 +367,7 @@ class ControllerExtensionShippingSameday extends Controller
             // Proceed with calling get_counties if the user is logged in
             $data['pp_counties'] = $this->get_counties();
         }
+        $data['sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
 
         $data = array_merge($data, $this->buildRequest(self::SAMEDAY_CONFIGS));
 
@@ -403,8 +409,6 @@ class ControllerExtensionShippingSameday extends Controller
         } catch (Exception $exception) {
             $this->session->data['error_warning'] = $exception->getMessage();
         }
-
-//        $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
 
         return json_encode('ceva');
     }
@@ -1311,6 +1315,42 @@ class ControllerExtensionShippingSameday extends Controller
         return $this->response->setOutput($this->load->view('extension/shipping/sameday_add_awb', $data));
     }
 
+    public function importGeolocations()
+    {
+
+
+        $sameday = new Sameday($this->samedayHelper->initClient());
+
+        $isoCode = $this->samedayHelper->getHostCountry();
+        $zone_id = $this->model_extension_shipping_sameday->getZone($isoCode)['country_id'];
+        try {
+            $counties = $sameday->getCounties(new SamedayGetCountiesRequest(null))->getCounties();
+            $action = $this->model_extension_shipping_sameday;
+            $action->truncateNomenclator();
+            foreach ($counties as $county) {
+                $countyCode = $county->getCode();
+                $zone = $this->model_extension_shipping_sameday->getZoneId($zone_id, $countyCode);
+                $page = 1;
+                do {
+                    $request = new SamedayGetCitiesRequest($county->getId());
+                    $request->setCountPerPage(1000);
+                    $request->setPage($page++);
+                    try {
+                        $cities = $sameday->getCities($request);
+                        foreach ($cities->getCities() as $city) {
+                            $action->addCity($city, $zone['zone_id']);
+                        }
+                    } catch (Exception $e) {
+                        break;
+                    }
+                } while ($page < $cities->getPages());
+            }
+        } catch (Exception $e) {
+
+        }
+
+    }
+
     /**
      * @throws \Sameday\Exceptions\SamedayOtherException
      * @throws SamedaySDKException
@@ -1692,7 +1732,7 @@ class ControllerExtensionShippingSameday extends Controller
                 $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']]
             );
 
-            $sameday =  new \Sameday\Sameday($this->samedayHelper->initClient());
+            $sameday =  new Sameday($this->samedayHelper->initClient());
             $return = [];
 
             try {
