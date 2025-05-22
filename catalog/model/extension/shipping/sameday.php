@@ -45,9 +45,9 @@ class ModelExtensionShippingSameday extends Model
      */
     public function getQuote($address)
     {
-        $table = DB_PREFIX .  "zone_to_geo_zone";
-        $countryId = (int) $address['country_id'];
-        $zoneId = (int) $address['zone_id'];
+        $table = DB_PREFIX . "zone_to_geo_zone";
+        $countryId = (int)$address['country_id'];
+        $zoneId = (int)$address['zone_id'];
 
         $query = $this->db->query(
             "SELECT * FROM $table WHERE 
@@ -77,11 +77,10 @@ class ModelExtensionShippingSameday extends Model
 
         $eligibleServices = $hostCountry === $destCountry
             ? SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES
-            : SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER
-        ;
+            : SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER;
         $availableService = array_filter(
             $this->getAvailableServices($this->getConfig('sameday_testing')),
-            static function(array $service) use ($eligibleServices) {
+            static function (array $service) use ($eligibleServices) {
                 return in_array($service['sameday_code'], $eligibleServices);
             }
         );
@@ -196,7 +195,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $time = time();
 
-        if ($time >= (((int) $this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
+        if ($time >= (((int)$this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
             $this->lockersRefresh();
         }
     }
@@ -235,8 +234,8 @@ class ModelExtensionShippingSameday extends Model
             static function ($locker) {
                 if (isset($locker['id'])) {
                     return array(
-                        'id' => (int) $locker['id'],
-                        'sameday_id' => (int) $locker['locker_id'],
+                        'id' => (int)$locker['id'],
+                        'sameday_id' => (int)$locker['locker_id'],
                     );
                 }
 
@@ -262,7 +261,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $store_id = 0;
         $code = "{$this->getPrefix()}sameday";
-        $key =  "{$this->getPrefix()}sameday_sync_lockers_ts";
+        $key = "{$this->getPrefix()}sameday_sync_lockers_ts";
         $time = time();
 
         $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
@@ -273,8 +272,8 @@ class ModelExtensionShippingSameday extends Model
             $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
         }
 
-        $lastTs = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '" . (int)$store_id . "' AND `key` = '" .$this->db->escape($key) .  "'  AND `code` = '" . $this->db->escape($code) . "'")->row;
-        $this->db->query('UPDATE '. DB_PREFIX ."setting SET value='{$this->db->escape($time)}' WHERE setting_id='{$this->db->escape($lastTs['setting_id'])}'");
+        $lastTs = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '" . (int)$store_id . "' AND `key` = '" . $this->db->escape($key) . "'  AND `code` = '" . $this->db->escape($code) . "'")->row;
+        $this->db->query('UPDATE ' . DB_PREFIX . "setting SET value='{$this->db->escape($time)}' WHERE setting_id='{$this->db->escape($lastTs['setting_id'])}'");
     }
 
     /**
@@ -284,7 +283,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
 
-        return (array) $this->db->query($query)->rows;
+        return (array)$this->db->query($query)->rows;
     }
 
     private function isShowLockersMap(): bool
@@ -448,7 +447,7 @@ class ModelExtensionShippingSameday extends Model
             array()
         );
 
-        $sameday =  new Sameday\Sameday($this->samedayHelper->initClient());
+        $sameday = new Sameday\Sameday($this->samedayHelper->initClient());
 
         try {
             return $sameday->postAwbEstimation($estimateCostRequest)->getCost();
@@ -475,7 +474,7 @@ class ModelExtensionShippingSameday extends Model
 
         $availableServices = array();
         foreach ($services as $service) {
-            if (1 === (int) $service['status']) {
+            if (1 === (int)$service['status']) {
                 $availableServices[] = $service;
             }
         }
@@ -527,27 +526,25 @@ class ModelExtensionShippingSameday extends Model
      * @param $data
      * @param int $store_id
      */
-    public function addAdditionalSetting($code, $data, $store_id = 0) {
+    public function addAdditionalSetting($code, $data, $store_id = 0)
+    {
         foreach ($data as $key => $value) {
             if (substr($key, 0, strlen($code)) == $code) {
                 $tableName = DB_PREFIX . "setting";
-                $this->db->query("DELETE FROM $tableName WHERE store_id = '" . (int) $store_id . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '".$this->db->escape($key)."'");
+                $this->db->query("DELETE FROM $tableName WHERE store_id = '" . (int)$store_id . "' AND `code` = '" . $this->db->escape($code) . "' AND `key` = '" . $this->db->escape($key) . "'");
                 if (!is_array($value)) {
-                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int) $store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
                 } else {
-                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int) $store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
+                    $this->db->query("INSERT INTO $tableName SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
                 }
             }
         }
     }
 
-    public function getCities($zone_id){
+    public function getCities($zone_id)
+    {
         $tableName = DB_PREFIX . "sameday_cities";
-        $query = "SELECT * FROM $tableName WHERE zone_id = " . (int) $zone_id;
+        $query = "SELECT * FROM $tableName WHERE zone_id = " . (int)$zone_id;
         return $this->db->query($query)->rows;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> c8c40f8d6dd271e7b43bc89a5b012c2935df0ef0
