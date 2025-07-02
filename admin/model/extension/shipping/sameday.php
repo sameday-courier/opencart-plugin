@@ -603,9 +603,9 @@ class ModelExtensionShippingSameday extends Model
                 county_code,
                 zone_id
             ) VALUES (
-                '{$this->db->escape($city->getId())}',
-                '{$this->db->escape($city->getName())}',
-                '{$this->db->escape($city->getCounty()->getCode())}',
+                '{$this->db->escape($city->city_id)}',
+                '{$this->db->escape($city->city_name)}',
+                '{$this->db->escape($city->county_code)}',
                 '{$this->db->escape($zone_id)}'
             )";
 
@@ -735,9 +735,9 @@ class ModelExtensionShippingSameday extends Model
 
         $this->db->query($query);
     }
-    public function getZoneId($countryId, $code){
+    public function getZoneId($zone_id, $county_code){
 
-        $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = $countryId AND code = '$code'";
+        $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE zone_id = $zone_id AND code = '$county_code'";
 
         return $this->db->query($query)->row;
 
@@ -854,6 +854,15 @@ class ModelExtensionShippingSameday extends Model
                     $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape(json_encode($value, true)) . "', serialized = '1'");
                 }
             }
+        }
+    }
+
+    public function citiesCheck(){
+        $query = $this->db->query("SHOW TABLES LIKE '" . DB_PREFIX . "sameday_cities'");
+        if ($query->num_rows > 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 }
