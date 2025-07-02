@@ -113,10 +113,10 @@
         </operation>
         <operation>
             <search><![CDATA[
-            <script type="text/javascript"><!--
+            // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                <script>
+
                   $(document).ready(function(){
                     $('#input-payment-zone').on('change', function(){
                       let county_id = $(this).val();
@@ -127,6 +127,7 @@
                         success: function(result){
                           let arr = $.parseJSON(result);
                           $('#input-shipping-city').html("");
+                          $('#input-shipping-city').append('<option>Alege un oras</option>');
                           arr.map(function(item){
                             $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
                           });
@@ -134,7 +135,7 @@
                       });
                     });
                   });
-                </script>
+
             ]]></add>
         </operation>
     </file>

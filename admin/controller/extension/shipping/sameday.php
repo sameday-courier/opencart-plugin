@@ -1319,35 +1319,24 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function importGeolocations() {
 
+        if ($this->model_extension_shipping_sameday->citiesCheck() === false) {
+            $this->model_extension_shipping_sameday->createCitiesTable();
+        }
 
-        $sameday = new Sameday($this->samedayHelper->initClient());
-
-        $isoCode = $this->samedayHelper->getHostCountry();
-        $zone_id = $this->model_extension_shipping_sameday->getZone($isoCode)['country_id'];
-        try {
-            $counties = $sameday->getCounties(new SamedayGetCountiesRequest(null))->getCounties();
+        try{
+            $sameday = new Sameday($this->samedayHelper->initClient());
+            $citiesData = json_decode(file_get_contents(DIR_APPLICATION . 'cities.json'), false, 512, JSON_THROW_ON_ERROR);
             $action = $this->model_extension_shipping_sameday;
+            $isoCode = $this->samedayHelper->getHostCountry();
+            $zone_id = $this->model_extension_shipping_sameday->getZone($isoCode)['country_id'];
+            $counties = $sameday->getCounties(new SamedayGetCountiesRequest(null))->getCounties();
             $action->truncateNomenclator();
-            foreach ($counties as $county) {
-                $countyCode = $county->getCode();
-                $zone = $this->model_extension_shipping_sameday->getZoneId($zone_id, $countyCode);
-                $page = 1;
-                do {
-                    $request = new SamedayGetCitiesRequest($county->getId());
-                    $request->setCountPerPage(1000);
-                    $request->setPage($page++);
-                    try {
-                        $cities = $sameday->getCities($request);
-                        foreach ($cities->getCities() as $city) {
-                            $action->addCity($city, $zone['zone_id']);
-                        }
-                    } catch (Exception $e) {
-                        break;
-                    }
-                } while ($page < $cities->getPages());
+            foreach($citiesData as $city){
+                $zone = $this->model_extension_shipping_sameday->getZoneId($zone_id, $city->county_code);
+                $action->addCity($city, $zone['zone_id']);
             }
-        } catch (Exception $e) {
-
+        }catch(JsonException $exception){
+            return;
         }
 
     }
