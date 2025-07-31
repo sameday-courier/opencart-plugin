@@ -72,8 +72,8 @@ class SamedayHelper
 
     const SAMEDAY_COUNTRIES = [
         ['value' => 187, 'label' => 'Romania'],
-//        ['value' => 34, 'label' => 'Bulgaria'],
-//        ['value' => 237, 'label' => 'Hungary'],
+        ['value' => 34, 'label' => 'Bulgaria'],
+        ['value' => 237, 'label' => 'Hungary'],
     ];
 
     const AFTER_48_HOURS = 172800;

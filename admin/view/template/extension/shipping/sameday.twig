@@ -488,9 +488,13 @@
 
     $(document).on('click', '#input-import-nomenclator', function(){
         let url = $('#input-import-nomenclator').attr('data-href');
+        $(this).prop('disabled', true);
+        $(this).text('Importing...')
         $.ajax({
             url: url,
             success: function(result){
+                $(this).prop('disabled', false);
+                $(this).text('Finalizat');
                 console.log(result);
             }
         });

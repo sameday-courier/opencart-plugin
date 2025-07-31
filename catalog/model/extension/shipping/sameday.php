@@ -547,4 +547,9 @@ class ModelExtensionShippingSameday extends Model
         $query = "SELECT * FROM $tableName WHERE zone_id = " . (int)$zone_id;
         return $this->db->query($query)->rows;
     }
+
+    public function getCountriesCodes()
+    {
+        return [SamedayHelper::API_HOST_LOCALE_RO, SamedayHelper::API_HOST_LOCALE_BG, SamedayHelper::API_HOST_LOCALE_HU];
+    }
 }

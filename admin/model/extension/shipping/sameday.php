@@ -735,11 +735,12 @@ class ModelExtensionShippingSameday extends Model
 
         $this->db->query($query);
     }
-    public function getZoneId($zone_id, $county_code){
+    public function getZoneId($countryId, $countryCode){
 
-        $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE zone_id = $zone_id AND code = '$county_code'";
+        $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = '$countryId' AND code = '$countryCode'";
+        $result = $this->db->query($query)->row;
 
-        return $this->db->query($query)->row;
+        return $result['zone_id'];
 
     }
 
@@ -865,4 +866,31 @@ class ModelExtensionShippingSameday extends Model
             return false;
         }
     }
+
+    public function getCountryByCode($isoCode){
+        $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE iso_code_2 = '$isoCode'");
+        return $query->row['country_id'];
+    }
+
+    public function addZoneCounty($country_id, $county){
+//        var_dump($county); die();
+        $county_name = $this->db->escape($county->county);
+        $county_code = $this->db->escape($county->code);
+        $country_id = (int)$country_id;
+        $zone = $this->db->query("SELECT * FROM `" . DB_PREFIX . "zone` WHERE `country_id` = '$country_id' AND `name` = '$county_name'");
+        if ($zone->num_rows == 0) {
+            $this->db->query("INSERT INTO `" . DB_PREFIX . "zone` SET 
+            `country_id` = '$country_id', 
+            `name` = '$county_name', 
+            `code` = '$county_code', 
+            `status` = 1
+            ");
+        }else{
+            if($zone->row['code'] == ''){
+                $zone_id = (int)$zone->row['zone_id'];
+                $this->db->query("UPDATE `" . DB_PREFIX . "zone` SET `code` = '$county_code' WHERE `zone_id` = '$zone_id'");
+            }
+        }
+    }
+
 }
