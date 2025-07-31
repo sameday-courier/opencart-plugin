@@ -342,7 +342,6 @@ class ControllerExtensionShippingSameday extends Controller
         $data['import_local_data_actions'] = json_encode(self::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link('extension/shipping/sameday/importLocalData', $this->addToken(), true);
         $data['import_geolocations'] = $this->url->link('extension/shipping/sameday/importGeolocations', $this->addToken(), true);
-        $data['get_all_counties'] = $this->url->link('extension/shipping/sameday/get_all_counties', $this->addToken(), true);
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['lockers'] = $this->model_extension_shipping_sameday->getLockers($this->getConfig('sameday_testing'));
@@ -2078,5 +2077,4 @@ class ControllerExtensionShippingSameday extends Controller
     {
         return $isShow === true ? self::TOGGLE_HTML_ELEMENT['show'] : self::TOGGLE_HTML_ELEMENT['hide'];
     }
-
 }
