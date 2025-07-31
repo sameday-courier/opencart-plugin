@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.6.6</version>
+    <version>1.6.7</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.twig">
@@ -47,24 +47,72 @@
             ]]></search>
             <add position="before"><![CDATA[
 
-                  $(document).ready(function(){
-                    $('#input-payment-zone').on('change', function(){
-                      let county_id = $(this).val();
-                      $.ajax({
-                        url: 'index.php?route=checkout/guest/get_cities',
-                        type: 'POST',
-                        data: { county_id },
-                        success: function(result){
-                          let arr = $.parseJSON(result);
-                          $('#input-shipping-city').html("");
-                          $('#input-shipping-city').append('<option>Alege un oras</option>');
-                          arr.map(function(item){
-                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
-                          });
-                        }
-                      });
+                let SamedayCities = {{ sameday_cities }};
+                /**
+                 * @param fieldName
+                 *
+                 * @returns HTML|undefined
+                 */
+                const getFieldByName = (fieldName) => {
+                    return Array.from(document.querySelectorAll('input, select'))
+                        .find(element => element.id.includes(fieldName)
+                        );
+                }
+                let formElements = {
+                    country: $(getFieldByName('country')),
+                    zone: $(getFieldByName('zone')),
+                    city: $(getFieldByName('city')),
+                };
+
+                if (undefined !== formElements.zone && formElements.zone.length > 0) {
+                    formElements.zone.on('change', (event) => {
+                        updateCities(formElements.city[0], event.target.value, formElements.country.val());
                     });
-                  });
+                }
+
+                const updateCities = (cityField, zoneId, countryId) => {
+                    let cities = SamedayCities?.[countryId]?.[zoneId] ?? [];
+                    if (cities.length > 0) {
+                        if (undefined !== citySelectElement && citySelectElement.length > 0) {
+                            populateCityField(cities, citySelectElement, cityField);
+                        } else {
+                            citySelectElement = document.createElement("select");
+                            citySelectElement.setAttribute("id", cityField.getAttribute('id'));
+                            citySelectElement.setAttribute("name", 'city');
+                            citySelectElement.setAttribute("class", "form-control form-control-select");
+
+                            populateCityField(cities, citySelectElement, cityField);
+                        }
+                    } else {
+                        if (undefined !== citySelectElement && citySelectElement.length > 0) {
+                            citySelectElement.replaceWith(cityField);
+                        }
+                    }
+                }
+
+                const createOptionElement = (value, text, cityFieldValue = null) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.setAttribute('data-alternate-values', `[${value}]`);
+                    if (value === cityFieldValue) {
+                        option.setAttribute('selected', true);
+                    }
+                    option.textContent = text;
+
+                    return option;
+                }
+
+                let citySelectElement;
+
+                const populateCityField = (cities, citySelectElement, cityField) => {
+                    citySelectElement.textContent = "";
+                    citySelectElement.appendChild(createOptionElement("", "Choose a city"));
+                    cities.forEach((city) => {
+                        citySelectElement.appendChild(createOptionElement(city.name, city.name, cityField.value));
+                    });
+
+                    cityField.replaceWith(citySelectElement);
+                }
 
             ]]></add>
         </operation>
@@ -85,6 +133,21 @@
                     echo json_encode($cities);
 
                 }
+
+                public function getCountryByCode($isoCode){
+                    $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE iso_code_2 = '$isoCode'");
+                    return $query->row['country_id'];
+                }
+
+                public function getCountiesByCountryId($country_id){
+                    $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "zone WHERE country_id = '" . (int)$country_id . "'");
+                    return $query->rows;
+                }
+
+                public function getCitiesByCountyId($zone_id){
+                    $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "sameday_cities WHERE zone_id = '" . (int)$zone_id . "'");
+                    return $query->rows;
+                }
             ]]></add>
         </operation>
         <operation>
@@ -94,6 +157,28 @@
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
                 $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
+
+                // Get Cities for Checkout
+                $countries = $this->model_extension_shipping_sameday->getCountriesCodes();
+                $sameday_cities = array();
+
+                foreach ($countries as $country) {
+                    $country_id = $this->getCountryByCode($country);
+                    $sameday_cities[$country_id] = array();
+                    $counties = $this->getCountiesByCountryId($country_id);
+                    foreach ($counties as $county) {
+                        $zone_id = $county['zone_id'];
+                        $sameday_cities[$country_id][$zone_id] = array();
+                        $cities = $this->getCitiesByCountyId($zone_id);
+                        foreach($cities as $city) {
+                            $sameday_cities[$country_id][$zone_id][] = array(
+                                'name' => $city['city_name']
+                            );
+                        }
+                    }
+                }
+
+                $data['sameday_cities'] = json_encode($sameday_cities);
             ]]></add>
         </operation>
     </file>
@@ -118,24 +203,72 @@
             ]]></search>
             <add position="before"><![CDATA[
 
-                  $(document).ready(function(){
-                    $('#input-payment-zone').on('change', function(){
-                      let county_id = $(this).val();
-                      $.ajax({
-                        url: 'index.php?route=checkout/register/get_cities',
-                        type: 'POST',
-                        data: { county_id },
-                        success: function(result){
-                          let arr = $.parseJSON(result);
-                          $('#input-shipping-city').html("");
-                          $('#input-shipping-city').append('<option>Alege un oras</option>');
-                          arr.map(function(item){
-                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
-                          });
-                        }
-                      });
+                let SamedayCities = {{ sameday_cities }};
+                /**
+                 * @param fieldName
+                 *
+                 * @returns HTML|undefined
+                 */
+                const getFieldByName = (fieldName) => {
+                    return Array.from(document.querySelectorAll('input, select'))
+                        .find(element => element.id.includes(fieldName)
+                        );
+                }
+                let formElements = {
+                    country: $(getFieldByName('country')),
+                    zone: $(getFieldByName('zone')),
+                    city: $(getFieldByName('city')),
+                };
+
+                if (undefined !== formElements.zone && formElements.zone.length > 0) {
+                    formElements.zone.on('change', (event) => {
+                        updateCities(formElements.city[0], event.target.value, formElements.country.val());
                     });
-                  });
+                }
+
+                const updateCities = (cityField, zoneId, countryId) => {
+                    let cities = SamedayCities?.[countryId]?.[zoneId] ?? [];
+                    if (cities.length > 0) {
+                        if (undefined !== citySelectElement && citySelectElement.length > 0) {
+                            populateCityField(cities, citySelectElement, cityField);
+                        } else {
+                            citySelectElement = document.createElement("select");
+                            citySelectElement.setAttribute("id", cityField.getAttribute('id'));
+                            citySelectElement.setAttribute("name", 'city');
+                            citySelectElement.setAttribute("class", "form-control form-control-select");
+
+                            populateCityField(cities, citySelectElement, cityField);
+                        }
+                    } else {
+                        if (undefined !== citySelectElement && citySelectElement.length > 0) {
+                            citySelectElement.replaceWith(cityField);
+                        }
+                    }
+                }
+
+                const createOptionElement = (value, text, cityFieldValue = null) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.setAttribute('data-alternate-values', `[${value}]`);
+                    if (value === cityFieldValue) {
+                        option.setAttribute('selected', true);
+                    }
+                    option.textContent = text;
+
+                    return option;
+                }
+
+                let citySelectElement;
+
+                const populateCityField = (cities, citySelectElement, cityField) => {
+                    citySelectElement.textContent = "";
+                    citySelectElement.appendChild(createOptionElement("", "Choose a city"));
+                    cities.forEach((city) => {
+                        citySelectElement.appendChild(createOptionElement(city.name, city.name, cityField.value));
+                    });
+
+                    cityField.replaceWith(citySelectElement);
+                }
 
             ]]></add>
         </operation>
@@ -156,6 +289,21 @@
                     echo json_encode($cities);
 
                 }
+
+                public function getCountryByCode($isoCode){
+                    $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE iso_code_2 = '$isoCode'");
+                    return $query->row['country_id'];
+                }
+
+                public function getCountiesByCountryId($country_id){
+                    $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "zone WHERE country_id = '" . (int)$country_id . "'");
+                    return $query->rows;
+                }
+
+                public function getCitiesByCountyId($zone_id){
+                    $query = $this->db->query('SELECT * FROM ' . DB_PREFIX . "sameday_cities WHERE zone_id = '" . (int)$zone_id . "'");
+                    return $query->rows;
+                }
             ]]></add>
         </operation>
         <operation>
@@ -165,6 +313,28 @@
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
                 $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
+
+                // Get Cities for Checkout
+                $countries = $this->model_extension_shipping_sameday->getCountriesCodes();
+                $sameday_cities = array();
+
+                foreach ($countries as $country) {
+                    $country_id = $this->getCountryByCode($country);
+                    $sameday_cities[$country_id] = array();
+                    $counties = $this->getCountiesByCountryId($country_id);
+                    foreach ($counties as $county) {
+                        $zone_id = $county['zone_id'];
+                        $sameday_cities[$country_id][$zone_id] = array();
+                        $cities = $this->getCitiesByCountyId($zone_id);
+                        foreach($cities as $city) {
+                            $sameday_cities[$country_id][$zone_id][] = array(
+                                'name' => $city['city_name']
+                            );
+                        }
+                    }
+                }
+
+                $data['sameday_cities'] = json_encode($sameday_cities);
             ]]></add>
         </operation>
     </file>
