@@ -46,8 +46,8 @@ class ModelExtensionShippingSameday extends Model
     public function getQuote($address)
     {
         $table = DB_PREFIX . "zone_to_geo_zone";
-        $countryId = (int)$address['country_id'];
-        $zoneId = (int)$address['zone_id'];
+        $countryId = (int) $address['country_id'];
+        $zoneId = (int) $address['zone_id'];
 
         $query = $this->db->query(
             "SELECT * FROM $table WHERE 
@@ -195,7 +195,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $time = time();
 
-        if ($time >= (((int)$this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
+        if ($time >= (((int) $this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
             $this->lockersRefresh();
         }
     }
@@ -234,8 +234,8 @@ class ModelExtensionShippingSameday extends Model
             static function ($locker) {
                 if (isset($locker['id'])) {
                     return array(
-                        'id' => (int)$locker['id'],
-                        'sameday_id' => (int)$locker['locker_id'],
+                        'id' => (int) $locker['id'],
+                        'sameday_id' => (int) $locker['locker_id'],
                     );
                 }
 
@@ -283,7 +283,7 @@ class ModelExtensionShippingSameday extends Model
     {
         $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
 
-        return (array)$this->db->query($query)->rows;
+        return (array) $this->db->query($query)->rows;
     }
 
     private function isShowLockersMap(): bool
@@ -474,7 +474,7 @@ class ModelExtensionShippingSameday extends Model
 
         $availableServices = array();
         foreach ($services as $service) {
-            if (1 === (int)$service['status']) {
+            if (1 === (int) $service['status']) {
                 $availableServices[] = $service;
             }
         }
