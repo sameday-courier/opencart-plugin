@@ -1106,7 +1106,7 @@ class ControllerExtensionShippingSameday extends Controller
             $showLockerDetails = $this->toggleHtmlElement(true);
         }
 
-        $showPDO = $this->toggleHtmlElement(false);
+        $showPDO = $this->toggleHtmlElement(true);
 
         if (null !== $locationId = $parts[3] ?? null) {
             if (
