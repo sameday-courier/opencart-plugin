@@ -179,9 +179,12 @@
                 <a class="btn btn-primary" href="{{ pickupPoint_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
                 <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="{{ text_pickupPoint_add }}"><i class="fa fa-plus"></i></a>
             </div>
+            <div class="panel-heading">
+                <input type="text" class="form-control d-block" name="search" placeholder="Search..." id="pickupPointsTableSearch">
+            </div>
             <div class="panel-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover" id="pickupPointsTable">
                         <thead>
                         <tr>
                             <td class="text-left">{{ column_pickupPoint_samedayId }}</td>
@@ -492,6 +495,20 @@
             url: url,
             success: function(result){
                 console.log(result);
+            }
+        });
+    });
+
+    $('#pickupPointsTableSearch').on('keyup', function(){
+        const search = $(this).val();
+        const rows = document.querySelectorAll('#pickupPointsTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            console.log(text);
+            if(!text.includes(search)){
+                row.style.display = 'none';
+            }else{
+                row.style.display = '';
             }
         });
     });
