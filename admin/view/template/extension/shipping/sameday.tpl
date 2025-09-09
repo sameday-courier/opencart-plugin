@@ -179,9 +179,12 @@
                 <a class="btn btn-primary" href="<?php echo $pickupPoint_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_services_refresh; ?>"><i class="fa fa-refresh"></i></a>
                 <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="<?php echo $text_pickupPoint_add; ?>"><i class="fa fa-plus"></i></a>
             </div>
+            <div class="panel-heading">
+                <input type="text" id="#pickupPointsTableSearch" placeholder="Search...">
+            </div>
             <div class="panel-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover" id="#pickupPointsTable">
                         <thead>
                         <tr>
                             <td class="text-left"></td>
@@ -489,6 +492,20 @@
 
         $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
             document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
+        });
+    });
+
+    $('#pickupPointsTableSearch').on('keyup', function(){
+        const search = $(this).val();
+        const rows = document.querySelectorAll('#pickupPointsTable tbody tr');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            console.log(text);
+            if(!text.includes(search)){
+                row.style.display = 'none';
+            }else{
+                row.style.display = '';
+            }
         });
     });
 </script>
