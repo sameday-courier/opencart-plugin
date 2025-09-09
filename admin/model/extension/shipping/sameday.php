@@ -739,9 +739,10 @@ class ModelExtensionShippingSameday extends Model
 
         $query = "SELECT zone_id FROM " . DB_PREFIX . "zone WHERE country_id = '$countryId' AND code = '$countryCode'";
         $result = $this->db->query($query)->row;
-
+        if(!isset($result['zone_id'])){
+            return null;
+        }
         return $result['zone_id'];
-
     }
 
     public function truncateNomenclator(){

@@ -486,15 +486,15 @@
         });
     });
 
-    $(document).on('click', '#input-import-nomenclator', function(){
+    $('#input-import-nomenclator').on('click', function(){
         let url = $('#input-import-nomenclator').attr('data-href');
         $(this).prop('disabled', true);
         $(this).text('Importing...')
         $.ajax({
             url: url,
             success: function(result){
-                $(this).prop('disabled', false);
-                $(this).text('Finalizat');
+                $('#input-import-nomenclator').prop('disabled', false);
+                $('#input-import-nomenclator').text('Finalizat');
                 console.log(result);
             }
         });

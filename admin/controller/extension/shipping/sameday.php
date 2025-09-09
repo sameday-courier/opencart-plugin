@@ -1337,7 +1337,9 @@ class ControllerExtensionShippingSameday extends Controller
             foreach($citiesData as $city){
                 $countryId = $this->model_extension_shipping_sameday->getZone($city->country_code)['country_id'];
                 $zoneId = $this->model_extension_shipping_sameday->getZoneId($countryId, $city->county_code);
-                $action->addCity($city, $zoneId);
+                if($zoneId !== null){
+                    $action->addCity($city, $zoneId);
+                }
             }
         }catch(JsonException $exception){
             return;
