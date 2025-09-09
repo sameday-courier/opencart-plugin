@@ -21,7 +21,7 @@ jobs:
       - name: Extract version from plugin file
         id: extract_version
         run: |
-          version=grep -oP '(?<=<version>).*?(?=</version>)' install.3.xml
+          version=$(grep '<version>' install.3.xml | sed -E 's:.*<version>(.*)</version>.*:\1:')
           echo "plugin_version_raw=$version" >> $GITHUB_OUTPUT
           echo "plugin_version=v$version" >> $GITHUB_OUTPUT
 
