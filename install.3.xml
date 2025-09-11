@@ -176,6 +176,33 @@
             ]]></add>
         </operation>
     </file>
+    <file path="admin/view/template/sale/order_list.twig">
+        <operation>
+            <search><![CDATA[
+                <button type="submit" id="button-invoice" form="form-order" formaction="{{ invoice }}" formtarget="_blank" data-toggle="tooltip" title="{{ button_invoice_print }}" class="btn btn-info"><i class="fa fa-print"></i></button>
+            ]]></search>
+            <add position="after"><![CDATA[
+                <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+                <button type="button" id="button-awb" form="form-order" formaction="" formtarget="_blank" data-toggle="tooltip" title="Generate AWB" class="btn btn-success" style="padding: 3px 9px"><i class="material-icons" style="position: relative; top: 3px">layers</i></button>
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                $('#button-shipping, #button-invoice').prop('disabled', true);
+            ]]></search>
+            <add position="replace"><![CDATA[
+                $('#button-shipping, #button-invoice, #button-awb').prop('disabled', true);
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                $('#button-invoice').prop('disabled', false);
+            ]]></search>
+            <add position="replace"><![CDATA[
+                $('#button-invoice, #button-awb').prop('disabled', false);
+            ]]></add>
+        </operation>
+    </file>
     <file path="admin/view/template/sale/order_info.twig">
         <operation>
             <search><![CDATA[
