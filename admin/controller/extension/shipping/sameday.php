@@ -342,6 +342,8 @@ class ControllerExtensionShippingSameday extends Controller
         $data['import_local_data_actions'] = json_encode(self::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link('extension/shipping/sameday/importLocalData', $this->addToken(), true);
         $data['import_geolocations'] = $this->url->link('extension/shipping/sameday/importGeolocations', $this->addToken(), true);
+//        $data['get_counties'] = $this->url->link('extension/shipping/sameday/get_counties', $this->addToken(), true);
+        $data['get_all_counties'] = $this->url->link('extension/shipping/sameday/get_all_counties', $this->addToken(), true);
         $data['service_refresh'] = $this->url->link('extension/shipping/sameday/serviceRefresh', $this->addToken(), true);
         $data['pickupPoints'] = $this->model_extension_shipping_sameday->getPickupPoints($this->getConfig('sameday_testing'));
         $data['lockers'] = $this->model_extension_shipping_sameday->getLockers($this->getConfig('sameday_testing'));
@@ -1319,35 +1321,30 @@ class ControllerExtensionShippingSameday extends Controller
 
     public function importGeolocations() {
 
+        $countiesData = json_decode(file_get_contents(DIR_SYSTEM . 'library/sameday-classes/utils/counties.json'), false, 512, JSON_THROW_ON_ERROR);
+        $this->load->model('extension/shipping/sameday');
+        foreach($countiesData as $county){
+            $country_id = $this->model_extension_shipping_sameday->getCountryByCode($county->country_code);
+            $this->model_extension_shipping_sameday->addZoneCounty($country_id, $county);
+        }
 
-        $sameday = new Sameday($this->samedayHelper->initClient());
+        if ($this->model_extension_shipping_sameday->citiesCheck() === false) {
+            $this->model_extension_shipping_sameday->createCitiesTable();
+        }
 
-        $isoCode = $this->samedayHelper->getHostCountry();
-        $zone_id = $this->model_extension_shipping_sameday->getZone($isoCode)['country_id'];
-        try {
-            $counties = $sameday->getCounties(new SamedayGetCountiesRequest(null))->getCounties();
+        try{
+            $citiesData = json_decode(file_get_contents(DIR_SYSTEM . 'library/sameday-classes/utils/cities.json'), false, 512, JSON_THROW_ON_ERROR);
             $action = $this->model_extension_shipping_sameday;
             $action->truncateNomenclator();
-            foreach ($counties as $county) {
-                $countyCode = $county->getCode();
-                $zone = $this->model_extension_shipping_sameday->getZoneId($zone_id, $countyCode);
-                $page = 1;
-                do {
-                    $request = new SamedayGetCitiesRequest($county->getId());
-                    $request->setCountPerPage(1000);
-                    $request->setPage($page++);
-                    try {
-                        $cities = $sameday->getCities($request);
-                        foreach ($cities->getCities() as $city) {
-                            $action->addCity($city, $zone['zone_id']);
-                        }
-                    } catch (Exception $e) {
-                        break;
-                    }
-                } while ($page < $cities->getPages());
+            foreach($citiesData as $city){
+                $countryId = $this->model_extension_shipping_sameday->getZone($city->country_code)['country_id'];
+                $zoneId = $this->model_extension_shipping_sameday->getZoneId($countryId, $city->county_code);
+                if($zoneId !== null){
+                    $action->addCity($city, $zoneId);
+                }
             }
-        } catch (Exception $e) {
-
+        }catch(JsonException $exception){
+            return;
         }
 
     }
@@ -2084,4 +2081,5 @@ class ControllerExtensionShippingSameday extends Controller
     {
         return $isShow === true ? self::TOGGLE_HTML_ELEMENT['show'] : self::TOGGLE_HTML_ELEMENT['hide'];
     }
+
 }
