@@ -56,6 +56,7 @@ class SamedayHelper
     const OOH_SERVICES = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::SAMEDAY_PUDO_SERVICE,
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
     ];
 
     const ELIGIBLE_TO_LOCKER = [
