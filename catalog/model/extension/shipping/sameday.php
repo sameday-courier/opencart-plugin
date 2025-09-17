@@ -26,15 +26,18 @@ class ModelExtensionShippingSameday extends Model
         'host_country',
     ];
 
+    /**
+     * @param mixed $registry
+     */
     public function __construct($registry)
     {
         parent::__construct($registry);
 
-        $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(self::SAMEDAY_CONFIGS), $registry, $this->getPrefix());
+        $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(), $registry, $this->getPrefix());
     }
 
     /**
-     * @param $address
+     * @param array $address
      * @return array|null
      * @throws SamedaySDKException
      * @throws SamedayAuthenticationException
@@ -43,7 +46,7 @@ class ModelExtensionShippingSameday extends Model
      * @throws SamedayOtherException
      * @throws SamedayServerException
      */
-    public function getQuote($address)
+    public function getQuote(array $address)
     {
         $table = DB_PREFIX . "zone_to_geo_zone";
         $countryId = (int) $address['country_id'];
@@ -79,7 +82,7 @@ class ModelExtensionShippingSameday extends Model
             ? SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES
             : SamedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER;
         $availableService = array_filter(
-            $this->getAvailableServices($this->getConfig('sameday_testing')),
+            $this->getAvailableServices(),
             static function (array $service) use ($eligibleServices) {
                 return in_array($service['sameday_code'], $eligibleServices);
             }
@@ -167,22 +170,27 @@ class ModelExtensionShippingSameday extends Model
             return null;
         }
 
-        $method_data = array(
+        return array(
             'code' => 'sameday',
             'title' => 'Sameday',
             'quote' => $quote_data,
             'sort_order' => $this->getConfig('sameday_sort_order'),
             'error' => false
         );
-
-        return $method_data;
     }
 
-    private function buildRequest(array $keys)
+    /**
+     * @return array
+     */
+    private function buildRequest(): array
     {
-        $entries = array();
+        $keys = self::SAMEDAY_CONFIGS;
+
+        $entries = [];
         foreach ($keys as $key) {
-            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"] ?? $this->getConfig("sameday_$key");
+            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"]
+                ?? $this->getConfig("sameday_$key")
+            ;
         }
 
         return $entries;
@@ -411,7 +419,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private function estimateCost($address, $serviceId)
     {
-        $pickupPointId = $this->getDefaultPickupPointId($this->getConfig('sameday_testing'));
+        $pickupPointId = $this->getDefaultPickupPointId();
         $weight = $this->cart->getWeight();
 
         $selectedPaymentMethod = $this->request->cookie['selected_payment_method'] ?? null;
@@ -459,16 +467,15 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param bool $testing
-     *
      * @return array
      */
-    private function getAvailableServices($testing)
+    private function getAvailableServices()
     {
-        $services = $this->db->query(sprintf(
+        $services = $this->db->query(
+            sprintf(
                 "SELECT * FROM %s WHERE testing='%s' AND status > 0",
                 DB_PREFIX . "sameday_service",
-                $this->db->escape($testing)
+                $this->db->escape($this->getConfig('sameday_testing'))
             )
         )->rows;
 
@@ -483,14 +490,17 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param $testing
-     *
-     * @return  int|null
+     * @return array|null
      */
-    private function getDefaultPickupPointId($testing)
+    private function getDefaultPickupPointId()
     {
-        $query = 'SELECT sameday_id FROM ' . DB_PREFIX . "sameday_pickup_point WHERE testing='{$this->db->escape($testing)}' AND default_pickup_point=1";
-        $defaultPickupPoint = $this->db->query($query)->row;
+        $defaultPickupPoint = $this->db->query(
+            sprintf(
+                "SELECT sameday_id FROM %s WHERE testing='%s' AND default_pickup_point=1",
+                DB_PREFIX . "sameday_pickup_point",
+                $this->getConfig('sameday_testing')
+            )
+        )->row;
 
         if (empty($defaultPickupPoint)) {
             return null;
@@ -504,7 +514,7 @@ class ModelExtensionShippingSameday extends Model
      *
      * @return mixed
      */
-    public function getConfig($key)
+    public function getConfig(string $key)
     {
         return $this->config->get("{$this->getPrefix()}$key");
     }
@@ -541,14 +551,26 @@ class ModelExtensionShippingSameday extends Model
         }
     }
 
-    public function getCities($zone_id)
+    /**
+     * @param $zone_id
+     *
+     * @return array
+     */
+    public function getCities($zone_id): array
     {
-        $tableName = DB_PREFIX . "sameday_cities";
-        $query = "SELECT * FROM $tableName WHERE zone_id = " . (int)$zone_id;
-        return $this->db->query($query)->rows;
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE zone_id = %i",
+                DB_PREFIX . "sameday_cities",
+                (int) $zone_id
+            )
+        )->rows;
     }
 
-    public function getCountriesCodes()
+    /**
+     * @return array
+     */
+    public function getCountriesCodes(): array
     {
         return [SamedayHelper::API_HOST_LOCALE_RO, SamedayHelper::API_HOST_LOCALE_BG, SamedayHelper::API_HOST_LOCALE_HU];
     }
