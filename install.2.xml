@@ -121,7 +121,7 @@
                 public function save() {
             ]]></search>
             <add position="before"><![CDATA[
-                public function get_cities() {
+                public function getCities() {
 
                     $this->load->model('extension/shipping/sameday');
                     $county_id = $this->request->post['county_id'];
@@ -277,7 +277,7 @@
                 public function save() {
             ]]></search>
             <add position="before"><![CDATA[
-                public function get_cities() {
+                public function getCities() {
 
                     $this->load->model('extension/shipping/sameday');
                     $county_id = $this->request->post['county_id'];

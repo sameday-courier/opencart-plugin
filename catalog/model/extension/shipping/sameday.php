@@ -7,6 +7,7 @@ use Sameday\Exceptions\SamedayNotFoundException;
 use Sameday\Exceptions\SamedayOtherException;
 use Sameday\Exceptions\SamedaySDKException;
 use Sameday\Exceptions\SamedayServerException;
+use Sameday\Objects\Locker\LockerObject;
 
 require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 
@@ -229,7 +230,7 @@ class ModelExtensionShippingSameday extends Model
         foreach ($lockers as $lockerObject) {
             $locker = $this->getLockerSameday($lockerObject->getId(), $this->isTesting());
             if (!$locker) {
-                $this->addLocker($lockerObject, $this->isTesting());
+                $this->addLocker($lockerObject);
             } else {
                 $this->updateLocker($lockerObject, $locker['id']);
             }
@@ -319,6 +320,7 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @param $lockerId
      * @param $testing
+     *
      * @return mixed
      */
     private function getLockerSameday($lockerId, $testing)
@@ -330,9 +332,10 @@ class ModelExtensionShippingSameday extends Model
 
     /**
      * @param object $lockerObject
-     * @param int $testing
+     *
+     * @return void
      */
-    private function addLocker($lockerObject, $testing)
+    private function addLocker($lockerObject)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_locker (
@@ -356,12 +359,18 @@ class ModelExtensionShippingSameday extends Model
                 '{$this->db->escape($lockerObject->getLong())}',
                 '{$this->db->escape($lockerObject->getPostalCode())}',
                 '{$this->db->escape(serialize($lockerObject->getBoxes()))}',
-                '{$this->db->escape($testing)}')";
+                '{$this->isTesting()}')";
 
         $this->db->query($query);
     }
 
-    private function updateLocker($lockerObject, $lockerId)
+    /**
+     * @param LockerObject $lockerObject
+     * @param int $lockerId
+     *
+     * @return void
+     */
+    private function updateLocker(LockerObject $lockerObject, int $lockerId)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . "sameday_locker SET 
@@ -469,13 +478,13 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return array
      */
-    private function getAvailableServices()
+    private function getAvailableServices(): array
     {
         $services = $this->db->query(
             sprintf(
                 "SELECT * FROM %s WHERE testing='%s' AND status > 0",
                 DB_PREFIX . "sameday_service",
-                $this->db->escape($this->getConfig('sameday_testing'))
+                $this->isTesting()
             )
         )->rows;
 
@@ -498,7 +507,7 @@ class ModelExtensionShippingSameday extends Model
             sprintf(
                 "SELECT sameday_id FROM %s WHERE testing='%s' AND default_pickup_point=1",
                 DB_PREFIX . "sameday_pickup_point",
-                $this->getConfig('sameday_testing')
+                $this->isTesting()
             )
         )->row;
 
