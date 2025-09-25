@@ -362,9 +362,13 @@ class ModelExtensionShippingSameday extends Model
      */
     public function getPickupPoint(int $id): array
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_pickup_point WHERE id='{$this->db->escape($id)}'";
-
-        return $this->db->query($query)->row;
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `id` = %d",
+                DB_PREFIX . "sameday_pickup_point",
+                $id
+            )
+        )->row;
     }
 
     /**

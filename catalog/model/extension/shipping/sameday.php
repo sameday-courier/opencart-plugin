@@ -9,8 +9,6 @@ use Sameday\Exceptions\SamedaySDKException;
 use Sameday\Exceptions\SamedayServerException;
 use Sameday\Objects\Locker\LockerObject;
 
-require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
-
 class ModelExtensionShippingSameday extends Model
 {
     /**
@@ -33,6 +31,8 @@ class ModelExtensionShippingSameday extends Model
     public function __construct($registry)
     {
         parent::__construct($registry);
+
+        require_once DIR_SYSTEM . 'library/sameday-php-sdk/src/Sameday/autoload.php';
 
         $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(), $registry, $this->getPrefix());
     }
@@ -198,6 +198,8 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @return void
+     *
      * @throws SamedaySDKException
      */
     private function syncLockers()
@@ -211,6 +213,7 @@ class ModelExtensionShippingSameday extends Model
 
     /**
      * @return void
+     *
      * @throws SamedaySDKException
      */
     private function lockersRefresh()
@@ -228,7 +231,7 @@ class ModelExtensionShippingSameday extends Model
 
         $remoteLockers = [];
         foreach ($lockers as $lockerObject) {
-            $locker = $this->getLockerSameday($lockerObject->getId(), $this->isTesting());
+            $locker = $this->getLockerSameday($lockerObject->getId());
             if (!$locker) {
                 $this->addLocker($lockerObject);
             } else {
@@ -278,23 +281,55 @@ class ModelExtensionShippingSameday extends Model
         if ($lastTimeSynced === null) {
             $value = $time;
 
-            $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET store_id = '" . (int)$store_id . "', `code` = '" . $this->db->escape($code) . "', `key` = '" . $this->db->escape($key) . "', `value` = '" . $this->db->escape($value) . "'");
+            $this->db->query(
+                sprintf(
+                    "INSERT INTO %s SET `store_id` = %d, `code` = '%s', `key` = '%s', `value` = '%s'",
+                    DB_PREFIX . "setting",
+                    $store_id,
+                    $this->db->escape($code),
+                    $this->db->escape($key),
+                    $this->db->escape($value)
+                )
+            );
         }
 
-        $lastTs = $this->db->query("SELECT * FROM " . DB_PREFIX . "setting WHERE store_id = '" . (int)$store_id . "' AND `key` = '" . $this->db->escape($key) . "'  AND `code` = '" . $this->db->escape($code) . "'")->row;
-        $this->db->query('UPDATE ' . DB_PREFIX . "setting SET value='{$this->db->escape($time)}' WHERE setting_id='{$this->db->escape($lastTs['setting_id'])}'");
+        $lastTs = $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `store_id` = %d AND `code` = '%s' AND `key` = '%s'",
+                DB_PREFIX . "setting",
+                $store_id,
+                $this->db->escape($code),
+                $this->db->escape($key)
+            )
+        )->row;
+
+        $this->db->query(
+            sprintf(
+                "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%s'",
+                DB_PREFIX . "settting",
+                $this->db->escape($value),
+                $this->db->escape($lastTs['setting_id'])
+            )
+        );
     }
 
     /**
      * @return array
      */
-    public function getLockers()
+    public function getLockers(): array
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE testing='{$this->db->escape($this->isTesting())}'";
-
-        return (array) $this->db->query($query)->rows;
+        return (array) $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `testing` = '%'",
+                DB_PREFIX . "sameday_locker",
+                $this->db->escape($this->getPrefix())
+            )
+        )->rows;
     }
 
+    /**
+     * @return bool
+     */
     private function isShowLockersMap(): bool
     {
         $sameday_show_lockers_map = $this->getConfig('sameday_show_lockers_map');
@@ -318,24 +353,28 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param $lockerId
-     * @param $testing
+     * @param int $lockerId
      *
      * @return mixed
      */
-    private function getLockerSameday($lockerId, $testing)
+    private function getLockerSameday(int $lockerId)
     {
-        $query = 'SELECT * FROM ' . DB_PREFIX . "sameday_locker WHERE locker_id='{$this->db->escape($lockerId)}' AND testing='{$this->db->escape($testing)}'";
-
-        return $this->db->query($query)->row;
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%'",
+                DB_PREFIX . "sameday_locker",
+                $lockerId,
+                $this->isTesting()
+            )
+        )->row;
     }
 
     /**
-     * @param object $lockerObject
+     * @param LockerObject $lockerObject
      *
      * @return void
      */
-    private function addLocker($lockerObject)
+    private function addLocker(LockerObject $lockerObject)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_locker (
@@ -383,15 +422,25 @@ class ModelExtensionShippingSameday extends Model
                 postal_code='{$this->db->escape($lockerObject->getPostalCode())}',
                 boxes='{$this->db->escape(serialize($lockerObject->getBoxes()))}'
             WHERE 
-                id='{$lockerId}'
-        ");
+                id='$lockerId'
+            "
+        );
     }
 
-    private function deleteLocker($id)
+    /**
+     * @param int $id
+     *
+     * @return void
+     */
+    private function deleteLocker(int $id)
     {
-        $query = 'DELETE FROM ' . DB_PREFIX . "sameday_locker WHERE id='{$this->db->escape($id)}'";
-
-        $this->db->query($query);
+        $this->db->query(
+            sprintf(
+                "DELETE FROM %s WHERE `id` = %d",
+                DB_PREFIX . "sameday_locker",
+                $id
+            )
+        );
     }
 
     /**
@@ -418,7 +467,9 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @param $address
      * @param $serviceId
+     *
      * @return float|null
+     *
      * @throws SamedayAuthenticationException
      * @throws SamedayAuthorizationException
      * @throws SamedayNotFoundException
