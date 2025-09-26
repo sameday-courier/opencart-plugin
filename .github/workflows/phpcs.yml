@@ -15,7 +15,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '7.0'
 
       - name: Install PHPCS
         run: |
@@ -24,24 +24,30 @@ jobs:
           chmod +x phpcs.phar
           mv phpcs.phar vendor/bin/phpcs
 
-      - name: Run PHPCS
-        id: phpcs
+      - name: Run PHPCS and Generate HTML Report
         run: |
-          vendor/bin/phpcs --standard=phpcs.xml.dist || true
-          echo "PHPCS_EXIT_CODE=$?" >> $GITHUB_ENV
+          REPORT_NAME="phpcs-report-${{ github.head_ref }}.html"
 
-      - name: Generate PHPCS HTML Report
-        run: |
-          vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html || true
-          if [ "${{ env.PHPCS_EXIT_CODE }}" -eq 0 ]; then
-            echo "<h2 style='color:green;'>Good job, you are able to merge this request!</h2>" >> phpcs-report.html
+          vendor/bin/phpcs --standard=phpcs.xml.dist \
+            --report=full \
+            --report-file="$REPORT_NAME" || EXIT_CODE=$?
+      
+          EXIT_CODE=${EXIT_CODE:-0}
+      
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "<p style='color:green; font-weight:bold;'>Good job, you are able to merge this request!</p>" >> "$REPORT_NAME"
           fi
 
-  fail-if-errors:
-    needs: phpcs
-    runs-on: ubuntu-latest
-    if: ${{ needs.phpcs.outputs.PHPCS_EXIT_CODE != 0 }}
-    steps:
-      - run: |
-          echo "::error ::PHPCS a găsit erori. Verificați raportul HTML pe GitHub Pages!"
-          exit 1
+          echo "REPORT_NAME=$REPORT_NAME" >> $GITHUB_ENV
+          echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+
+      - name: Upload PHPCS Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpcs-report
+          path: ${{ env.REPORT_NAME }}
+
+      # Block merge if found errors
+      - name: Fail if PHPCS Errors
+        if: ${{ env.EXIT_CODE != 0 }}
+        run: exit 1
