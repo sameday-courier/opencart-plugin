@@ -26,18 +26,13 @@ jobs:
           mv phpcs.phar vendor/bin/phpcs
 
       - name: Run PHPCS
-        run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle | tee phpcs-report.xml
-
-      - name: Run PHPCS
         id: phpcs
         run: |
           echo "Rulăm PHPCS conform phpcs.xml.dist..."
-          vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle > phpcs-checkstyle.xml || true
           vendor/bin/phpcs --standard=phpcs.xml.dist
-          # If there are some errors, return non 0 code
-          PHPCS_EXIT_CODE=$(vendor/bin/phpcs --standard=phpcs.xml.dist --report=summary | tail -n1 | awk '{print $2}')
+          PHPCS_EXIT_CODE=$?
           if [ "$PHPCS_EXIT_CODE" -ne 0 ]; then
-            echo "::error file=phpcs.xml.dist::PHPCS found some issues. Check the HTML Report for more info!"
+            echo "::error file=phpcs.xml.dist::PHPCS found some errors. Check HTML report!"
             exit 1
           fi
 
