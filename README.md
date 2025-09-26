@@ -46,7 +46,7 @@ For further information, contact us at software@sameday.ro !
 
 ### Code Style
 This project use [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) and has their own ruleset
-defined at `phpcs.xml.dist`.
+defined at `phpcs.xml.dist`
 
 - In order to start verification, run:
   composer cs-check
