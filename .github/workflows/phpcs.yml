@@ -25,7 +25,7 @@ jobs:
         run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle | tee phpcs-report.xml
 
       - name: Annotate PR with PHPCS
-        uses: reviewdog/action-phpcs@v1
+        uses: reviewdog/action-phpcs@v0.2.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
@@ -34,7 +34,7 @@ jobs:
           phpcs_args: "--standard=phpcs.xml.dist"
 
       - name: PHPCS Summary (Checks tab)
-        uses: reviewdog/action-phpcs@v1
+        uses: reviewdog/action-phpcs@v0.2.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-check
