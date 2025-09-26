@@ -1,4 +1,4 @@
-name: Validate Code With PHPCS
+name: PHPCS
 
 on:
   pull_request:
@@ -8,41 +8,46 @@ on:
 jobs:
   phpcs:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.0'
-          tools: composer, phpcs
 
-      - name: Install dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist
+      - name: Install PHPCS
+        run: |
+          mkdir -p vendor/bin
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          chmod +x phpcs.phar
+          mv phpcs.phar vendor/bin/phpcs
 
       - name: Run PHPCS
         run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle | tee phpcs-report.xml
 
-#      - name: Annotate PR with PHPCS
-#        uses: reviewdog/action@v0.14.0
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          reporter: github-pr-review
-#          level: error
-#          fail_on_error: true
-#          tool_name: phpcs
-#          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
+      - name: Annotate PR with PHPCS
+        uses: reviewdog/action@v0.14.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: error
+          fail_on_error: true
+          tool_name: phpcs
+          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
 
-#      - name: PHPCS Summary (Checks tab)
-#        uses: reviewdog/action@v0.14.0
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          reporter: github-pr-check
-#          level: error
-#          fail_on_error: true
-#          tool_name: phpcs
-#          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
+      - name: PHPCS Summary (Checks tab)
+        uses: reviewdog/action@v0.14.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: error
+          fail_on_error: true
+          tool_name: phpcs
+          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
 
       - name: Generate PHPCS HTML Report
         run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html

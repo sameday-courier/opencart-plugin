@@ -49,8 +49,7 @@ This project use [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer)
 defined at `phpcs.xml.dist`
 
 - In order to start verification, run:
-  composer cs-check
+  php vendor/bin/phpcs --standard=phpcs.xml.dist
 
 - In order to automatically fix wherever is possible, run :
-  composer cs-fix
-
+  php vendor/bin/phpcbf --standard=phpcs.xml.dist
