@@ -2322,6 +2322,14 @@ class ControllerExtensionShippingSameday extends Controller
         return 'marketplace/extension';
     }
 
+    public function get_test()
+    {
+        $s = 1;
+        if($s == 2){
+            print 'De test';
+        }
+    }
+
     /**
      * @param bool $isShow
      *
