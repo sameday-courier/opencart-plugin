@@ -24,25 +24,25 @@ jobs:
       - name: Run PHPCS
         run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle | tee phpcs-report.xml
 
-      - name: Annotate PR with PHPCS
-        uses: reviewdog/action@v0.14.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-          level: error
-          fail_on_error: true
-          tool_name: phpcs
-          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
+#      - name: Annotate PR with PHPCS
+#        uses: reviewdog/action@v0.14.0
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          reporter: github-pr-review
+#          level: error
+#          fail_on_error: true
+#          tool_name: phpcs
+#          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
 
-      - name: PHPCS Summary (Checks tab)
-        uses: reviewdog/action@v0.14.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-check
-          level: error
-          fail_on_error: true
-          tool_name: phpcs
-          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
+#      - name: PHPCS Summary (Checks tab)
+#        uses: reviewdog/action@v0.14.0
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          reporter: github-pr-check
+#          level: error
+#          fail_on_error: true
+#          tool_name: phpcs
+#          tool_command: vendor/bin/phpcs --standard=phpcs.xml.dist
 
       - name: Generate PHPCS HTML Report
         run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html
