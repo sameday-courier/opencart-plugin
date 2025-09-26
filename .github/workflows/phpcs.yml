@@ -1,0 +1,52 @@
+name: Validate Code With PHPCS
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.0'
+          tools: composer, phpcs
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-suggest --prefer-dist
+
+      - name: Run PHPCS
+        run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=checkstyle | tee phpcs-report.xml
+
+      - name: Annotate PR with PHPCS
+        uses: reviewdog/action-phpcs@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: error
+          fail_on_error: true
+          phpcs_args: "--standard=phpcs.xml.dist"
+
+      - name: PHPCS Summary (Checks tab)
+        uses: reviewdog/action-phpcs@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: error
+          fail_on_error: true
+          phpcs_args: "--standard=phpcs.xml.dist"
+
+      - name: Generate PHPCS HTML Report
+        run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html
+
+      - name: Upload PHPCS HTML Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpcs-html-report
+          path: phpcs-report.html
