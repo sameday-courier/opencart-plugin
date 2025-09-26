@@ -37,7 +37,7 @@ jobs:
           EXIT_CODE=${EXIT_CODE:-0}
       
           if [ "$EXIT_CODE" -eq 0 ]; then
-            echo "<p style='color:green; font-weight:bold;'>Good job, you are able to merge this request!</p>" >> "$REPORT_NAME"
+            sed -i '$ s#</phpcs>#  <status success="true">Well Done!</status>\n</phpcs>#' "$REPORT_NAME"
           fi
 
           echo "REPORT_NAME=$REPORT_NAME" >> $GITHUB_ENV
