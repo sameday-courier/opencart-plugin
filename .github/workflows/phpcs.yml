@@ -37,20 +37,6 @@ jobs:
             echo "<h2 style='color:green;'>Good job, you are able to merge this request!</h2>" >> phpcs-report.html
           fi
 
-  deploy:
-    needs: phpcs
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
   fail-if-errors:
     needs: phpcs
     runs-on: ubuntu-latest
