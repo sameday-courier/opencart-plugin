@@ -26,9 +26,11 @@ jobs:
 
       - name: Run PHPCS and Generate HTML Report
         run: |
-          REPORT_NAME="phpcs-report-${{ github.head_ref }}.html"
+          REPORT_NAME="phpcs-report-${{ github.head_ref }}.xml"
 
           vendor/bin/phpcs --standard=phpcs.xml.dist \
+            --report=checkstyle \
+            --report=xml \
             --report=full \
             --report-file="$REPORT_NAME" || EXIT_CODE=$?
       
