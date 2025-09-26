@@ -20,3 +20,4 @@
 !system/library/samedayclasses.php
 !admin/view/javascript/select2/
 !admin/cities.json
+!phpcs.xml.dist
