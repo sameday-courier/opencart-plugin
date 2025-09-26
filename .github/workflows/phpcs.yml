@@ -25,22 +25,16 @@ jobs:
           chmod +x phpcs.phar
           mv phpcs.phar vendor/bin/phpcs
 
-      - name: Run PHPCS
-        id: phpcs
+      - name: Run PHPCS for exit code
+        id: phpcs-exit
         run: |
-          echo "Rulăm PHPCS conform phpcs.xml.dist..."
           vendor/bin/phpcs --standard=phpcs.xml.dist
-          PHPCS_EXIT_CODE=$?
-          if [ "$PHPCS_EXIT_CODE" -ne 0 ]; then
-            echo "::error file=phpcs.xml.dist::PHPCS found some errors. Check HTML report!"
-            exit 1
-          fi
+          echo "PHPCS_EXIT_CODE=$?" >> $GITHUB_ENV
 
       - name: Generate PHPCS HTML Report
         run: |
           vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html || true
-          PHPCS_EXIT_CODE=$(vendor/bin/phpcs --standard=phpcs.xml.dist --report=summary | tail -n1 | awk '{print $2}')
-          if [ "$PHPCS_EXIT_CODE" -eq 0 ]; then
+          if [ "${{ env.PHPCS_EXIT_CODE }}" -eq 0 ]; then
             echo "<p style='color:green; font-weight:bold;'>Good job, you are able to merge this request!</p>" >> phpcs-report.html
           fi
 
@@ -49,3 +43,9 @@ jobs:
         with:
           name: phpcs-html-report
           path: phpcs-report.html
+
+      - name: Fail if PHPCS has errors
+        if: ${{ env.PHPCS_EXIT_CODE != 0 }}
+        run: |
+          echo "::error file=phpcs.xml.dist::PHPCS a găsit erori. Verificați raportul HTML!"
+          exit 1
