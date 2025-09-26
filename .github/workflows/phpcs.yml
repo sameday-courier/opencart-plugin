@@ -42,7 +42,12 @@ jobs:
           fi
 
       - name: Generate PHPCS HTML Report
-        run: vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html
+        run: |
+          PHPCS_EXIT_CODE=$(vendor/bin/phpcs --standard=phpcs.xml.dist --report=summary | tail -n1 | awk '{print $2}')
+          vendor/bin/phpcs --standard=phpcs.xml.dist --report=full --report-file=phpcs-report.html
+          if [ "$PHPCS_EXIT_CODE" -eq 0 ]; then
+            echo "<p style='color:green; font-weight:bold;'>Good job, you are able to merge this request!</p>" >> phpcs-report.html
+          fi
 
       - name: Upload PHPCS HTML Artifact
         uses: actions/upload-artifact@v4
