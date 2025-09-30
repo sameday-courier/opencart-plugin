@@ -1672,7 +1672,7 @@ class ControllerExtensionShippingSameday extends Controller
             new SamedayGetAwbPdfRequest($awb['awb_number'], new AwbPdfType(AwbPdfType::A4))
         );
 
-        $this->response->setOutput($content->getPdf());
+        echo $content->getPdf();
 
         exit;
     }

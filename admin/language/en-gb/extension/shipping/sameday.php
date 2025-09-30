@@ -77,6 +77,7 @@ $_['entry_name'] = 'Display name';
 $_['entry_price'] = 'Price';
 $_['entry_price_free'] = 'Free delivery price';
 $_['entry_geo_zone'] = 'Geo Zone';
+$_['entry_repayment'] = 'Repayment';
 
 // Create Awb Form Lables
 $_['awb_options'] = 'Awb options';
