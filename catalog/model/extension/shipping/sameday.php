@@ -333,9 +333,7 @@ class ModelExtensionShippingSameday extends Model
      */
     private function isShowLockersMap(): bool
     {
-        $sameday_show_lockers_map = $this->getConfig('sameday_show_lockers_map');
-
-        return (null === $sameday_show_lockers_map || $sameday_show_lockers_map === '0');
+        return (bool) $this->getConfig('sameday_show_lockers_map');
     }
 
     /**

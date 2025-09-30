@@ -382,10 +382,10 @@
                             disabled="disabled"
                             title="Click on button below and choose your easybox!"
                      {% endif %}
-                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
-                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
-                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
-                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country="{{ quote.destCountry }}" {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county="{{ quote.destCounty }}" {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city="{{ quote.destCity }}" {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username="{{ quote.apiUsername }}" {% endif %}
                  />
             ]]></add>
         </operation>
@@ -400,10 +400,10 @@
                             disabled="disabled"
                             title="Click on button below and choose your easybox!"
                      {% endif %}
-                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
-                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
-                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
-                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country="{{ quote.destCountry }}" {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county="{{ quote.destCounty }}" {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city="{{ quote.destCity }}" {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username="{{ quote.apiUsername }}" {% endif %}
                  />
             ]]></add>
         </operation>
