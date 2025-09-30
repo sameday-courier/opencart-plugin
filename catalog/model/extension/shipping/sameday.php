@@ -165,7 +165,7 @@ class ModelExtensionShippingSameday extends Model
                 } else {
                     $this->syncLockers();
 
-                    $quote_data[$service['sameday_code']]['lockers'] = $this->showLockersList();
+                    $quote_data[$serviceCode]['lockers'] = $this->showLockersList();
                 }
             }
         }
@@ -282,8 +282,6 @@ class ModelExtensionShippingSameday extends Model
         $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
 
         if ($lastTimeSynced === null) {
-            $value = $time;
-
             $this->db->query(
                 sprintf(
                     "INSERT INTO %s SET `store_id` = %d, `code` = '%s', `key` = '%s', `value` = '%s'",
@@ -291,7 +289,7 @@ class ModelExtensionShippingSameday extends Model
                     $store_id,
                     $this->db->escape($code),
                     $this->db->escape($key),
-                    $this->db->escape($value)
+                    $this->db->escape($time)
                 )
             );
         }
@@ -310,7 +308,7 @@ class ModelExtensionShippingSameday extends Model
             sprintf(
                 "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%s'",
                 DB_PREFIX . "settting",
-                $this->db->escape($value),
+                $this->db->escape($time),
                 $this->db->escape($lastTs['setting_id'])
             )
         );
@@ -483,7 +481,7 @@ class ModelExtensionShippingSameday extends Model
      * @throws SamedaySDKException
      * @throws SamedayServerException
      */
-    private function estimateCost(string $address, int $serviceId)
+    private function estimateCost(array $address, int $serviceId)
     {
         $pickupPointId = $this->getDefaultPickupPointId();
         $weight = $this->cart->getWeight();
