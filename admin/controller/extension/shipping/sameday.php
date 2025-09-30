@@ -1,7 +1,12 @@
 <?php
 
+use Sameday\Exceptions\SamedayAuthenticationException;
+use Sameday\Exceptions\SamedayAuthorizationException;
 use Sameday\Exceptions\SamedayBadRequestException;
+use Sameday\Exceptions\SamedayNotFoundException;
+use Sameday\Exceptions\SamedayOtherException;
 use Sameday\Exceptions\SamedaySDKException;
+use Sameday\Exceptions\SamedayServerException;
 use Sameday\Objects\ParcelDimensionsObject;
 use Sameday\Objects\PickupPoint\PickupPointContactPersonObject;
 use Sameday\Objects\PostAwb\ParcelObject;
@@ -9,6 +14,7 @@ use Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject;
 use Sameday\Objects\PostAwb\Request\CompanyEntityObject;
 use Sameday\Objects\PostAwb\Request\ThirdPartyPickupEntityObject;
 use Sameday\Requests\SamedayDeleteAwbRequest;
+use Sameday\Requests\SamedayGetCountiesRequest;
 use Sameday\Requests\SamedayGetParcelStatusHistoryRequest;
 use Sameday\Requests\SamedayPostAwbEstimationRequest;
 use Sameday\Requests\SamedayPostPickupPointRequest;
@@ -146,7 +152,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             // Add custom sanitization for password
             $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
-            $password = $this->model_extension_shipping_sameday->sanitizeInput($_POST[$passKey]);
+            $password = $this->model_extension_shipping_sameday->sanitizeInput($post[$passKey]);
             if ('' === $password) {
                 $password = $this->getConfig('sameday_password');
                 if ('' === $password || null === $password) {
@@ -158,11 +164,11 @@ class ControllerExtensionShippingSameday extends Controller
                 }
             }
 
-            $this->request->post[$passKey] = $password;
+            $post[$passKey] = $password;
 
             $this->model_setting_setting->editSetting(
                 $this->model_extension_shipping_sameday->getPrefix() . "sameday",
-                $this->request->post
+                $post
             );
 
             $this->session->data['error_success'] = $this->language->get('text_success');
@@ -334,26 +340,18 @@ class ControllerExtensionShippingSameday extends Controller
             },
             $data['services']
         );
-        $data['url_cities_ajax'] = $this->url->link('extension/shipping/sameday/getCities', $this->addToken(), true);
+        $data['url_cities_ajax'] = $this->url->link(
+            'extension/shipping/sameday/getCities',
+            $this->addToken(),
+            true
+        );
         $data['url_deletePickupPoint'] = $this->url->link(
             'extension/shipping/sameday/deletePickupPoint',
             $this->addToken(),
             true
         );
 
-        $data['pp_countries'] = SamedayHelper::SAMEDAY_COUNTRIES;
-
-        $username = $this->getConfig('sameday_username');
-        $password = $this->getConfig('sameday_password');
-
-        if (!empty($username) && !empty($password)) {
-            // Proceed with calling get_counties if the user is logged in
-            $data['pp_counties'] = $this->getCounties();
-        }
-
         $data['sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
-
-        $data['shipping_sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
 
         $data = array_merge($data, $this->buildRequest());
 
@@ -423,19 +421,19 @@ class ControllerExtensionShippingSameday extends Controller
      *
      * @throws SamedayBadRequestException
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayServerException
      */
     public function getCounties(): array
     {
         try {
             $sameday = new Sameday($this->samedayHelper->initClient());
         } catch (Exception $exception) {
-            var_dump($exception);
+            return [];
         }
 
-        $counties = $sameday->getCounties(new \Sameday\Requests\SamedayGetCountiesRequest(''));
+        $counties = $sameday->getCounties(new SamedayGetCountiesRequest(''));
         $countiesArray = [];
         foreach ($counties->getCounties() as $county) {
             $countiesArray[] = [
@@ -452,9 +450,9 @@ class ControllerExtensionShippingSameday extends Controller
      *
      * @throws SamedayBadRequestException
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayServerException
      */
     public function getCities()
     {
@@ -752,7 +750,9 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         if ($redirectToPage) {
-            $this->response->redirect($this->url->link('extension/shipping/sameday', $this->addToken(), true));
+            $this->response->redirect(
+                $this->url->link('extension/shipping/sameday', $this->addToken(), true)
+            );
         }
     }
 
@@ -1478,17 +1478,17 @@ class ControllerExtensionShippingSameday extends Controller
     /**
      * @return void
      *
-     * @throws JsonException
+     * @throws JsonException|Exception
      */
     public function importGeolocations()
     {
         $countiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/counties.json';
-        $countiesData = json_decode(file_get_contents($countiesFile));
+        $countiesData = json_decode(file_get_contents($countiesFile), true);
         $this->load->model('extension/shipping/sameday');
 
         foreach ($countiesData as $county) {
-            $country_id = $this->model_extension_shipping_sameday->getCountryByCode($county->country_code);
-            $this->model_extension_shipping_sameday->addZoneCounty((int) $country_id, (string) $county);
+            $country_id = $this->model_extension_shipping_sameday->getCountryByCode($county['country_code']);
+            $this->model_extension_shipping_sameday->addZoneCounty((int) $country_id, $county);
         }
 
         if ($this->model_extension_shipping_sameday->citiesCheck() === false) {
@@ -1496,30 +1496,34 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         try {
-            $citiesData = json_decode(file_get_contents(DIR_SYSTEM . 'library/sameday-classes/utils/cities.json'));
-            $action = $this->model_extension_shipping_sameday;
-            $action->truncateNomenclator();
-            foreach ($citiesData as $city) {
+            $citiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/cities.json';
+            $cities = json_decode(file_get_contents($citiesFile));
+            $this->model_extension_shipping_sameday->truncateNomenclator();
+            foreach ($cities as $city) {
                 $countryId = $this->model_extension_shipping_sameday->getZone($city->country_code)['country_id'];
                 $zoneId = $this->model_extension_shipping_sameday->getZoneId($countryId, $city->county_code);
                 if ($zoneId !== null) {
-                    $action->addCity($city, $zoneId);
+                    $this->model_extension_shipping_sameday->addCity($city, $zoneId);
                 }
             }
         } catch (Exception $exception) {
             return;
         }
+
+        $this->response->redirect(
+            $this->url->link('extension/shipping/sameday', $this->addToken(), true)
+        );
     }
 
     /**
      * @return void|Action
      *
-     * @throws \Sameday\Exceptions\SamedayOtherException
+     * @throws SamedayOtherException
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayServerException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayNotFoundException
+     * @throws SamedayServerException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
      */
     public function showAwbHistory()
     {
@@ -1644,10 +1648,10 @@ class ControllerExtensionShippingSameday extends Controller
      *
      * @throws SamedayBadRequestException
      * @throws SamedaySDKException
-     * @throws \Sameday\Exceptions\SamedayAuthenticationException
-     * @throws \Sameday\Exceptions\SamedayAuthorizationException
-     * @throws \Sameday\Exceptions\SamedayNotFoundException
-     * @throws \Sameday\Exceptions\SamedayServerException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
+     * @throws SamedayServerException
      */
     public function showAsPdf()
     {

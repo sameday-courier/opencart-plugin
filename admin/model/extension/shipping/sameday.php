@@ -693,12 +693,12 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param string $city
+     * @param mixed $city
      * @param int $zone_id
      *
      * @return void
      */
-    public function addCity(string $city, int $zone_id)
+    public function addCity($city, int $zone_id)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_cities (
@@ -847,7 +847,7 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @return void
      */
-    private function createCitiesTable()
+    public function createCitiesTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_cities (
@@ -979,9 +979,9 @@ class ModelExtensionShippingSameday extends Model
     /**
      * @param string $key
      *
-     * @return string
+     * @return null|string
      */
-    public function getConfig(string $key): string
+    public function getConfig(string $key)
     {
         return $this->config->get($this->getKey($key));
     }
@@ -1061,6 +1061,7 @@ class ModelExtensionShippingSameday extends Model
                         DB_PREFIX . "setting",
                         $store_id,
                         $this->db->escape($code),
+                        $this->db->escape($key),
                         $value
                     )
                 );
@@ -1092,14 +1093,14 @@ class ModelExtensionShippingSameday extends Model
 
     /**
      * @param int $country_id
-     * @param string $county
+     * @param array $county
      *
      * @return void
      */
-    public function addZoneCounty(int $country_id, string $county)
+    public function addZoneCounty(int $country_id, array $county)
     {
-        $county_name = $this->db->escape($county->county);
-        $county_code = $this->db->escape($county->code);
+        $county_name = $this->db->escape($county['county']);
+        $county_code = $this->db->escape($county['code']);
 
         $zone = $this->db->query(sprintf(
             "SELECT * FROM %s WHERE `country_id` = '%s' AND `name` = '%s'",
@@ -1121,7 +1122,7 @@ class ModelExtensionShippingSameday extends Model
                     "UPDATE %s SET `code` = '%s' WHERE `zone_id` = '%d'",
                     DB_PREFIX . 'zone',
                     $county_code,
-                    (int)$zone->row['zone_id']
+                    (int) $zone->row['zone_id']
                 ));
             }
         }

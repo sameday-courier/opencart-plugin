@@ -628,6 +628,7 @@ class ModelExtensionShippingSameday extends Model
                         DB_PREFIX . "setting",
                         $store_id,
                         $this->db->escape($code),
+                        $this->db->escape($key),
                         $value
                     )
                 );
