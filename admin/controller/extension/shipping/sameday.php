@@ -1482,7 +1482,7 @@ class ControllerExtensionShippingSameday extends Controller
      */
     public function importGeolocations()
     {
-        $countiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/counties.json';
+        $countiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/nomenclature/counties.json';
         $countiesData = json_decode(file_get_contents($countiesFile), true);
         $this->load->model('extension/shipping/sameday');
 
@@ -1496,7 +1496,7 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         try {
-            $citiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/cities.json';
+            $citiesFile = DIR_SYSTEM . 'library/sameday-classes/utils/nomenclature/cities.json';
             $cities = json_decode(file_get_contents($citiesFile));
             $this->model_extension_shipping_sameday->truncateNomenclator();
             foreach ($cities as $city) {
