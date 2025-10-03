@@ -633,19 +633,80 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param int $zone_id
+     * @param string $isoCode
      *
-     * @return array
+     * @return int|null
      */
-    public function getCities(int $zone_id): array
+    public function getCountryIdByCode(string $isoCode)
     {
         return $this->db->query(
             sprintf(
-                "SELECT * FROM %s WHERE zone_id = %i",
-                DB_PREFIX . "sameday_cities",
-                $zone_id
+                "SELECT `country_id` FROM %s WHERE `iso_code_2` = '%s'",
+                DB_PREFIX . "country",
+                $this->db->escape($isoCode)
+            )
+        )->row['country_id'] ?? null;
+    }
+
+    /**
+     * @param int $countryId
+     *
+     * @return array
+     */
+    public function getCountiesByCountryId(int $countryId): array
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `country_id` = %d",
+                DB_PREFIX . "zone",
+                $countryId
             )
         )->rows;
+    }
+
+    /**
+     * @param int $zoneId
+     *
+     * @return array
+     */
+    public function getCitiesByCountyId(int $zoneId): array
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `zone_id` = %d",
+                DB_PREFIX . "sameday_cities",
+                $zoneId
+            )
+        )->rows;
+    }
+
+    /**
+     * @return string
+     */
+    public function displayCities(): string
+    {
+        // Display in Checkout zone
+        $countriesCodes = $this->getCountriesCodes();
+        $samedayCities = [];
+        foreach ($countriesCodes as $countryCode) {
+            $countryId = $this->getCountryIdByCode($countryCode);
+            $samedayCities[$countryId] = [];
+            if (null !== $countryId) {
+                $counties = $this->getCountiesByCountryId($countryId);
+                foreach ($counties as $county) {
+                    $zone_id = $county['zone_id'];
+                    $samedayCities[$countryId][$zone_id] = [];
+                    $cities = $this->getCitiesByCountyId($zone_id);
+                    foreach ($cities as $city) {
+                        $samedayCities[$countryId][$zone_id][] = [
+                            'name' => $city['city_name']
+                        ];
+                    }
+                }
+            }
+        }
+
+        return json_encode($samedayCities);
     }
 
     /**
