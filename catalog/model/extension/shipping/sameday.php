@@ -695,13 +695,14 @@ class ModelExtensionShippingSameday extends Model
                 $counties = $this->getCountiesByCountryId($countryId);
                 foreach ($counties as $county) {
                     $zone_id = $county['zone_id'];
-                    $samedayCities[$countryId][$zone_id] = [];
-                    $cities = $this->getCitiesByCountyId($zone_id);
-                    foreach ($cities as $city) {
-                        $samedayCities[$countryId][$zone_id][] = [
-                            'name' => $city['city_name']
-                        ];
-                    }
+                    $samedayCities[$countryId][$zone_id] = array_map(
+                        static function (array $city) {
+                            return [
+                                'name' => $city['city_name']
+                            ];
+                        },
+                        $this->getCitiesByCountyId($zone_id)
+                    );
                 }
             }
         }
