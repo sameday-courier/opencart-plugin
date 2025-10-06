@@ -34,37 +34,11 @@
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
                 $data['sameday_cities'] = $this->model_extension_shipping_sameday->displayCities();
-                $data['scripts'][] = "catalog/view/javascript/sameday/assets/update-city.js";
-            ]]></add>
-        </operation>
-    </file>
-    <file path="catalog/view/theme/*/template/checkout/guest.twig">
-        <operation>
-            <search><![CDATA[
-            // Sort the custom fields
-            ]]></search>
-            <add position="before"><![CDATA[
-                    window.SamedayCities = {{ sameday_cities }};
-                    {% for scriptHref in scripts %}
-                        let script = document.createElement('script');
-                        script.src = "{{ scriptHref }}";
-                        document.head.appendChild(script);
-                    {% endfor %}
-            ]]></add>
-        </operation>
-    </file>
-    <file path="catalog/view/theme/*/template/checkout/register.twig">
-        <operation>
-            <search><![CDATA[
-            // Sort the custom fields
-            ]]></search>
-            <add position="before"><![CDATA[
-                window.SamedayCities = {{ sameday_cities }};
-                {% for scriptHref in scripts %}
-                    let script = document.createElement('script');
-                    script.src = "{{ scriptHref }}";
-                    document.head.appendChild(script);
-                {% endfor %}
+                $data['scripts'] = json_encode(
+                    [
+                        "catalog/view/javascript/sameday/assets/update-city.js"
+                    ]
+                );
             ]]></add>
         </operation>
     </file>
@@ -76,7 +50,43 @@
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
                 $data['sameday_cities'] = $this->model_extension_shipping_sameday->displayCities();
-                $data['scripts'][] = "catalog/view/javascript/sameday/assets/update-city.js";
+                $data['scripts'][] = json_encode(
+                    [
+                        "catalog/view/javascript/sameday/assets/update-city.js"
+                    ]
+                );
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/guest.twig">
+        <operation>
+            <search><![CDATA[
+            // Sort the custom fields
+            ]]></search>
+            <add position="before"><![CDATA[
+                window.SamedayCities = {{ sameday_cities }};
+                let SamedayScripts = {{ scripts }};
+                SamedayScripts.forEach((href) => {
+                    let script = document.createElement('script');
+                    script.src = href;
+                    document.head.appendChild(script);
+                });
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/register.twig">
+        <operation>
+            <search><![CDATA[
+            // Sort the custom fields
+            ]]></search>
+            <add position="before"><![CDATA[
+                window.SamedayCities = {{ sameday_cities }};
+                let SamedayScripts = {{ scripts }};
+                SamedayScripts.forEach((href) => {
+                    let script = document.createElement('script');
+                    script.src = href;
+                    document.head.appendChild(script);
+                });
             ]]></add>
         </operation>
     </file>
@@ -226,7 +236,7 @@
                 <p><strong>{{ text_comments }}</strong></p>
             ]]></search>
             <add position="after"><![CDATA[
-            <script src="catalog/view/sameday/assets/update-payment.js"></script>
+                <script src="catalog/view/sameday/assets/update-payment.js"></script>
             ]]></add>
         </operation>
     </file>
