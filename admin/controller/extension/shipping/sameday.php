@@ -136,14 +136,13 @@ class ControllerExtensionShippingSameday extends Controller
         $this->load->model('setting/setting');
         $settingsModel = $this->model_extension_shipping_sameday;
         $post = $this->request->post;
+        $hostCountry = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $post[$settingsModel->getKey('sameday_sync_until_ts')] = $this->getConfig('sameday_sync_until_ts');
             $post[$settingsModel->getKey('sameday_sync_lockers_ts')] = $this->getConfig('sameday_sync_lockers_ts');
             $post[$settingsModel->getKey('sameday_testing')] = $this->getConfig('sameday_testing');
-            $post[$settingsModel->getKey('sameday_host_country')] = $this->getConfig('sameday_host_country')
-                ?? $this->samedayHelper::API_HOST_LOCALE_RO
-            ;
+            $post[$settingsModel->getKey('sameday_host_country')] = $hostCountry;
 
             if (null !== $this->testing && null !== $this->hostCountry) {
                 $post[$this->model_extension_shipping_sameday->getKey('sameday_testing')] = $this->testing;
@@ -352,6 +351,14 @@ class ControllerExtensionShippingSameday extends Controller
         );
 
         $data['sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
+        // For Add Pickup-Point Form
+        $data['pp_counties'] = $this->getCounties();
+        $data['pp_countries'] = array_filter(
+            $this->samedayHelper::SAMEDAY_COUNTRIES,
+            static function ($country) use ($hostCountry) {
+                return $country['code'] === $hostCountry;
+            }
+        );
 
         $data = array_merge($data, $this->buildRequest());
 
@@ -418,12 +425,6 @@ class ControllerExtensionShippingSameday extends Controller
 
     /**
      * @return array
-     *
-     * @throws SamedayBadRequestException
-     * @throws SamedaySDKException
-     * @throws SamedayAuthenticationException
-     * @throws SamedayAuthorizationException
-     * @throws SamedayServerException
      */
     public function getCounties(): array
     {
@@ -433,7 +434,12 @@ class ControllerExtensionShippingSameday extends Controller
             return [];
         }
 
-        $counties = $sameday->getCounties(new SamedayGetCountiesRequest(''));
+        try {
+            $counties = $sameday->getCounties(new SamedayGetCountiesRequest(''));
+        } catch (Exception $exception) {
+            return [];
+        }
+
         $countiesArray = [];
         foreach ($counties->getCounties() as $county) {
             $countiesArray[] = [

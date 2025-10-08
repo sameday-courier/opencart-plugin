@@ -71,9 +71,21 @@ class SamedayHelper
     ];
 
     const SAMEDAY_COUNTRIES = [
-        ['value' => 187, 'label' => 'Romania'],
-        ['value' => 34, 'label' => 'Bulgaria'],
-        ['value' => 237, 'label' => 'Hungary'],
+        [
+            'value' => 187,
+            'label' => 'Romania',
+            'code' => self::API_HOST_LOCALE_RO
+        ],
+        [
+            'value' => 34,
+            'label' => 'Bulgaria',
+            'code' => self::API_HOST_LOCALE_BG
+        ],
+        [
+            'value' => 237,
+            'label' => 'Hungary',
+            'code' => self::API_HOST_LOCALE_HU
+        ],
     ];
 
     const AFTER_48_HOURS = 172800;
