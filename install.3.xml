@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.7.0</version>
+    <version>1.7.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.twig">
@@ -76,7 +76,7 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = {{ scripts }}
+                let SamedayScripts = {{ scripts }};
                 if (SamedayScripts.length > 0) {
                     window.SamedayCities = {{ sameday_cities }};
                     SamedayScripts.forEach((href) => {
@@ -94,7 +94,7 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = {{ scripts }}
+                let SamedayScripts = {{ scripts }};
                 if (SamedayScripts.length > 0) {
                     window.SamedayCities = {{ sameday_cities }};
                     SamedayScripts.forEach((href) => {
