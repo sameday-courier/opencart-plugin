@@ -76,7 +76,7 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = {{ scripts }}
+                let SamedayScripts = {{ scripts }};
                 if (SamedayScripts.length > 0) {
                     window.SamedayCities = {{ sameday_cities }};
                     SamedayScripts.forEach((href) => {
@@ -94,7 +94,7 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = {{ scripts }}
+                let SamedayScripts = {{ scripts }};
                 if (SamedayScripts.length > 0) {
                     window.SamedayCities = {{ sameday_cities }};
                     SamedayScripts.forEach((href) => {
