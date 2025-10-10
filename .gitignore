@@ -14,7 +14,7 @@
 !admin/view/template/extension/shipping/sameday_awb_history_status_refresh.twig
 !admin/view/template/extension/shipping/sameday_service.tpl
 !admin/view/template/extension/shipping/sameday_service.twig
-!catalog/view/javascript/sameday/assets/update-city.js
+!catalog/view/javascript/sameday/assets/*.js
 !catalog/model/extension/shipping/sameday.php
 !system/library/sameday-php-sdk/
 !system/library/sameday-classes/

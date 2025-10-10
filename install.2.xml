@@ -33,12 +33,18 @@
             ]]></search>
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
-                $data['sameday_cities'] = $this->model_extension_shipping_sameday->displayCities();
-                $data['scripts'] = json_encode(
-                    [
-                        "catalog/view/javascript/sameday/assets/update-city.js"
-                    ]
-                );
+                $samedayShippingModel = $this->model_extension_shipping_sameday;
+                $useNomenclator = $samedayShippingModel->getConfig('sameday_nomenclator_use');
+                $data['sameday_cities'] = json_encode([]);
+                $data['scripts'] = json_encode([]);
+                if ($useNomenclator === 'on') {
+                    $data['sameday_cities'] = $samedayShippingModel->displayCities();
+                    $data['scripts'] = json_encode(
+                        [
+                            "catalog/view/javascript/sameday/assets/update-city.js"
+                        ]
+                    );
+                }
             ]]></add>
         </operation>
     </file>
@@ -49,12 +55,18 @@
             ]]></search>
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
-                $data['sameday_cities'] = $this->model_extension_shipping_sameday->displayCities();
-                $data['scripts'][] = json_encode(
-                    [
-                        "catalog/view/javascript/sameday/assets/update-city.js"
-                    ]
-                );
+                $samedayShippingModel = $this->model_extension_shipping_sameday;
+                $useNomenclator = $samedayShippingModel->getConfig('sameday_nomenclator_use');
+                $data['sameday_cities'] = json_encode([]);
+                $data['scripts'] = json_encode([]);
+                if ($useNomenclator === 'on') {
+                    $data['sameday_cities'] = $samedayShippingModel->displayCities();
+                    $data['scripts'] = json_encode(
+                        [
+                            "catalog/view/javascript/sameday/assets/update-city.js"
+                        ]
+                    );
+                }
             ]]></add>
         </operation>
     </file>
@@ -64,13 +76,15 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                window.SamedayCities = <?php echo sameday_cities; ?>;
-                let SamedayScripts = <?php echo scripts; ?>;
-                SamedayScripts.forEach((href) => {
-                    let script = document.createElement('script');
-                    script.src = href;
-                    document.head.appendChild(script);
-                });
+                let SamedayScripts = <?php echo $scripts; ?>
+                if (SamedayScripts.length > 0) {
+                    window.SamedayCities = {{ sameday_cities }};
+                    SamedayScripts.forEach((href) => {
+                        let script = document.createElement('script');
+                        script.src = href;
+                        document.head.appendChild(script);
+                    });
+                }
             ]]></add>
         </operation>
     </file>
@@ -80,13 +94,15 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                window.SamedayCities = <?php echo sameday_cities; ?>;
-                let SamedayScripts = <?php echo scripts; ?>;
-                SamedayScripts.forEach((href) => {
-                    let script = document.createElement('script');
-                    script.src = href;
-                    document.head.appendChild(script);
-                });
+                let SamedayScripts = "<?php echo $scripts; ?>";
+                if (SamedayScripts.length > 0) {
+                    window.SamedayCities = "<?php echo $sameday_cities; ?>";
+                    SamedayScripts.forEach((href) => {
+                        let script = document.createElement('script');
+                        script.src = href;
+                        document.head.appendChild(script);
+                    });
+                }
             ]]></add>
         </operation>
     </file>
