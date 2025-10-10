@@ -76,9 +76,9 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = "<?php echo $scripts; ?>";
+                let SamedayScripts = <?php echo $scripts; ?>;
                 if (SamedayScripts.length > 0) {
-                    window.SamedayCities = "<?php echo $sameday_cities; ?>";
+                    window.SamedayCities = <?php echo $sameday_cities; ?>;
                     SamedayScripts.forEach((href) => {
                         let script = document.createElement('script');
                         script.src = href;
@@ -94,9 +94,9 @@
             // Sort the custom fields
             ]]></search>
             <add position="before"><![CDATA[
-                let SamedayScripts = "<?php echo $scripts; ?>";
+                let SamedayScripts = <?php echo $scripts; ?>;
                 if (SamedayScripts.length > 0) {
-                    window.SamedayCities = "<?php echo $sameday_cities; ?>";
+                    window.SamedayCities = <?php echo $sameday_cities; ?>;
                     SamedayScripts.forEach((href) => {
                         let script = document.createElement('script');
                         script.src = href;
