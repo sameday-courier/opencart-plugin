@@ -71,9 +71,21 @@ class SamedayHelper
     ];
 
     const SAMEDAY_COUNTRIES = [
-        ['value' => 187, 'label' => 'Romania'],
-//        ['value' => 34, 'label' => 'Bulgaria'],
-//        ['value' => 237, 'label' => 'Hungary'],
+        [
+            'value' => 187,
+            'label' => 'Romania',
+            'code' => self::API_HOST_LOCALE_RO
+        ],
+        [
+            'value' => 34,
+            'label' => 'Bulgaria',
+            'code' => self::API_HOST_LOCALE_BG
+        ],
+        [
+            'value' => 237,
+            'label' => 'Hungary',
+            'code' => self::API_HOST_LOCALE_HU
+        ],
     ];
 
     const AFTER_48_HOURS = 172800;
@@ -94,6 +106,9 @@ class SamedayHelper
         self::API_HOST_LOCALE_BG => 'BGN',
     ];
 
+    /**
+     * @return string[][]
+     */
     public static function getEnvModes(): array
     {
         return [
@@ -112,6 +127,9 @@ class SamedayHelper
         ];
     }
 
+    /**
+     * @return string[]
+     */
     private static function getEAWBInstances(): array
     {
         return [
@@ -121,6 +139,11 @@ class SamedayHelper
         ];
     }
 
+    /**
+     * @param $countryCode
+     *
+     * @return string
+     */
     public static function getEAWBInstanceUrlByCountry($countryCode): string
     {
         return self::getEawbInstances()[$countryCode ?? self::API_HOST_LOCALE_RO];
@@ -143,11 +166,11 @@ class SamedayHelper
     }
 
     /**
-     * @param $samedayConfigs
-     * @param $registry
-     * @param $prefix
+     * @param array $samedayConfigs
+     * @param mixed $registry
+     * @param mixed $prefix
      */
-    public function __construct($samedayConfigs, $registry, $prefix)
+    public function __construct(array $samedayConfigs, $registry, $prefix)
     {
         $this->samedayConfigs = $samedayConfigs;
 
@@ -194,11 +217,19 @@ class SamedayHelper
         return in_array($samedayCode, self::ELIGIBLE_TO_LOCKER, true);
     }
 
+    /**
+     * @param string $samedayCode
+     *
+     * @return bool
+     */
     public function isOohDeliveryOption(string $samedayCode): bool
     {
         return in_array($samedayCode, self::OOH_SERVICES);
     }
 
+    /**
+     * @return string
+     */
     public function getHostCountry(): string
     {
         return $this->samedayConfigs['sameday_host_country'] ?? self::API_HOST_LOCALE_RO;

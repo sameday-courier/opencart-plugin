@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.6.7</version>
+    <version>1.7.0</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.twig">
@@ -26,143 +26,83 @@
             ]]></add>
         </operation>
     </file>
-    <file path="catalog/view/theme/*/template/checkout/guest.twig">
-        <operation>
-            <search><![CDATA[
-               <input type="text" name="city" value="{{ city }}" placeholder="{{ entry_city }}" id="input-payment-city" class="form-control" />
-            ]]></search>
-            <add position="replace"><![CDATA[
-                {% if useNomenclator == true %}
-                    <select name="city" id="input-shipping-city" class="form-control">
-                        <option>- Alege un judet -</option>
-                    </select>
-                {% else %}
-                    <input type="text" name="city" value="" placeholder="{{ entry_city }}" id="input-payment-city" class="form-control" />
-                {% endif %}
-            ]]></add>
-        </operation>
-        <operation>
-            <search><![CDATA[
-            <script type="text/javascript"><!--
-            ]]></search>
-            <add position="before"><![CDATA[
-                <script>
-                  $(document).ready(function(){
-                    $('#input-payment-zone').on('change', function(){
-                      let county_id = $(this).val();
-                      $.ajax({
-                        url: 'index.php?route=checkout/guest/get_cities',
-                        type: 'POST',
-                        data: { county_id },
-                        success: function(result){
-                          let arr = $.parseJSON(result);
-                          $('#input-shipping-city').html("");
-                          arr.map(function(item){
-                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
-                          });
-                        }
-                      });
-                    });
-                  });
-                </script>
-            ]]></add>
-        </operation>
-    </file>
     <file path="catalog/controller/checkout/guest.php">
-        <operation>
-            <search><![CDATA[
-                public function save() {
-            ]]></search>
-            <add position="before"><![CDATA[
-                public function get_cities() {
-
-                    $this->load->model('extension/shipping/sameday');
-                    $county_id = $this->request->post['county_id'];
-
-                    $cities = $this->model_extension_shipping_sameday->getCities($county_id);
-
-                    echo json_encode($cities);
-
-                }
-            ]]></add>
-        </operation>
         <operation>
             <search><![CDATA[
                 $this->response->setOutput($this->load->view('checkout/guest', $data));
             ]]></search>
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
-                $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
-            ]]></add>
-        </operation>
-    </file>
-    <file path="catalog/view/theme/*/template/checkout/register.twig">
-        <operation>
-            <search><![CDATA[
-               <input type="text" name="city" value="" placeholder="{{ entry_city }}" id="input-payment-city" class="form-control" />
-            ]]></search>
-            <add position="replace"><![CDATA[
-                {% if useNomenclator == true %}
-                    <select name="city" id="input-shipping-city" class="form-control">
-                        <option>- Alege un judet -</option>
-                    </select>
-                {% else %}
-                    <input type="text" name="city" value="" placeholder="{{ entry_city }}" id="input-payment-city" class="form-control" />
-                {% endif %}
-            ]]></add>
-        </operation>
-        <operation>
-            <search><![CDATA[
-            <script type="text/javascript"><!--
-            ]]></search>
-            <add position="before"><![CDATA[
-                <script>
-                  $(document).ready(function(){
-                    $('#input-payment-zone').on('change', function(){
-                      let county_id = $(this).val();
-                      $.ajax({
-                        url: 'index.php?route=checkout/register/get_cities',
-                        type: 'POST',
-                        data: { county_id },
-                        success: function(result){
-                          let arr = $.parseJSON(result);
-                          $('#input-shipping-city').html("");
-                          arr.map(function(item){
-                            $('#input-shipping-city').append('<option value="' + item['city_name'] + '">' + item['city_name'] + '</option');
-                          });
-                        }
-                      });
-                    });
-                  });
-                </script>
+                $samedayShippingModel = $this->model_extension_shipping_sameday;
+                $useNomenclator = $samedayShippingModel->getConfig('sameday_nomenclator_use');
+                $data['sameday_cities'] = json_encode([]);
+                $data['scripts'] = json_encode([]);
+                if ($useNomenclator === 'on') {
+                    $data['sameday_cities'] = $samedayShippingModel->displayCities();
+                    $data['scripts'] = json_encode(
+                        [
+                            "catalog/view/javascript/sameday/assets/update-city.js"
+                        ]
+                    );
+                }
             ]]></add>
         </operation>
     </file>
     <file path="catalog/controller/checkout/register.php">
         <operation>
             <search><![CDATA[
-                public function save() {
-            ]]></search>
-            <add position="before"><![CDATA[
-                public function get_cities() {
-
-                    $this->load->model('extension/shipping/sameday');
-                    $county_id = $this->request->post['county_id'];
-
-                    $cities = $this->model_extension_shipping_sameday->getCities($county_id);
-
-                    echo json_encode($cities);
-
-                }
-            ]]></add>
-        </operation>
-        <operation>
-            <search><![CDATA[
                 $this->response->setOutput($this->load->view('checkout/register', $data));
             ]]></search>
             <add position="before"><![CDATA[
                 $this->load->model('extension/shipping/sameday');
-                $data['useNomenclator'] = $this->model_extension_shipping_sameday->getConfig('sameday_nomenclator_use');
+                $samedayShippingModel = $this->model_extension_shipping_sameday;
+                $useNomenclator = $samedayShippingModel->getConfig('sameday_nomenclator_use');
+                $data['sameday_cities'] = json_encode([]);
+                $data['scripts'] = json_encode([]);
+                if ($useNomenclator === 'on') {
+                    $data['sameday_cities'] = $samedayShippingModel->displayCities();
+                    $data['scripts'] = json_encode(
+                        [
+                            "catalog/view/javascript/sameday/assets/update-city.js"
+                        ]
+                    );
+                }
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/guest.twig">
+        <operation>
+            <search><![CDATA[
+            // Sort the custom fields
+            ]]></search>
+            <add position="before"><![CDATA[
+                let SamedayScripts = {{ scripts }}
+                if (SamedayScripts.length > 0) {
+                    window.SamedayCities = {{ sameday_cities }};
+                    SamedayScripts.forEach((href) => {
+                        let script = document.createElement('script');
+                        script.src = href;
+                        document.head.appendChild(script);
+                    });
+                }
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/checkout/register.twig">
+        <operation>
+            <search><![CDATA[
+            // Sort the custom fields
+            ]]></search>
+            <add position="before"><![CDATA[
+                let SamedayScripts = {{ scripts }}
+                if (SamedayScripts.length > 0) {
+                    window.SamedayCities = {{ sameday_cities }};
+                    SamedayScripts.forEach((href) => {
+                        let script = document.createElement('script');
+                        script.src = href;
+                        document.head.appendChild(script);
+                    });
+                }
             ]]></add>
         </operation>
     </file>
@@ -210,10 +150,10 @@
                             disabled="disabled"
                             title="Click on button below and choose your easybox!"
                      {% endif %}
-                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
-                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
-                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
-                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country="{{ quote.destCountry }}" {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county="{{ quote.destCounty }}" {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city="{{ quote.destCity }}" {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username="{{ quote.apiUsername }}" {% endif %}
                  />
             ]]></add>
         </operation>
@@ -228,10 +168,10 @@
                             disabled="disabled"
                             title="Click on button below and choose your easybox!"
                      {% endif %}
-                     {% if quote.destCountry is not null %} data-dest_country={{ quote.destCountry }} {% endif %}
-                     {% if quote.destCounty is not null %} data-dest_county={{ quote.destCounty }} {% endif %}
-                     {% if quote.destCity is not null %} data-dest_city={{ quote.destCity }} {% endif %}
-                     {% if quote.apiUsername is not null %} data-api_username={{ quote.apiUsername }} {% endif %}
+                     {% if quote.destCountry is not null %} data-dest_country="{{ quote.destCountry }}" {% endif %}
+                     {% if quote.destCounty is not null %} data-dest_county="{{ quote.destCounty }}" {% endif %}
+                     {% if quote.destCity is not null %} data-dest_city="{{ quote.destCity }}" {% endif %}
+                     {% if quote.apiUsername is not null %} data-api_username="{{ quote.apiUsername }}" {% endif %}
                  />
             ]]></add>
         </operation>
@@ -284,53 +224,7 @@
                             <span id="showLockerDetails"></span>
                         </div>
                         <script src="https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js"></script>
-                    <script>
-                        jQuery(document).ready(function ($) {
-                            const ln = $("#locker_nextday");
-                            const nextDayVal = ln.val() + ".";
-                            const destCountry = ln.data('dest_country');
-                            const destCity = ln.data('dest_city');
-                            const apiUsername = ln.data('api_username');
-                            $(document).on("click", "#showLockerMap", () => {
-                                const clientId = "b8cb2ee3-41b9-4c3d-aafe-1527b453d65e";
-                                const LockerPlugin = window['LockerPlugin'];
-                                const lockerInit = {
-                                    'apiUsername': apiUsername,
-                                    'clientId': clientId,
-                                    'countryCode': destCountry,
-                                    'langCode': destCountry.toLowerCase(),
-                                    'city': destCity,
-                                };
-
-                                LockerPlugin.init(lockerInit);
-
-                                if (
-                                    LockerPlugin.options.countryCode !== destCountry
-                                    || LockerPlugin.options.city !== destCity
-                                ) {
-                                    lockerInit.countryCode = destCountry;
-                                    lockerInit.city = destCity;
-
-                                    LockerPlugin.reinitializePlugin(lockerInit);
-                                }
-
-                                let pluginInstance = LockerPlugin.getInstance();
-
-                                pluginInstance.open();
-
-                                pluginInstance.subscribe((lockerData) => {
-                                    let locker = `${lockerData.lockerId}.${lockerData.name}`;
-
-                                    $("#locker_nextday").val(nextDayVal + locker);
-                                    $('#locker_nextday').prop('checked', true);
-                                    $('#locker_nextday').prop('disabled', false);
-                                    $('#showLockerDetails').html('<strong>' + lockerData.name + ' - ' + lockerData.address + '</strong>');
-
-                                    pluginInstance.close();
-                                });
-                            });
-                        });
-                    </script>
+                        <script src="catalog/view/javascript/sameday/assets/sameday-locker.js"></script>
                     {% endif %}
                 {% endif %}
             ]]></add>
@@ -358,40 +252,7 @@
                 <p><strong>{{ text_comments }}</strong></p>
             ]]></search>
             <add position="after"><![CDATA[
-            <script>
-                jQuery(document).ready(($) => {
-                    const paymentMethodClass = 'paymentMethod';
-                    const cookieName = 'selected_payment_method';
-
-                    const allPaymentMethods = Array.from(document.getElementsByClassName(paymentMethodClass));
-                    const currentPaymentMethod = allPaymentMethods.filter(method => method.checked)[0].valueOf().value;
-
-                    const setCookie = (value) => {
-                        document.cookie = cookieName + '=' + value;
-                    }
-
-                    const getPaymentMethodFromCookie = () => {
-                        let cookies = document.cookie.split(';');
-                        let payment_method = '';
-                        cookies.forEach((value) => {
-                            if (value.indexOf('_payment_method') > 0) {
-                                payment_method = value.split('=')[1];
-                            }
-                        });
-
-                        return payment_method;
-                    }
-
-                    setCookie(currentPaymentMethod);
-
-                    $(document).on('click', '.paymentMethod', (element) => {
-                            let payment_code = element.target.value;
-
-                            setCookie(payment_code);
-                        }
-                    );
-                });
-            </script>
+                <script src="catalog/view/sameday/assets/update-payment.js"></script>
             ]]></add>
         </operation>
     </file>

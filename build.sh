@@ -49,6 +49,9 @@ elif [ $VERSION -eq 3 ]; then
         admin/view/template/extension/shipping/sameday_awb_history_status_refresh.twig \
         admin/view/template/extension/shipping/sameday_service.twig \
         catalog/model/extension/shipping/sameday.php \
+        catalog/view/javascript/sameday/assets/sameday-locker.js \
+        catalog/view/javascript/sameday/assets/update-city.js \
+        catalog/view/javascript/sameday/assets/update-payment.js \
         system/library/sameday-php-sdk/ \
         system/library/sameday-classes/ \
         system/library/samedayclasses.php \

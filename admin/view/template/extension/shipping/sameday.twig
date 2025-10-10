@@ -120,7 +120,7 @@
                             </button>
                             <br>
                             <div class="form-group" style="padding-left: 15px;">
-                                <input type="checkbox" id="input-nomenclator-use" name="shipping_sameday_nomenclator_use" class="form-check-input" {{ shipping_sameday_nomenclator_use ? 'checked' : '' }}>
+                                <input type="checkbox" id="input-nomenclator-use" name="shipping_sameday_nomenclator_use" class="form-check-input" {{ sameday_nomenclator_use ? 'checked' : '' }}>
                                 <label role="button" for="input-nomenclator-use">Use imported locations</label>
                             </div>
                         </div>
@@ -486,11 +486,15 @@
         });
     });
 
-    $(document).on('click', '#input-import-nomenclator', function(){
+    $('#input-import-nomenclator').on('click', function(){
         let url = $('#input-import-nomenclator').attr('data-href');
+        $(this).prop('disabled', true);
+        $(this).text('Importing...')
         $.ajax({
             url: url,
             success: function(result){
+                $('#input-import-nomenclator').prop('disabled', false);
+                $('#input-import-nomenclator').text('Finalizat');
                 console.log(result);
             }
         });

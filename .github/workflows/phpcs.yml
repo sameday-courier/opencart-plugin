@@ -1,0 +1,54 @@
+name: PHPCS
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.0'
+
+      - name: Install PHPCS
+        run: |
+          mkdir -p vendor/bin
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          chmod +x phpcs.phar
+          mv phpcs.phar vendor/bin/phpcs
+
+      - name: Run PHPCS and Generate HTML Report
+        run: |
+          REPORT_NAME="phpcs-report-${{ github.head_ref }}.xml"
+
+          vendor/bin/phpcs --standard=phpcs.xml.dist \
+            --report=xml \
+            --report=full \
+            --report-file="$REPORT_NAME" || EXIT_CODE=$?
+      
+          EXIT_CODE=${EXIT_CODE:-0}
+      
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            sed -i '$ s#</phpcs>#  <status success="true">Well Done!</status>\n</phpcs>#' "$REPORT_NAME"
+          fi
+
+          echo "REPORT_NAME=$REPORT_NAME" >> $GITHUB_ENV
+          echo "EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+
+      - name: Upload PHPCS Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpcs-report
+          path: ${{ env.REPORT_NAME }}
+
+      # Block merge if found errors
+      - name: Fail if PHPCS Errors
+        if: ${{ env.EXIT_CODE != 0 }}
+        run: exit 1

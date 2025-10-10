@@ -176,7 +176,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_pickup_points; ?></h3>
-                <a class="btn btn-primary" href="<?php echo $pickupPoint_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_services_refresh; ?>"><i class="fa fa-refresh"></i></a>
+                <a class="btn btn-primary" href="<?php echo $pickupPoint_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_pickup_points_refresh; ?>"><i class="fa fa-refresh"></i></a>
                 <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="<?php echo $text_pickupPoint_add; ?>"><i class="fa fa-plus"></i></a>
             </div>
             <div class="panel-body">

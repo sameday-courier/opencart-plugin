@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<ruleset name="OpenCart-Style">
+    <description>
+        Coding style SamedayCourier Opencart Extension
+        Compatible with PHP 7.0.*
+    </description>
+
+    <rule ref="PSR2"/>
+
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <severity>0</severity>
+    </rule>
+
+    <exclude name="Squiz.NamingConventions.ValidFunctionName.NotCamelCaps"/>
+    <exclude name="Squiz.NamingConventions.ValidVariableName.NotCamelCaps"/>
+
+    <exclude name="Squiz.Functions.TypeHintDeclaration.Missing"/>
+    <exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.TypeHintMissing"/>
+    <exclude name="PSR12.Classes.ClassDeclaration"/>
+    <rule ref="PSR1.Files.SideEffects.FoundWithSymbols">
+        <exclude name="PSR1.Files.SideEffects.FoundWithSymbols"/>
+    </rule>
+
+    <rule ref="PSR1.Classes.ClassDeclaration">
+        <exclude name="PSR1.Classes.ClassDeclaration.MissingNamespace"/>
+    </rule>
+
+    <rule ref="Generic.Files.LineEndings">
+        <exclude name="Generic.Files.LineEndings.InvalidEOLChar"/>
+    </rule>
+
+    <rule ref="Squiz.WhiteSpace.ControlStructureSpacing"/>
+
+    <rule ref="Squiz.WhiteSpace.FunctionSpacing">
+        <properties>
+            <property name="spacing" value="1"/>
+            <property name="spacingBeforeFirst" value="0"/>
+        </properties>
+        <exclude name="Squiz.WhiteSpace.FunctionSpacing.After"/>
+    </rule>
+    <exclude name="PSR2.Methods.FunctionClosingBrace.SpaceAfter"/>
+
+    <rule ref="Squiz.PHP.CommentedOutCode"/>
+
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <exclude name="Squiz.Commenting.FunctionComment.InvalidReturn"/>
+        <exclude name="Squiz.Commenting.FunctionComment.IncorrectTypeHint"/>
+        <exclude name="Squiz.Commenting.FunctionComment.IncorrectParamVarName"/>
+        <exclude name="Squiz.Commenting.FunctionComment.IncorrectParamVarType"/>
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
+        <exclude name="Squiz.Commenting.FunctionComment.SpacingAfterParamType"/>
+        <exclude name="Squiz.Commenting.FunctionComment.SpacingBetween"/>
+        <exclude name="Squiz.Commenting.FunctionComment.ThrowsNoComment"/>
+        <exclude name="Squiz.Commenting.FunctionComment.EmptyThrows"/>
+        <exclude name="Squiz.Commenting.FunctionComment.ThrowTagMissing"/>
+    </rule>
+
+    <config name="lineLength" value="120"/>
+    <config name="tabWidth" value="4"/>
+
+    <file>admin/controller/extension/shipping/sameday.php</file>
+    <file>admin/model/extension/shipping/sameday.php</file>
+    <file>catalog/model/extension/shipping/sameday.php</file>
+
+    <exclude-pattern>*/system/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/storage/*</exclude-pattern>
+    <exclude-pattern>*/install/*</exclude-pattern>
+    <exclude-pattern>*/image/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+</ruleset>
