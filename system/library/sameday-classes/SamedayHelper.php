@@ -28,6 +28,8 @@ class SamedayHelper
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
     const OOH_SERVICE_CODE = 'OOH';
 
+    const OOH_CROSSBORDER_SERVICE_CODE = 'OOH_CROSSBORDER';
+
     const OOH_TYPES = [
         0 => self::LOCKER_NEXT_DAY_SERVICE,
         1 => self::SAMEDAY_PUDO_SERVICE,
@@ -56,6 +58,7 @@ class SamedayHelper
     const OOH_SERVICES = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::SAMEDAY_PUDO_SERVICE,
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE
     ];
 
     const ELIGIBLE_TO_LOCKER = [
@@ -68,6 +71,12 @@ class SamedayHelper
         self::API_HOST_LOCALE_RO => 'Ridicare Sameday Point/Easybox',
         self::API_HOST_LOCALE_BG => 'вземете от Sameday Point/Easybox',
         self::API_HOST_LOCALE_HU => 'Felvenni től Sameday Point/Easybox',
+    ];
+
+    const OOH_CROSSBORDER_SERVICES_LABELS = [
+        self::API_HOST_LOCALE_RO => 'Ridicare Sameday Point/Easybox Crossborder',
+        self::API_HOST_LOCALE_BG => 'Вземане от точка за доставка в същия ден/Easybox през граница',
+        self::API_HOST_LOCALE_HU => 'Aznapi átvételi pont/Easybox határokon átívelő átvétel',
     ];
 
     const SAMEDAY_COUNTRIES = [

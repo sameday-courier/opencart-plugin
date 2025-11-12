@@ -532,6 +532,13 @@ class ControllerExtensionShippingSameday extends Controller
             true
         ))[0] ?? null;
 
+        $oohCrossService = array_values(array_filter(
+            $services,
+            static function (array $service) use ($samedayHelper) {
+                return $service['sameday_code'] === $samedayHelper::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE;
+            },
+            true
+        ))[0] ?? null;
 
         if (null !== $oohService) {
             $oohService['sameday_name'] = $samedayHelper::OOH_SERVICES_LABELS[$samedayHelper->getHostCountry()];
@@ -540,6 +547,19 @@ class ControllerExtensionShippingSameday extends Controller
             $oohService['column_ooh_label'] = $this->buildLanguage('column_ooh_label');
 
             $services = array_merge([$oohService], $services);
+        }
+
+        if (null !== $oohCrossService) {
+            $oohCrossService['sameday_name']= $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                $samedayHelper->getHostCountry()
+            ];
+            $oohCrossService['name'] = $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                $samedayHelper->getHostCountry()
+            ];
+            $oohCrossService['sameday_code'] = $samedayHelper::OOH_CROSSBORDER_SERVICE_CODE;
+            $oohCrossService['column_ooh_label'] = $this->buildLanguage('column_ooh_cross_label');
+
+            $services = array_merge([$oohCrossService], $services);
         }
 
         return array_filter($services, static function ($service) use ($samedayHelper) {
@@ -2208,7 +2228,15 @@ class ControllerExtensionShippingSameday extends Controller
         foreach ($keys as $key) {
             if ($key === 'name' && $this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 $entries['disabled'] = 'disabled';
-                $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+                if (in_array($service['sameday_code'], $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER)) {
+                    $entries[$key] = $this->samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                        $this->samedayHelper->getHostCountry()
+                    ];
+                } else {
+                    $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[
+                        $this->samedayHelper->getHostCountry()
+                    ];
+                }
             } else {
                 $entries[$key] = $this->request->post[$key] ?? $service[$key];
             }

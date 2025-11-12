@@ -307,7 +307,7 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query(
             sprintf(
                 "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%s'",
-                DB_PREFIX . "settting",
+                DB_PREFIX . "setting",
                 $this->db->escape($time),
                 $this->db->escape($lastTs['setting_id'])
             )
@@ -321,7 +321,7 @@ class ModelExtensionShippingSameday extends Model
     {
         return (array) $this->db->query(
             sprintf(
-                "SELECT * FROM %s WHERE `testing` = '%'",
+                "SELECT * FROM %s WHERE `testing` = '%s'",
                 DB_PREFIX . "sameday_locker",
                 $this->db->escape($this->getPrefix())
             )
@@ -333,7 +333,11 @@ class ModelExtensionShippingSameday extends Model
      */
     private function isShowLockersMap(): bool
     {
-        return (bool) $this->getConfig('sameday_show_lockers_map');
+        if ($this->getConfig('sameday_show_lockers_map') === '0') {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -360,7 +364,7 @@ class ModelExtensionShippingSameday extends Model
     {
         return $this->db->query(
             sprintf(
-                "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%'",
+                "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%s'",
                 DB_PREFIX . "sameday_locker",
                 $lockerId,
                 $this->isTesting()

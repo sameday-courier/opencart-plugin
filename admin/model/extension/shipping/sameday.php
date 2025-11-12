@@ -1049,7 +1049,7 @@ class ModelExtensionShippingSameday extends Model
                     $this->db->escape($key)
                 ));
 
-                $queryFormat = "INSERT INTO %s SET `store_id` = %d, `code` = '%s', key = '%s', `value` = '%s'" ;
+                $queryFormat = "INSERT INTO %s SET `store_id` = %d, `code` = '%s', `key` = '%s', `value` = '%s'" ;
                 if (is_array($value)) {
                     $value = $this->db->escape(json_encode($value, true));
                     $queryFormat .= ", `serialized` = 1";
@@ -1075,7 +1075,7 @@ class ModelExtensionShippingSameday extends Model
     public function citiesCheck(): bool
     {
         return $this->db->query(
-            sprintf("SHOW TABLES LIKE %s", DB_PREFIX . "sameday_cities'")
+            sprintf("SHOW TABLES LIKE '%s'", DB_PREFIX . "sameday_cities")
         )->num_rows > 0;
     }
 
