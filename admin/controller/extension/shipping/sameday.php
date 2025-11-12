@@ -2224,7 +2224,11 @@ class ControllerExtensionShippingSameday extends Controller
         foreach ($keys as $key) {
             if ($key === 'name' && $this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 $entries['disabled'] = 'disabled';
-                $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+                if(in_array($service['sameday_code'], $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER)) {
+                    $entries[$key] = $this->samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+                }else{
+                    $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+                }
             } else {
                 $entries[$key] = $this->request->post[$key] ?? $service[$key];
             }
