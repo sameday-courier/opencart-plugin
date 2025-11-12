@@ -412,6 +412,7 @@ class ModelExtensionShippingSameday extends Model
      */
     public function getLocker(int $id): array
     {
+        var_dump('de aici');
         return $this->db->query(
             sprintf(
                 "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%s'",
@@ -1049,7 +1050,7 @@ class ModelExtensionShippingSameday extends Model
                     $this->db->escape($key)
                 ));
 
-                $queryFormat = "INSERT INTO %s SET `store_id` = %d, `code` = '%s', key = '%s', `value` = '%s'" ;
+                $queryFormat = "INSERT INTO %s SET `store_id` = %d, `code` = '%s', `key` = '%s', `value` = '%s'" ;
                 if (is_array($value)) {
                     $value = $this->db->escape(json_encode($value, true));
                     $queryFormat .= ", `serialized` = 1";
