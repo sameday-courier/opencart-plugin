@@ -550,8 +550,12 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         if (null !== $oohCrossService) {
-            $oohCrossService['sameday_name']= $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[$samedayHelper->getHostCountry()];
-            $oohCrossService['name'] = $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[$samedayHelper->getHostCountry()];
+            $oohCrossService['sameday_name']= $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                $samedayHelper->getHostCountry()
+            ];
+            $oohCrossService['name'] = $samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                $samedayHelper->getHostCountry()
+            ];
             $oohCrossService['sameday_code'] = $samedayHelper::OOH_CROSSBORDER_SERVICE_CODE;
             $oohCrossService['column_ooh_label'] = $this->buildLanguage('column_ooh_cross_label');
 
@@ -2224,10 +2228,14 @@ class ControllerExtensionShippingSameday extends Controller
         foreach ($keys as $key) {
             if ($key === 'name' && $this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
                 $entries['disabled'] = 'disabled';
-                if(in_array($service['sameday_code'], $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER)) {
-                    $entries[$key] = $this->samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
-                }else{
-                    $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[$this->samedayHelper->getHostCountry()];
+                if (in_array($service['sameday_code'], $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER)) {
+                    $entries[$key] = $this->samedayHelper::OOH_CROSSBORDER_SERVICES_LABELS[
+                        $this->samedayHelper->getHostCountry()
+                    ];
+                } else {
+                    $entries[$key] = $this->samedayHelper::OOH_SERVICES_LABELS[
+                        $this->samedayHelper->getHostCountry()
+                    ];
                 }
             } else {
                 $entries[$key] = $this->request->post[$key] ?? $service[$key];
