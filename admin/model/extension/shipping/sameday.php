@@ -1075,7 +1075,7 @@ class ModelExtensionShippingSameday extends Model
     public function citiesCheck(): bool
     {
         return $this->db->query(
-            sprintf("SHOW TABLES LIKE %s", DB_PREFIX . "sameday_cities'")
+            sprintf("SHOW TABLES LIKE '%s'", DB_PREFIX . "sameday_cities")
         )->num_rows > 0;
     }
 
