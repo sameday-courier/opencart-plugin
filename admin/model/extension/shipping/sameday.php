@@ -412,7 +412,6 @@ class ModelExtensionShippingSameday extends Model
      */
     public function getLocker(int $id): array
     {
-        var_dump('de aici');
         return $this->db->query(
             sprintf(
                 "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%s'",
