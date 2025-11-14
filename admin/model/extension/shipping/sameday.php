@@ -716,6 +716,37 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
+    private function addCodCode(){
+        $value = json_encode(['cod']);
+
+        $query = "INSERT INTO " . DB_PREFIX . "setting 
+    SET store_id = 0, 
+        code = 'shipping_sameday', 
+        `key` = 'shipping_sameday_cod', 
+        value = '" . $this->db->escape($value) . "'";
+        $this->db->query($query);
+    }
+
+    private function removeCodCode(){
+        $query = "DELETE FROM " . DB_PREFIX . "setting WHERE `key` = 'shipping_sameday_cod'";
+        $this->db->query($query);
+    }
+
+    public function checkCodSetting(){
+        $value = json_encode(['cod']);
+        $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "setting WHERE `key` = 'shipping_sameday_cod'");
+
+        if ((int)$query->row['total'] === 0) {
+            $value = json_encode(['cod']);
+            $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET code = 'shipping_sameday', `key` = 'shipping_sameday_cod', value = '" . $this->db->escape($value) . "'");
+        }
+    }
+
+    public function updateCod($data){
+        $query = "UPDATE " . DB_PREFIX . "setting SET value='". $this->db->escape($data) ."' WHERE `key`='shipping_sameday_cod'";
+        $this->db->query($query);
+    }
+
     /**
      * @return void
      */
