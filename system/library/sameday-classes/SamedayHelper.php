@@ -257,4 +257,24 @@ class SamedayHelper
 
         return self::OOH_TYPES[0];
     }
+
+    public static function getCodValues($registry)
+    {
+        $model_setting = $registry->get('model_setting_setting');
+        $config = $registry->get('config');
+
+        if (!$model_setting) {
+            $loader = $registry->get('load');
+            $loader->model('setting/setting');
+            $model_setting = $registry->get('model_setting_setting');
+        }
+
+        $store_id = (int)$config->get('config_store_id');
+        $settings = $model_setting->getSetting('shipping_sameday', $store_id);
+
+        $key = 'shipping_sameday_cod';
+        $value = isset($settings[$key]) ?? $settings[$key];
+
+        return json_decode($value, true);
+    }
 }

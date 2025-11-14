@@ -232,6 +232,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_show_lockers_map',
             'entry_locker_max_items',
             'entry_sort_order',
+            'entry_cod',
             'entry_import_local_data',
             'entry_import_nomenclator',
             'entry_import_nomenclator_button',
@@ -372,6 +373,9 @@ class ControllerExtensionShippingSameday extends Controller
             true
         );
 
+        $data['url_cod_ajax'] = $this->url->link('extension/shipping/sameday/updateCod', $this->addToken(), true);
+        $data['cods'] = json_decode($this->config->get('shipping_sameday_cod'));
+
         $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
     }
 
@@ -479,6 +483,26 @@ class ControllerExtensionShippingSameday extends Controller
         }
 
         $this->response->setOutput(json_encode($citiesArray));
+    }
+
+    public function updateCod(){
+        if(isset($this->request->post['cods'])){
+            $data = $this->request->post['cods'];
+            if(isset($this->request->post['newCod'])){
+                array_push($data, $this->request->post['newCod']);
+            }
+        }else{
+            $data = array();
+            if(isset($this->request->post['newCod'])){
+                array_push($data, $this->request->post['newCod']);
+            }else{
+                return;
+            }
+        }
+
+        $newCods = json_encode($data);
+        $this->model_extension_shipping_sameday->updateCod($newCods);
+        echo $newCods;
     }
 
     /**
