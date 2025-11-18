@@ -485,15 +485,16 @@ class ControllerExtensionShippingSameday extends Controller
         $this->response->setOutput(json_encode($citiesArray));
     }
 
-    public function updateCod(){
-        if(isset($this->request->post['cods'])){
+    public function updateCod()
+    {
+        if (isset($this->request->post['cods'])){
             $data = $this->request->post['cods'];
-            if(isset($this->request->post['newCod'])){
+            if (isset($this->request->post['newCod'])){
                 array_push($data, $this->request->post['newCod']);
             }
         }else{
             $data = array();
-            if(isset($this->request->post['newCod'])){
+            if (isset($this->request->post['newCod'])){
                 array_push($data, $this->request->post['newCod']);
             }else{
                 return;
