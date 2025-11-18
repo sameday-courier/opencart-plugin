@@ -110,6 +110,7 @@
                                 <input type="text" id="input-cod" class="form-control" placeholder="COD References..." aria-describedby="references-submit">
                                 <span class="input-group-addon btn btn-primary" id="references-submit" data-url="{{ url_cod_ajax }}">Update</span>
                             </div>
+                            <div><span><em>In case third party extensions are added that use different references for "cash on delivery", add them here. (default: cod)</em></span></div>
                             <div class="references">
                                 {% for cod in cods %}
                                     <span class="badge">{{ cod }} <sup data-url="{{ url_cod_ajax }}" data-cod="{{ cod }}">x</sup></span>
