@@ -757,7 +757,7 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
-     * @param $data
+     * @param mixed $data
      * @return void
      */
     public function updateCod($data)
