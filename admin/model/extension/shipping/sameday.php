@@ -716,6 +716,9 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
+    /**
+     * @return void
+     */
     private function addCodCode()
     {
         $value = json_encode(['cod']);
@@ -728,12 +731,18 @@ class ModelExtensionShippingSameday extends Model
         $this->db->query($query);
     }
 
+    /**
+     * @return void
+     */
     private function removeCodCode()
     {
         $query = "DELETE FROM " . DB_PREFIX . "setting WHERE `key` = 'shipping_sameday_cod'";
         $this->db->query($query);
     }
 
+    /**
+     * @return void
+     */
     public function checkCodSetting()
     {
         $value = json_encode(['cod']);
@@ -747,6 +756,10 @@ class ModelExtensionShippingSameday extends Model
         }
     }
 
+    /**
+     * @param $data
+     * @return void
+     */
     public function updateCod($data)
     {
         $query = "UPDATE " . DB_PREFIX . "setting SET 
