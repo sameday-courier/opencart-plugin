@@ -5,6 +5,11 @@ pr:
     include:
       - '*'
 
+variables:
+  - group: sonar-project-keys
+  - name: projectKey
+    value: $(PROJECT_KEY_SD.Plugins-opencart-plugin)
+
 resources:
   repositories:
     - repository: templates
@@ -16,3 +21,5 @@ stages:
   displayName: "SonarQube Scan"
   jobs:
     - template: templates/sonar-flexible-scan.yaml@templates
+      parameters:
+        projectKey: $(projectKey)
