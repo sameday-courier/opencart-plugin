@@ -1,0 +1,10 @@
+ resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: SD.Plugins
+
+  stages:
+  - stage: Sonar
+    jobs:
+      - template: templates/sonar-pr-scan.yaml@templates
