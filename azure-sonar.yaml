@@ -4,6 +4,7 @@ pr:
   branches:
     include:
       - '*'
+
 variables:
   - group: sonar-project-keys
 
@@ -15,6 +16,6 @@ resources:
 
 stages:
 - stage: Sonar
-  displayName: "SonarQube PR Scan"
+  displayName: "SonarQube Scan"
   jobs:
-    - template: templates/sonar-pr-scan.yaml@templates
+    - template: templates/sonar-flexible-scan.yaml@templates
