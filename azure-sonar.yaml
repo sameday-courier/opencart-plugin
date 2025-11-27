@@ -1,10 +1,20 @@
- resources:
+trigger: none
+
+pr:
+  branches:
+    include:
+      - *
+variables:
+  - group: sonar-project-keys
+
+resources:
   repositories:
     - repository: templates
       type: git
-      name: SD.Plugins
+      name: SD.Plugins        # Azure DevOps repo where template lives
 
-   stages:
-   - stage: Sonar
-     jobs:
-       - template: templates/sonar-pr-scan.yaml@templates
+stages:
+- stage: Sonar
+  displayName: "SonarQube PR Scan"
+  jobs:
+    - template: templates/sonar-pr-scan.yaml@templates
