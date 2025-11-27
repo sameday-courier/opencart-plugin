@@ -18,9 +18,6 @@ resources:
     - repository: templates
       type: git
       name: SD.Plugins        # Azure DevOps repo where template lives
-    - repository: SD.CICD
-      type: git
-      name: SD.CICD           # Azure DevOps repo for CICD templates
 
 stages:
 - stage: Sonar
