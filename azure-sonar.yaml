@@ -7,8 +7,13 @@ pr:
 
 variables:
   - group: sonar-project-keys
+  - group: defectdojo-config
   - name: projectKey
     value: $(PROJECT_KEY_SD.Plugins-opencart-plugin)
+  - name: SONAR_PROJECT_KEY
+    value: $(PROJECT_KEY_SD.Plugins-opencart-plugin)
+  - name: SONAR_PROJECT_NAME
+    value: 'SD.Plugins-opencart-plugin'
 
 resources:
   repositories:
