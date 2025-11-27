@@ -53,3 +53,11 @@ defined at `phpcs.xml.dist`
 
 - In order to automatically fix wherever is possible, run :
   php vendor/bin/phpcbf --standard=phpcs.xml.dist
+
+### CI/CD
+This project uses Azure Pipelines for continuous integration:
+
+- **SonarQube Analysis**: Automatic code quality checks on every pull request
+- **Security Scanning**: Automated security vulnerability detection
+
+Pull requests will automatically trigger the CI pipeline for code quality verification.
