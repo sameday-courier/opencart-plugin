@@ -61,6 +61,7 @@ $_['estimate_cost'] = 'Estimate cost';
 $_['entry_tax_class'] = 'Tax Class';
 $_['entry_username'] = 'Username';
 $_['entry_password'] = 'Password';
+$_['entry_awb_format'] = 'AWB Format';
 $_['entry_testing'] = 'Testing mode';
 $_['entry_status'] = 'Status';
 $_['entry_estimated_cost'] = 'Estimated cost';
