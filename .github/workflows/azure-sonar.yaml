@@ -18,7 +18,7 @@ resources:
   repositories:
     - repository: templates
       type: git
-      name: SD.Plugins        # Azure DevOps repo where template lives
+      name: SD.Plugins
 
 stages:
 - stage: Sonar
