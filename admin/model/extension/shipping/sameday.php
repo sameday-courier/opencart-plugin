@@ -746,13 +746,15 @@ class ModelExtensionShippingSameday extends Model
     public function checkCodSetting()
     {
         $value = json_encode(['cod']);
+        $codKey = $this->getKey('sameday_cod');
+        $code = $this->getPrefix() . 'sameday';
         $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "setting 
-        WHERE `key` = 'shipping_sameday_cod'");
+        WHERE `key` = '" . $this->db->escape($codKey) . "'");
 
         if ((int)$query->row['total'] === 0) {
             $value = json_encode(['cod']);
-            $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET code = 'shipping_sameday', 
-            `key` = 'shipping_sameday_cod', value = '" . $this->db->escape($value) . "'");
+            $this->db->query("INSERT INTO " . DB_PREFIX . "setting SET code = '" . $this->db->escape($code) . "', 
+            `key` = '" . $this->db->escape($codKey) . "', value = '" . $this->db->escape($value) . "'");
         }
     }
 
@@ -762,8 +764,9 @@ class ModelExtensionShippingSameday extends Model
      */
     public function updateCod($data)
     {
+        $codKey = $this->getKey('sameday_cod');
         $query = "UPDATE " . DB_PREFIX . "setting SET 
-        value='". $this->db->escape($data) ."' WHERE `key`='shipping_sameday_cod'";
+        value='". $this->db->escape($data) ."' WHERE `key`='" . $this->db->escape($codKey) . "'";
         $this->db->query($query);
     }
 
