@@ -170,6 +170,8 @@ class ControllerExtensionShippingSameday extends Controller
                 $post
             );
 
+            $this->model_extension_shipping_sameday->checkCodSetting();
+
             $this->session->data['error_success'] = $this->language->get('text_success');
 
             $this->response->redirect(
@@ -374,7 +376,8 @@ class ControllerExtensionShippingSameday extends Controller
         );
 
         $data['url_cod_ajax'] = $this->url->link('extension/shipping/sameday/updateCod', $this->addToken(), true);
-        $data['cods'] = json_decode($this->config->get('shipping_sameday_cod'));
+        $codConfig = $this->getConfig('sameday_cod');
+        $data['cods'] = $codConfig ? json_decode($codConfig) : [];
 
         $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
     }

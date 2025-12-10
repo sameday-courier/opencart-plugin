@@ -104,6 +104,23 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-cod"><?php echo $entry_cod; ?></label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <input type="text" id="input-cod" class="form-control" placeholder="COD References..." aria-describedby="references-submit">
+                                <span class="input-group-addon btn btn-primary" id="references-submit" data-url="<?php echo $url_cod_ajax; ?>">Update</span>
+                            </div>
+                            <div><span><em>In case third party extensions are added that use different references for "cash on delivery", add them here. (default: cod)</em></span></div>
+                            <div class="references">
+                                <?php if (isset($cods) && is_array($cods)) { ?>
+                                    <?php foreach ($cods as $cod) { ?>
+                                        <span class="badge"><?php echo $cod; ?> <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="<?php echo $cod; ?>">x</sup></span>
+                                    <?php } ?>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-import-local-data"><?php echo $entry_import_local_data; ?></label>
                         <div class="col-sm-10">
                             <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="<?php echo $import_local_data_href; ?>" data-actions='<?php echo $import_local_data_actions; ?>'>
@@ -490,6 +507,55 @@
         $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
             document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
         });
+
+        $(document).ready(function(){
+            $('body').on('click', '#references-submit', function(){
+
+                let newCod = $('#input-cod').val();
+                if(newCod !== ''){
+                    let url = $(this).attr('data-url');
+                    let cods = [];
+                    $('.references span sup[data-cod]').each(function() {
+                        cods.push($(this).attr('data-cod'));
+                    });
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {cods, newCod},
+                        success: function(data){
+                            console.log(data);
+                            let html = "";
+                            JSON.parse(data).map(cod => {
+                                html += '<span class="badge">' + cod + ' <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="' + cod + '">x</sup></span>';
+                            });
+                            $('.references').html(html);
+                        }
+                    });
+                }
+            });
+
+            $('body').on('click', '.references span sup', function(){
+                $(this).parent().remove();
+                let url = $(this).attr('data-url');
+                let cods = [];
+                $('.references span sup[data-cod]').each(function() {
+                    cods.push($(this).attr('data-cod'));
+                });
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {cods},
+                    success: function(data){
+                        console.log(data);
+                        let html = "";
+                        JSON.parse(data).map(cod => {
+                            html += '<span class="badge">' + cod + ' <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="' + cod + '">x</sup></span>';
+                        });
+                        $('.references').html(html);
+                    }
+                });
+            });
+        });
     });
 </script>
 
@@ -519,4 +585,10 @@
             transform: rotate(360deg);
         }
     }
-</style
+    .references{
+        margin-top: 10px;
+    }
+    .references span sup{
+        cursor: pointer;
+    }
+</style>
