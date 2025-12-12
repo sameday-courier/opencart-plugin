@@ -104,23 +104,6 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-cod"><?php echo $entry_cod; ?></label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="text" id="input-cod" class="form-control" placeholder="COD References..." aria-describedby="references-submit">
-                                <span class="input-group-addon btn btn-primary" id="references-submit" data-url="<?php echo $url_cod_ajax; ?>">Update</span>
-                            </div>
-                            <div><span><em>In case third party extensions are added that use different references for "cash on delivery", add them here. (default: cod)</em></span></div>
-                            <div class="references">
-                                <?php if (isset($cods) && is_array($cods)) { ?>
-                                    <?php foreach ($cods as $cod) { ?>
-                                        <span class="badge"><?php echo $cod; ?> <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="<?php echo $cod; ?>">x</sup></span>
-                                    <?php } ?>
-                                <?php } ?>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-import-local-data"><?php echo $entry_import_local_data; ?></label>
                         <div class="col-sm-10">
                             <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="<?php echo $import_local_data_href; ?>" data-actions='<?php echo $import_local_data_actions; ?>'>
@@ -154,36 +137,36 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead>
-                            <tr>
-                                <td class="text-left"><?php echo $column_internal_name; ?></td>
-                                <td class="text-left"><?php echo $column_name; ?></td>
-                                <td class="text-left"><?php echo $column_price; ?></td>
-                                <td class="text-left"><?php echo $column_price_free; ?></td>
-                                <td class="text-left"><?php echo $column_status; ?></td>
-                            </tr>
+                        <tr>
+                            <td class="text-left"><?php echo $column_internal_name; ?></td>
+                            <td class="text-left"><?php echo $column_name; ?></td>
+                            <td class="text-left"><?php echo $column_price; ?></td>
+                            <td class="text-left"><?php echo $column_price_free; ?></td>
+                            <td class="text-left"><?php echo $column_status; ?></td>
+                        </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($services)) { ?>
-                            <tr>
-                                <td class="text-center" colspan="6"> <?php echo $text_services_empty; ?> </td>
-                            </tr>
-                            <?php } else { foreach ($services as $idx => $service) { ?>
-                            <tr>
-                                <td>
-                                    <a href="<?php echo $service_links[$idx]; ?>"
-                                    <?php if (isset($service['column_ooh_label'])) { ?>
-                                        title="<?php echo $service['column_ooh_label']; ?>"
-                                    <?php } ?>
-                                    >
-                                        <?php echo $service['sameday_name']; ?>
-                                    </a>
-                                </td>
-                                <td><?php echo $service['name']; ?></td>
-                                <td><?php echo $service['price']; ?></td>
-                                <td><?php echo $service['price_free']; ?></td>
-                                <td><?php echo $statuses[$service['status']]['text']; ?></td>
-                            </tr>
-                            <?php } } ?>
+                        <?php if (empty($services)) { ?>
+                        <tr>
+                            <td class="text-center" colspan="6"> <?php echo $text_services_empty; ?> </td>
+                        </tr>
+                        <?php } else { foreach ($services as $idx => $service) { ?>
+                        <tr>
+                            <td>
+                                <a href="<?php echo $service_links[$idx]; ?>"
+                                <?php if (isset($service['column_ooh_label'])) { ?>
+                                title="<?php echo $service['column_ooh_label']; ?>"
+                                <?php } ?>
+                                >
+                                <?php echo $service['sameday_name']; ?>
+                                </a>
+                            </td>
+                            <td><?php echo $service['name']; ?></td>
+                            <td><?php echo $service['price']; ?></td>
+                            <td><?php echo $service['price_free']; ?></td>
+                            <td><?php echo $statuses[$service['status']]['text']; ?></td>
+                        </tr>
+                        <?php } } ?>
                         </tbody>
                     </table>
                 </div>
@@ -197,8 +180,32 @@
                 <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="<?php echo $text_pickupPoint_add; ?>"><i class="fa fa-plus"></i></a>
             </div>
             <div class="panel-body">
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                            <input type="text" id="pickup-point-search" class="form-control" placeholder="Search pickup points...">
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="input-group">
+                            <span class="input-group-addon">Show</span>
+                            <select id="pickup-point-per-page" class="form-control">
+                                <option value="10" selected>10</option>
+                                <option value="20" >20</option>
+                                <option value="50">50</option>
+                            </select>
+                            <span class="input-group-addon">per page</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div id="pickup-point-info" class="text-right" style="padding-top: 8px; color: #666;">
+                            <span id="pickup-point-count">0</span> pickup points
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover" id="pickup-points-table">
                         <thead>
                         <tr>
                             <td class="text-left"></td>
@@ -211,13 +218,17 @@
                             <td class="text-left"><?php echo $column_pickupPoint_action; ?></td>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="pickup-points-tbody">
                         <?php if (empty($pickupPoints)) { ?>
-                        <tr>
-                            <td class="text-center" colspan="6"><?php echo $text_pickup_points_empty; ?></td>
+                        <tr class="no-results">
+                            <td class="text-center" colspan="8"><?php echo $text_pickup_points_empty; ?></td>
                         </tr>
                         <?php } else { $i=1;foreach ($pickupPoints as $pickupPoint) { ?>
-                        <tr data-sameday-id="<?php echo $pickupPoint['sameday_id']; ?>">
+                        <tr class="pickup-point-row" data-sameday-id="<?php echo $pickupPoint['sameday_id']; ?>"
+                            data-alias="<?php echo strtolower($pickupPoint['sameday_alias']); ?>"
+                            data-city="<?php echo strtolower($pickupPoint['city']); ?>"
+                            data-county="<?php echo strtolower($pickupPoint['county']); ?>"
+                            data-address="<?php echo strtolower($pickupPoint['address']); ?>">
                             <td><?php echo $i++;?></td>
                             <td><?php echo $pickupPoint['sameday_id']; ?></td>
                             <td><?php echo $pickupPoint['sameday_alias']; ?></td>
@@ -230,6 +241,20 @@
                         <?php } } ?>
                         </tbody>
                     </table>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div id="pickup-point-pagination-info" style="padding-top: 8px; color: #666;">
+                            Showing <span id="pickup-point-start">0</span> to <span id="pickup-point-end">0</span> of <span id="pickup-point-total">0</span> entries
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <nav aria-label="Pickup points pagination">
+                            <ul class="pagination pull-right" id="pickup-point-pagination">
+                                <!-- Pagination will be generated by JavaScript -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -296,7 +321,7 @@
                         <div class="col-sm-9">
                             <select name="pickupPointCountry" id="input-pickupPointCountry" class="form-control">
                                 <?php foreach($pp_countries as $country): ?>
-                                    <option value="<?php echo $country['value']; ?>"><?php echo $country['label']; ?></option>
+                                <option value="<?php echo $country['value']; ?>"><?php echo $country['label']; ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -306,7 +331,7 @@
                         <div class="col-sm-9">
                             <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="<?php echo $url_cities_ajax; ?>">
                                 <?php foreach($pp_counties as $county): ?>
-                                    <option value="<?php echo $county['id']; ?>"><?php echo $county['name']; ?></option>
+                                <option value="<?php echo $county['id']; ?>"><?php echo $county['name']; ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -442,15 +467,15 @@
             }
         }
 
-       $(document).on('click', '#input-import-nomenclator', function(){
-           let url = $('#input-import-nomenclator').attr('data-href');
-           $.ajax({
-               url: url,
-               success: function(result){
-                   console.log(result);
-               }
-           });
-       });
+        $(document).on('click', '#input-import-nomenclator', function(){
+            let url = $('#input-import-nomenclator').attr('data-href');
+            $.ajax({
+                url: url,
+                success: function(result){
+                    console.log(result);
+                }
+            });
+        });
         $('#form-pickupPoints').on('submit', function(e){
             e.preventDefault();
             $('[type="submit"]', this).prop('disabled', true);
@@ -507,56 +532,186 @@
         $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
             document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
         });
-
-        $(document).ready(function(){
-            $('body').on('click', '#references-submit', function(){
-
-                let newCod = $('#input-cod').val();
-                if(newCod !== ''){
-                    let url = $(this).attr('data-url');
-                    let cods = [];
-                    $('.references span sup[data-cod]').each(function() {
-                        cods.push($(this).attr('data-cod'));
-                    });
-                    $.ajax({
-                        url: url,
-                        type: "POST",
-                        data: {cods, newCod},
-                        success: function(data){
-                            console.log(data);
-                            let html = "";
-                            JSON.parse(data).map(cod => {
-                                html += '<span class="badge">' + cod + ' <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="' + cod + '">x</sup></span>';
-                            });
-                            $('.references').html(html);
-                        }
-                    });
-                }
-            });
-
-            $('body').on('click', '.references span sup', function(){
-                $(this).parent().remove();
-                let url = $(this).attr('data-url');
-                let cods = [];
-                $('.references span sup[data-cod]').each(function() {
-                    cods.push($(this).attr('data-cod'));
-                });
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {cods},
-                    success: function(data){
-                        console.log(data);
-                        let html = "";
-                        JSON.parse(data).map(cod => {
-                            html += '<span class="badge">' + cod + ' <sup data-url="<?php echo $url_cod_ajax; ?>" data-cod="' + cod + '">x</sup></span>';
-                        });
-                        $('.references').html(html);
-                    }
-                });
-            });
-        });
     });
+
+    // Pickup Points Pagination and Search
+    (function() {
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredRows = [];
+
+        function getFilteredRows() {
+            const searchTerm = $('#pickup-point-search').val().toLowerCase().trim();
+            const allRows = $('.pickup-point-row');
+
+            if (searchTerm === '') {
+                return allRows.toArray();
+            }
+
+            return allRows.filter(function() {
+                const row = $(this);
+                const alias = row.attr('data-alias') || '';
+                const city = row.attr('data-city') || '';
+                const county = row.attr('data-county') || '';
+                const address = row.attr('data-address') || '';
+                const samedayId = String(row.attr('data-sameday-id') || '');
+
+                return alias.indexOf(searchTerm) !== -1 ||
+                    city.indexOf(searchTerm) !== -1 ||
+                    county.indexOf(searchTerm) !== -1 ||
+                    address.indexOf(searchTerm) !== -1 ||
+                    samedayId.indexOf(searchTerm) !== -1;
+            });
+        }
+
+        function updateDisplay() {
+            filteredRows = getFilteredRows();
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            // Update current page if it's out of bounds
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            // Hide all rows first
+            $('.pickup-point-row').hide();
+            $('.no-results').hide();
+
+            // Show filtered and paginated rows
+            if (totalItems === 0) {
+                // Show existing no-results row or create one if it doesn't exist
+                if ($('.no-results').length === 0) {
+                    $('#pickup-points-tbody').append(
+                        '<tr class="no-results"><td class="text-center" colspan="8">No pickup points found</td></tr>'
+                    );
+                } else {
+                    $('.no-results').show();
+                }
+            } else {
+                // Hide no-results row if it exists
+                $('.no-results').hide();
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    $(filteredRows[i]).show();
+                }
+            }
+
+            // Update pagination info
+            const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+            $('#pickup-point-start').text(start);
+            $('#pickup-point-end').text(end);
+            $('#pickup-point-total').text(totalItems);
+            $('#pickup-point-count').text(totalItems);
+
+            // Generate pagination
+            generatePagination(totalPages);
+        }
+
+        function generatePagination(totalPages) {
+            const pagination = $('#pickup-point-pagination');
+            pagination.empty();
+
+            if (totalPages <= 1) {
+                return;
+            }
+
+            // Previous button
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.append(
+                '<li class="' + prevDisabled + '">' +
+                '<a href="#" aria-label="Previous" data-page="prev">' +
+                '<span aria-hidden="true">&laquo;</span>' +
+                '</a></li>'
+            );
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                pagination.append('<li><a href="#" data-page="1">1</a></li>');
+                if (startPage > 2) {
+                    pagination.append('<li class="disabled"><span>...</span></li>');
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === currentPage ? 'active' : '';
+                pagination.append(
+                    '<li class="' + active + '">' +
+                    '<a href="#" data-page="' + i + '">' + i + '</a></li>'
+                );
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pagination.append('<li class="disabled"><span>...</span></li>');
+                }
+                pagination.append('<li><a href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>');
+            }
+
+            // Next button
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.append(
+                '<li class="' + nextDisabled + '">' +
+                '<a href="#" aria-label="Next" data-page="next">' +
+                '<span aria-hidden="true">&raquo;</span>' +
+                '</a></li>'
+            );
+        }
+
+        // Event handlers
+        $('#pickup-point-search').on('input', function() {
+            currentPage = 1;
+            updateDisplay();
+        });
+
+        $('#pickup-point-per-page').on('change', function() {
+            itemsPerPage = parseInt($(this).val());
+            currentPage = 1;
+            updateDisplay();
+        });
+
+        $(document).on('click', '#pickup-point-pagination a', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+
+            if (page === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (page === 'next') {
+                const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                }
+            } else if (typeof page === 'number') {
+                currentPage = page;
+            }
+
+            updateDisplay();
+            $('html, body').animate({
+                scrollTop: $('#pickup-points-table').offset().top - 100
+            }, 300);
+        });
+
+        // Initialize on page load
+        $(document).ready(function() {
+            updateDisplay();
+        });
+    })();
 </script>
 
 <style>
@@ -585,10 +740,4 @@
             transform: rotate(360deg);
         }
     }
-    .references{
-        margin-top: 10px;
-    }
-    .references span sup{
-        cursor: pointer;
-    }
-</style>
+</style

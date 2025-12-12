@@ -138,6 +138,8 @@ class ControllerExtensionShippingSameday extends Controller
         $post = $this->request->post;
         $hostCountry = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
 
+        $this->model_extension_shipping_sameday->checkCodSetting();
+
         if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->validate()) {
             $post[$settingsModel->getKey('sameday_sync_until_ts')] = $this->getConfig('sameday_sync_until_ts');
             $post[$settingsModel->getKey('sameday_sync_lockers_ts')] = $this->getConfig('sameday_sync_lockers_ts');

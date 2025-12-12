@@ -8,21 +8,21 @@
             <h1>{{ heading_title }}</h1>
             <ul class="breadcrumb">
                 {% for breadcrumb in breadcrumbs %}
-                <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
                 {% endfor %}
             </ul>
         </div>
     </div>
     <div class="container-fluid">
         {% if error_success %}
-        <div class="alert alert-success"><i class="fa fa-check"></i> {{ error_success }}
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-        </div>
+            <div class="alert alert-success"><i class="fa fa-check"></i> {{ error_success }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
         {% endif %}
         {% if error_warning %}
-        <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-        </div>
+            <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
         {% endif %}
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -58,7 +58,7 @@
                             <select name="shipping_sameday_tax_class_id" id="input-tax-class" class="form-control">
                                 <option value="0">{{ text_none }}</option>
                                 {% for tax_class in tax_classes %}
-                                <option value="{{ tax_class.tax_class_id }}" {% if tax_class.tax_class_id == sameday_tax_class_id %} selected="selected" {% endif %}>{{ tax_class.title }}</option>
+                                    <option value="{{ tax_class.tax_class_id }}" {% if tax_class.tax_class_id == sameday_tax_class_id %} selected="selected" {% endif %}>{{ tax_class.title }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -69,7 +69,7 @@
                             <select name="shipping_sameday_geo_zone_id" id="input-geo-zone" class="form-control">
                                 <option value="0">{{ text_all_zones }}</option>
                                 {% for geo_zone in geo_zones %}
-                                <option value="{{ geo_zone.geo_zone_id }}" {% if  geo_zone.geo_zone_id == sameday_geo_zone_id%} selected="selected" {% endif %}>{{ geo_zone.name }}</option>
+                                    <option value="{{ geo_zone.geo_zone_id }}" {% if  geo_zone.geo_zone_id == sameday_geo_zone_id%} selected="selected" {% endif %}>{{ geo_zone.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -162,37 +162,37 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                         <thead>
-                            <tr>
-                                <td class="text-left">{{ column_internal_name }}</td>
-                                <td class="text-left">{{ column_name }}</td>
-                                <td class="text-left">{{ column_price }}</td>
-                                <td class="text-left">{{ column_price_free }}</td>
-                                <td class="text-left">{{ column_status }}</td>
-                            </tr>
+                        <tr>
+                            <td class="text-left">{{ column_internal_name }}</td>
+                            <td class="text-left">{{ column_name }}</td>
+                            <td class="text-left">{{ column_price }}</td>
+                            <td class="text-left">{{ column_price_free }}</td>
+                            <td class="text-left">{{ column_status }}</td>
+                        </tr>
                         </thead>
                         <tbody>
-                            {% if services is empty  %}
+                        {% if services is empty  %}
                             <tr>
                                 <td class="text-center" colspan="6">{{ text_services_empty }}</td>
                             </tr>
-                            {% else  %}
-                                {% for key, service in services %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{ service_links[key] }}"
-                                               {% if service.column_ooh_label is not null %}
+                        {% else  %}
+                            {% for key, service in services %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ service_links[key] }}"
+                                                {% if service.column_ooh_label is not null %}
                                                     title="{{ service.column_ooh_label }}"
-                                               {% endif %}
-                                            >{{ service.sameday_name }}
-                                            </a>
-                                        </td>
-                                        <td>{{ service.name }}</td>
-                                        <td>{{ service.price }}</td>
-                                        <td>{{ service.price_free }}</td>
-                                        <td>{{ statuses[service.status]['text'] }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% endif %}
+                                                {% endif %}
+                                        >{{ service.sameday_name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ service.name }}</td>
+                                    <td>{{ service.price }}</td>
+                                    <td>{{ service.price_free }}</td>
+                                    <td>{{ statuses[service.status]['text'] }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -205,8 +205,32 @@
                 <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="{{ text_pickupPoint_add }}"><i class="fa fa-plus"></i></a>
             </div>
             <div class="panel-body">
+                <div class="row" style="margin-bottom: 15px;">
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                            <input type="text" id="pickup-point-search" class="form-control" placeholder="Search pickup points...">
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="input-group">
+                            <span class="input-group-addon">Show</span>
+                            <select id="pickup-point-per-page" class="form-control">
+                                <option value="10" selected>10</option>
+                                <option value="20" >20</option>
+                                <option value="50">50</option>
+                            </select>
+                            <span class="input-group-addon">per page</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div id="pickup-point-info" class="text-right" style="padding-top: 8px; color: #666;">
+                            <span id="pickup-point-count">0</span> pickup points
+                        </div>
+                    </div>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                    <table class="table table-bordered table-hover" id="pickup-points-table">
                         <thead>
                         <tr>
                             <td class="text-left">{{ column_pickupPoint_samedayId }}</td>
@@ -218,26 +242,44 @@
                             <td class="text-left">{{ column_pickupPoint_action }}</td>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="pickup-points-tbody">
                         {% if pickupPoints is empty  %}
-                        <tr>
-                            <td class="text-center" colspan="5">{{ text_pickup_points_empty }}</td>
-                        </tr>
+                            <tr class="no-results">
+                                <td class="text-center" colspan="7">{{ text_pickup_points_empty }}</td>
+                            </tr>
                         {% else %}
                             {% for key, pickupPoint in pickupPoints %}
-                            <tr data-sameday-id="{{ pickupPoint.sameday_id }}">
-                                <td>{{ pickupPoint.sameday_id }}</td>
-                                <td>{{ pickupPoint.sameday_alias }}</td>
-                                <td>{{ pickupPoint.city }}</td>
-                                <td>{{ pickupPoint.county }}</td>
-                                <td>{{ pickupPoint.address }}</td>
-                                <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
-                                <td><button data-id="{{ pickupPoint.sameday_id }}" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
-                            </tr>
+                                <tr class="pickup-point-row" data-sameday-id="{{ pickupPoint.sameday_id }}"
+                                    data-alias="{{ pickupPoint.sameday_alias|lower }}"
+                                    data-city="{{ pickupPoint.city|lower }}"
+                                    data-county="{{ pickupPoint.county|lower }}"
+                                    data-address="{{ pickupPoint.address|lower }}">
+                                    <td>{{ pickupPoint.sameday_id }}</td>
+                                    <td>{{ pickupPoint.sameday_alias }}</td>
+                                    <td>{{ pickupPoint.city }}</td>
+                                    <td>{{ pickupPoint.county }}</td>
+                                    <td>{{ pickupPoint.address }}</td>
+                                    <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
+                                    <td><button data-id="{{ pickupPoint.sameday_id }}" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
+                                </tr>
                             {% endfor %}
                         {% endif %}
                         </tbody>
                     </table>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div id="pickup-point-pagination-info" style="padding-top: 8px; color: #666;">
+                            Showing <span id="pickup-point-start">0</span> to <span id="pickup-point-end">0</span> of <span id="pickup-point-total">0</span> entries
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <nav aria-label="Pickup points pagination">
+                            <ul class="pagination pull-right" id="pickup-point-pagination">
+                                <!-- Pagination will be generated by JavaScript -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -573,6 +615,186 @@
             });
         });
     });
+
+    // Pickup Points Pagination and Search
+    (function() {
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredRows = [];
+        console.log(filteredRows);
+
+        function getFilteredRows() {
+            const searchTerm = $('#pickup-point-search').val().toLowerCase().trim();
+            const allRows = $('.pickup-point-row');
+
+            if (searchTerm === '') {
+                return allRows.toArray();
+            }
+
+            return allRows.filter(function() {
+                const row = $(this);
+                const alias = row.attr('data-alias') || '';
+                const city = row.attr('data-city') || '';
+                const county = row.attr('data-county') || '';
+                const address = row.attr('data-address') || '';
+                const samedayId = String(row.attr('data-sameday-id') || '');
+
+                return alias.includes(searchTerm) ||
+                    city.includes(searchTerm) ||
+                    county.includes(searchTerm) ||
+                    address.includes(searchTerm) ||
+                    samedayId.includes(searchTerm);
+            });
+        }
+
+        function updateDisplay() {
+            filteredRows = getFilteredRows();
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            // Update current page if it's out of bounds
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            // Hide all rows first
+            $('.pickup-point-row').hide();
+            $('.no-results').hide();
+
+            // Show filtered and paginated rows
+            if (totalItems === 0) {
+                // Show existing no-results row or create one if it doesn't exist
+                if ($('.no-results').length === 0) {
+                    $('#pickup-points-tbody').append(
+                        '<tr class="no-results"><td class="text-center" colspan="7">No pickup points found</td></tr>'
+                    );
+                } else {
+                    $('.no-results').show();
+                }
+            } else {
+                // Hide no-results row if it exists
+                $('.no-results').hide();
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    $(filteredRows[i]).show();
+                }
+            }
+
+            // Update pagination info
+            const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+            $('#pickup-point-start').text(start);
+            $('#pickup-point-end').text(end);
+            $('#pickup-point-total').text(totalItems);
+            $('#pickup-point-count').text(totalItems);
+
+            // Generate pagination
+            generatePagination(totalPages);
+        }
+
+        function generatePagination(totalPages) {
+            const pagination = $('#pickup-point-pagination');
+            pagination.empty();
+
+            if (totalPages <= 1) {
+                return;
+            }
+
+            // Previous button
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.append(
+                '<li class="' + prevDisabled + '">' +
+                '<a href="#" aria-label="Previous" data-page="prev">' +
+                '<span aria-hidden="true">&laquo;</span>' +
+                '</a></li>'
+            );
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                pagination.append('<li><a href="#" data-page="1">1</a></li>');
+                if (startPage > 2) {
+                    pagination.append('<li class="disabled"><span>...</span></li>');
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === currentPage ? 'active' : '';
+                pagination.append(
+                    '<li class="' + active + '">' +
+                    '<a href="#" data-page="' + i + '">' + i + '</a></li>'
+                );
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pagination.append('<li class="disabled"><span>...</span></li>');
+                }
+                pagination.append('<li><a href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>');
+            }
+
+            // Next button
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.append(
+                '<li class="' + nextDisabled + '">' +
+                '<a href="#" aria-label="Next" data-page="next">' +
+                '<span aria-hidden="true">&raquo;</span>' +
+                '</a></li>'
+            );
+        }
+
+        // Event handlers
+        $('#pickup-point-search').on('input', function() {
+            currentPage = 1;
+            updateDisplay();
+        });
+
+        $('#pickup-point-per-page').on('change', function() {
+            itemsPerPage = parseInt($(this).val());
+            currentPage = 1;
+            updateDisplay();
+        });
+
+        $(document).on('click', '#pickup-point-pagination a', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+
+            if (page === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (page === 'next') {
+                const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                }
+            } else if (typeof page === 'number') {
+                currentPage = page;
+            }
+
+            updateDisplay();
+            $('html, body').animate({
+                scrollTop: $('#pickup-points-table').offset().top - 100
+            }, 300);
+        });
+
+        // Initialize on page load
+        $(document).ready(function() {
+            updateDisplay();
+        });
+    })();
 </script>
 
 <style>
