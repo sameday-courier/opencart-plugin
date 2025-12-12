@@ -585,10 +585,4 @@
             transform: rotate(360deg);
         }
     }
-    .references{
-        margin-top: 10px;
-    }
-    .references span sup{
-        cursor: pointer;
-    }
-</style>
+</style
