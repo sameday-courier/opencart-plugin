@@ -240,6 +240,7 @@ class ControllerExtensionShippingSameday extends Controller
             'entry_import_nomenclator_button',
             'entry_drop_down_list',
             'entry_interactive_map',
+            'entry_awb_format',
 
             'column_internal_id',
             'column_internal_name',
@@ -378,6 +379,14 @@ class ControllerExtensionShippingSameday extends Controller
         $data['url_cod_ajax'] = $this->url->link('extension/shipping/sameday/updateCod', $this->addToken(), true);
         $codConfig = $this->getConfig('sameday_cod');
         $data['cods'] = $codConfig ? json_decode($codConfig) : [];
+
+        $data['awbFormatTypes'] = [
+            AwbPdfType::A4,
+            AwbPdfType::A6
+        ];
+
+        $data['awbFormatType'] = $this->getConfig('sameday_awb_format');
+        var_dump($this->getConfig('sameday_awb_format'));
 
         $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
     }
@@ -1725,8 +1734,10 @@ class ControllerExtensionShippingSameday extends Controller
 
         $sameday = new Sameday($this->samedayHelper->initClient());
 
+        $awbFormat = $this->getConfig('sameday_awb_format');
+
         $content = $sameday->getAwbPdf(
-            new SamedayGetAwbPdfRequest($awb['awb_number'], new AwbPdfType(AwbPdfType::A4))
+            new SamedayGetAwbPdfRequest($awb['awb_number'], new AwbPdfType($awbFormat))
         );
 
         echo $content->getPdf();
