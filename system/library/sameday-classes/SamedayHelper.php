@@ -104,6 +104,9 @@ class SamedayHelper
 
     const AFTER_48_HOURS = 172800;
 
+    // Maximum weight limit in kilograms for Sameday shipping
+    const MAX_WEIGHT_KG = 1500;
+
     // PDO stands for Personal Delivery Option and is an additional tax that apply to Service
     const SERVICE_OPTIONAL_TAX_PDO_CODE = 'PDO';
 
