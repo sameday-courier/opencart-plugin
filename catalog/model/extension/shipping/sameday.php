@@ -90,10 +90,12 @@ class ModelExtensionShippingSameday extends Model
                 'title' => 'Sameday',
                 'quote' => array(),
                 'sort_order' => $this->getConfig('sameday_sort_order'),
-                'error' => sprintf('Your package weight (%s) exceeds the maximum allowed weight of %skg for 
-                Sameday shipping. Contact owner for tailored solution.',
-                    $this->weight->format($this->cart->getWeight(), $weight_class_id),
-                    SamedayHelper::MAX_WEIGHT_KG)
+                'error' => sprintf(
+             'Your package weight (%s) exceeds the maximum allowed weight of %skg for 
+                    Sameday shipping. Contact owner for tailored solution.',
+            $this->weight->format($this->cart->getWeight(), $weight_class_id),
+                    SamedayHelper::MAX_WEIGHT_KG
+                )
             );
         }
         // End of weight validation section
