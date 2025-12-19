@@ -78,6 +78,21 @@ class ModelExtensionShippingSameday extends Model
             return $method_data;
         }
 
+        // Validate maximum weight limit for Sameday shipping (convert to kg regardless of admin's chosen unit: kg, g, oz, lb)
+        $weight_class_id = $this->config->get('config_weight_class_id');
+        $weight_value = (float)($this->db->query("SELECT value FROM " . DB_PREFIX . "weight_class WHERE weight_class_id = '" . (int)$weight_class_id . "'")->row['value'] ?? 1);
+        $total_weight_kg = $this->cart->getWeight() / ($weight_value ?: 1); // Convert to kg: weight_class 'value' is multiplier FROM kg TO unit
+        
+        if ($total_weight_kg > SamedayHelper::MAX_WEIGHT_KG) {
+            return array(
+                'code' => 'sameday',
+                'title' => 'Sameday',
+                'quote' => array(),
+                'sort_order' => $this->getConfig('sameday_sort_order'),
+                'error' => sprintf('Your package weight (%s) exceeds the maximum allowed weight of %skg for Sameday shipping. Contact owner for tailored solution.', $this->weight->format($this->cart->getWeight(), $weight_class_id), SamedayHelper::MAX_WEIGHT_KG)
+            );
+        }
+
         $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
         $hostCountry = $this->getHostCountry();
         $destCountry = $address['iso_code_2'];
