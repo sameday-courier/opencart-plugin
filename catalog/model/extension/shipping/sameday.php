@@ -94,7 +94,7 @@ class ModelExtensionShippingSameday extends Model
                     'Your package weight (%s) exceeds the maximum allowed weight of %skg for 
                             Sameday shipping. Contact owner for tailored solution.',
                     $this->weight->format($this->cart->getWeight(), $weight_class_id),
-                            SamedayHelper::MAX_WEIGHT_KG
+                    SamedayHelper::MAX_WEIGHT_KG
                 )
             );
         }
