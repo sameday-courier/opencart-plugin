@@ -80,7 +80,8 @@ class ModelExtensionShippingSameday extends Model
 
         // Weight validation section
         $weight_class_id = $this->config->get('config_weight_class_id');
-        $weight_value = (float)($this->db->query("SELECT value FROM " . DB_PREFIX . "weight_class WHERE weight_class_id = '" . (int)$weight_class_id . "'")->row['value'] ?? 1);
+        $weight_value = (float)($this->db->query("SELECT value FROM " . DB_PREFIX .
+            "weight_class WHERE weight_class_id = '" . (int)$weight_class_id . "'")->row['value'] ?? 1);
         $total_weight_kg = $this->cart->getWeight() / ($weight_value ?: 1);
         
         if ($total_weight_kg > SamedayHelper::MAX_WEIGHT_KG) {
@@ -89,7 +90,10 @@ class ModelExtensionShippingSameday extends Model
                 'title' => 'Sameday',
                 'quote' => array(),
                 'sort_order' => $this->getConfig('sameday_sort_order'),
-                'error' => sprintf('Your package weight (%s) exceeds the maximum allowed weight of %skg for Sameday shipping. Contact owner for tailored solution.', $this->weight->format($this->cart->getWeight(), $weight_class_id), SamedayHelper::MAX_WEIGHT_KG)
+                'error' => sprintf('Your package weight (%s) exceeds the maximum allowed weight of %skg for 
+                Sameday shipping. Contact owner for tailored solution.',
+                    $this->weight->format($this->cart->getWeight(), $weight_class_id),
+                    SamedayHelper::MAX_WEIGHT_KG)
             );
         }
         // End of weight validation section
