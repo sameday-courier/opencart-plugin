@@ -132,9 +132,15 @@ class SamedayHelper
         ];
     }
 
-    public static function isCodCode($value, $array)
+    /**
+     * @param $value
+     * @param $array
+     *
+     * @return bool
+     */
+    public static function isCodCode($value, $array): bool
     {
-        return in_array($value, json_decode($array));
+        return in_array($value, json_decode($array, true), true);
     }
 
     /**

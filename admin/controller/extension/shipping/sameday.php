@@ -1425,7 +1425,7 @@ class ControllerExtensionShippingSameday extends Controller
         );
 
         $repayment = 0;
-        if ($this->samedayHelper->isCodCode($orderInfo['payment_code'], $this->getConfig('sameday_cod'))) {
+        if ($this->samedayHelper::isCodCode($orderInfo['payment_code'], $this->getConfig('sameday_cod'))) {
             $repayment = $this->currency->format(
                 $orderInfo['total'],
                 $orderInfo['currency_code'],
