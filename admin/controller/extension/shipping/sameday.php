@@ -153,7 +153,6 @@ class ControllerExtensionShippingSameday extends Controller
             }
 
             // Add custom sanitization for password
-            // Kt1@l&9h
             $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
             $password = $this->model_extension_shipping_sameday->sanitizeInput($post[$passKey]);
             if ('' === $password) {
