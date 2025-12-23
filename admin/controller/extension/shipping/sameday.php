@@ -135,8 +135,7 @@ class ControllerExtensionShippingSameday extends Controller
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
         $settingsModel = $this->model_extension_shipping_sameday;
-        $post = $_POST;
-        //$post = $this->request->post;
+        $post = $this->model_extension_shipping_sameday->sanitizeInputs($_POST);
         $hostCountry = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
 
         $this->model_extension_shipping_sameday->checkCodSetting();
@@ -154,7 +153,7 @@ class ControllerExtensionShippingSameday extends Controller
 
             // Add custom sanitization for password
             $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
-            $password = $this->model_extension_shipping_sameday->sanitizeInput($post[$passKey]);
+            $password = $post[$passKey];
             if ('' === $password) {
                 $password = $this->getConfig('sameday_password');
                 if ('' === $password || null === $password) {
@@ -165,7 +164,6 @@ class ControllerExtensionShippingSameday extends Controller
                     );
                 }
             }
-
             $post[$passKey] = $password;
 
             $this->model_setting_setting->editSetting(

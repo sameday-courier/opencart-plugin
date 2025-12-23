@@ -1063,6 +1063,20 @@ class ModelExtensionShippingSameday extends Model
     }
 
     /**
+     * @param array $inputs
+     *
+     * @return array
+     */
+    public static function sanitizeInputs(array $inputs): array
+    {
+        foreach ($inputs as $key => $value) {
+            $inputs[$key] = self::sanitizeInput($value);
+        }
+
+        return $inputs;
+    }
+
+    /**
      * @param string $input
      *
      * @return string
