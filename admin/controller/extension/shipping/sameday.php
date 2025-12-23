@@ -2162,16 +2162,15 @@ class ControllerExtensionShippingSameday extends Controller
         $needLogin = false;
 
         $username = $this->getConfig('sameday_username');
-        if ($this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')] !== $username) {
+        $post = $this->model_extension_shipping_sameday->sanitizeInputs($_POST);
+        if ($post[$this->model_extension_shipping_sameday->getKey('sameday_username')] !== $username) {
             // Username changed.
             $username = $this->request->post[$this->model_extension_shipping_sameday->getKey('sameday_username')];
             $needLogin = true;
         }
 
         $password = $this->getConfig('sameday_password');
-        $newPassword = $this->model_extension_shipping_sameday->sanitizeInput(
-            $_POST[$this->model_extension_shipping_sameday->getKey('sameday_password')]
-        );
+        $newPassword = $post[$this->model_extension_shipping_sameday->getKey('sameday_password')];
         if ('' !== $newPassword) {
             // Password updated.
             $password = $newPassword;
