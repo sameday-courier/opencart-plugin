@@ -80,6 +80,7 @@ $_['entry_price'] = 'Price';
 $_['entry_price_free'] = 'Free delivery price';
 $_['entry_geo_zone'] = 'Geo Zone';
 $_['entry_repayment'] = 'Repayment';
+$_['entry_repayment_title'] = 'Cash on delivery payment';
 
 // Create Awb Form Lables
 $_['awb_options'] = 'Awb options';

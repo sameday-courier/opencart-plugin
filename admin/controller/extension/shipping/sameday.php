@@ -135,7 +135,8 @@ class ControllerExtensionShippingSameday extends Controller
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
         $settingsModel = $this->model_extension_shipping_sameday;
-        $post = $this->request->post;
+        $post = $_POST;
+        //$post = $this->request->post;
         $hostCountry = $this->getConfig('sameday_host_country') ?? $this->samedayHelper::API_HOST_LOCALE_RO;
 
         $this->model_extension_shipping_sameday->checkCodSetting();
@@ -152,6 +153,7 @@ class ControllerExtensionShippingSameday extends Controller
             }
 
             // Add custom sanitization for password
+            // Kt1@l&9h
             $passKey = $this->model_extension_shipping_sameday->getKey('sameday_password');
             $password = $this->model_extension_shipping_sameday->sanitizeInput($post[$passKey]);
             if ('' === $password) {
@@ -388,7 +390,6 @@ class ControllerExtensionShippingSameday extends Controller
         ];
 
         $data['awbFormatType'] = $this->getConfig('sameday_awb_format');
-        var_dump($this->getConfig('sameday_awb_format'));
 
         $this->response->setOutput($this->load->view('extension/shipping/sameday', $data));
     }
@@ -1947,7 +1948,7 @@ class ControllerExtensionShippingSameday extends Controller
 
         $parcelDimensions = [];
         foreach ($params['sameday_package_weight'] as $k => $weight) {
-            if (!strlen($weight) || $weight < 1) {
+            if ($weight === '' || $weight < 1) {
                 $return['errors'][] = $this->language->get('error_weight_cost');
             }
 
