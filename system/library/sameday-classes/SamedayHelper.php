@@ -19,12 +19,7 @@ class SamedayHelper
      * @var array $samedayConfigs
      */
     private $samedayConfigs;
-//    const CASH_ON_DELIVERY_CODE = 'cod';
-
-    public static function getCashOnDeliveryCode($registry) {
-        $config = $registry->get('config');
-        return $config->get('shipping_sameday_cod');
-    }
+    const CASH_ON_DELIVERY_CODE = 'cod';
     const SAMEDAY_6H_SERVICE = '6H';
     const DEFAULT_SAMEDAY_SERVICE = '24';
     const LOCKER_NEXT_DAY_SERVICE = 'LN';
@@ -32,9 +27,7 @@ class SamedayHelper
     const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
     const OOH_SERVICE_CODE = 'OOH';
-
     const OOH_CROSSBORDER_SERVICE_CODE = 'OOH_CROSSBORDER';
-
     const OOH_TYPES = [
         0 => self::LOCKER_NEXT_DAY_SERVICE,
         1 => self::SAMEDAY_PUDO_SERVICE,
@@ -106,19 +99,17 @@ class SamedayHelper
 
     // PDO stands for Personal Delivery Option and is an additional tax that apply to Service
     const SERVICE_OPTIONAL_TAX_PDO_CODE = 'PDO';
-
     const API_PROD = 0;
     const API_DEMO = 1;
-
     const API_HOST_LOCALE_RO = 'RO';
     const API_HOST_LOCALE_HU = 'HU';
     const API_HOST_LOCALE_BG = 'BG';
-
     const SAMEDAY_ELIGIBLE_CURRENCIES = [
         self::API_HOST_LOCALE_RO => 'RON',
         self::API_HOST_LOCALE_HU => 'HUF',
         self::API_HOST_LOCALE_BG => 'BGN',
     ];
+    const EURO_CURRENCY = "EUR";
 
     /**
      * @return string[][]
@@ -141,9 +132,15 @@ class SamedayHelper
         ];
     }
 
-    public static function isCodCode($value, $array)
+    /**
+     * @param $value
+     * @param $array
+     *
+     * @return bool
+     */
+    public static function isCodCode($value, $array): bool
     {
-        return in_array($value, json_decode($array));
+        return in_array($value, json_decode($array, true), true);
     }
 
     /**
@@ -266,6 +263,26 @@ class SamedayHelper
         }
 
         return self::OOH_TYPES[0];
+    }
+
+    /**
+     * @param float $amount
+     *
+     * @return string
+     */
+    public static function convertBGNtoEUR(float $amount): string
+    {
+        return number_format(($amount * 0.511292), 2, '.', '');
+    }
+
+    /**
+     * @param float $amount
+     *
+     * @return string
+     */
+    public static function convertEURtoBGN(float $amount): string
+    {
+        return number_format(($amount * 1.95583), 2, '.', '');
     }
 
     public static function getCodValues($registry)

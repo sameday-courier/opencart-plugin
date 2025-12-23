@@ -11,6 +11,7 @@ use Sameday\Objects\Locker\LockerObject;
 use Sameday\Objects\ParcelDimensionsObject;
 use Sameday\Objects\Types\AwbPaymentType;
 use Sameday\Objects\Types\PackageType;
+use Sameday\Responses\SamedayPostAwbEstimationResponse;
 
 class ModelExtensionShippingSameday extends Model
 {
@@ -93,6 +94,7 @@ class ModelExtensionShippingSameday extends Model
         );
 
         $quote_data = array();
+        $quoteText = '';
 
         if (empty($availableService)) {
             return null;
@@ -104,6 +106,7 @@ class ModelExtensionShippingSameday extends Model
             ) {
                 continue;
             }
+            $quoteTitle = $service['name'];
 
             if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
                 if ('' === $lockerMaxItems = ($this->getConfig('sameday_locker_max_items') ?? '')) {
@@ -121,10 +124,35 @@ class ModelExtensionShippingSameday extends Model
                 $price = 0;
             }
 
-            if ($isEstimatedCostEnabled) {
-                $estimatedCost = $this->estimateCost($address, $service['sameday_id']);
-                if ($estimatedCost !== null) {
-                    $price = $estimatedCost;
+            if ($isEstimatedCostEnabled
+                && null !== $estimation = $this->estimateCost($address, $service['sameday_id'])
+            ) {
+                $price = $estimation->getCost();
+
+                // Business logic for Bulgaria Currency Rules
+                $storeCurrency = $this->session->data['currency'];
+                $estimatedCurrency = $estimation->getCurrency();
+                if (($storeCurrency !== $estimatedCurrency)) {
+                    if ($storeCurrency === $this->samedayHelper::EURO_CURRENCY) {
+                        $price = $this->samedayHelper::convertBGNtoEUR($price);
+                        $estimatedPrice = $estimation->getCost();
+                    }
+
+                    $bulgarianCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[
+                        $this->samedayHelper::API_HOST_LOCALE_BG
+                    ];
+                    if ($storeCurrency === $bulgarianCurrency) {
+                        $price = $this->samedayHelper::convertEURtoBGN($price);
+                        $estimatedPrice = $estimation->getCost();
+                    }
+
+                    if (isset($estimatedPrice)) {
+                        $quoteTitle .= sprintf(
+                            " (≈ %s %s) ",
+                            $estimatedPrice,
+                            $estimatedCurrency
+                        );
+                    }
                 }
             }
 
@@ -142,7 +170,7 @@ class ModelExtensionShippingSameday extends Model
                     $service['sameday_id']
                 ),
                 'service_id' => $service['sameday_id'],
-                'title' => $service['name'],
+                'title' => $quoteTitle,
                 'cost' => $price,
                 'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
                 'text' => $this->currency->format(
@@ -474,7 +502,7 @@ class ModelExtensionShippingSameday extends Model
      * @param array $address
      * @param int $serviceId
      *
-     * @return float|null
+     * @return null|SamedayPostAwbEstimationResponse
      *
      * @throws SamedayAuthenticationException
      * @throws SamedayAuthorizationException
@@ -524,7 +552,7 @@ class ModelExtensionShippingSameday extends Model
         $sameday = new Sameday\Sameday($this->samedayHelper->initClient());
 
         try {
-            return $sameday->postAwbEstimation($estimateCostRequest)->getCost();
+            return $sameday->postAwbEstimation($estimateCostRequest);
         } catch (SamedayBadRequestException $exception) {
             return null;
         } catch (SamedaySDKException $exception) {
