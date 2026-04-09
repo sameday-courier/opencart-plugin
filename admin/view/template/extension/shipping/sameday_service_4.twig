@@ -1,0 +1,116 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="float-end">
+                <button type="submit" form="form-custom" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+                <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+            <h1>{{ heading_title_service }}</h1>
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                <li class="breadcrumb-item"><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if error_success %}
+        <div class="alert alert-success alert-dismissible fade show"><i class="fa fa-check"></i> {{ error_success }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
+        </div>
+        {% endif %}
+        {% if error_warning %}
+        <div class="alert alert-danger alert-dismissible fade show"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
+        </div>
+        {% endif %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-pencil"></i> {{ text_edit_service }}
+            </div>
+            <div class="card-body">
+                <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-custom" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-name">{{ entry_name }}</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="name" value="{{ name }}" {{ disabled }} placeholder="{{ entry_name }}" id="input-name" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-price">{{ entry_price }}</label>
+                        <div class="col-sm-10">
+                            <input type="number" name="price" step="any" value="{{ price }}" placeholder="{{ entry_price }}" min="0" id="input-price" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-price">{{ entry_price_free }}</label>
+                        <div class="col-sm-10">
+                            <input type="number" name="price_free" step="any" value="{{ price_free }}" placeholder="{{ entry_price_free }}" min="0" id="input-price" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+                        <div class="col-sm-10">
+                            <select name="status" id="input-status" class="form-control">
+                                {% for key in statuses %}
+                                <option value="{{ key.value }}" {% if key.value == status %} selected="selected" {% endif %}> {{ key.text }} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ footer }}
+
+<script type="text/javascript">
+
+    $('.date_from').datetimepicker({
+        sideBySide: true,
+        format: 'LT',
+        icons: {
+            time: 'fa fa-time',
+            date: 'fa fa-calendar',
+            up: 'fa fa-chevron-circle-up',
+            down: 'fa fa-chevron-circle-down',
+        },
+
+        inline: true,
+        maskInput: false,           // disables the text input mask
+        pickDate: false,            // disables the date picker
+        pickTime: true,            // disables de time picker
+        pick12HourFormat: true,   // enables the 12-hour format time picker
+        pickSeconds: false,         // disables seconds in the time picker
+        startDate: -Infinity,      // set a minimum date
+        endDate: Infinity        // set a maximum date
+    });
+
+    $('.date_to').datetimepicker({
+        format: 'LT',
+        sideBySide: true,
+        icons: {
+            time: 'fa fa-time',
+            date: 'fa fa-calendar',
+            up: 'fa fa-chevron-circle-up',
+            down: 'fa fa-chevron-circle-down',
+        },
+
+        inline: true,
+        maskInput: false,           // disables the text input mask
+        pickDate: false,            // disables the date picker
+        pickTime: true,            // disables de time picker
+        pick12HourFormat: true,   // enables the 12-hour format time picker
+        pickSeconds: false,         // disables seconds in the time picker
+        startDate: -Infinity,      // set a minimum date
+        endDate: Infinity        // set a maximum date
+    });
+
+    $('#input-status').trigger('change');
+</script>
+
+
+
+
+
