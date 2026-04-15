@@ -26,8 +26,7 @@
                     <div class="appendEstimateCost"></div>
                     <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-shipping" class="form-horizontal">
                         {% if awb_errors is not null %}
-                        <div class="alert alert-danger fade in">
-                            <a href="#" class="close" data-dismiss="alert">&times;</a>
+                        <div class="alert alert-danger" role="alert">
                             <ul>
                                 {% for error in awb_errors %}
                                 <li>
@@ -35,6 +34,7 @@
                                 </li>
                                 {% endfor %}
                             </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                         {% endif %}
 
@@ -487,10 +487,10 @@
                 "</li>\n";
         }
 
-        return "<div class=\"alert " + alertType + " fade in\">\n" +
-            "<a href=\"#\" class=\"close\" data-dismiss=\"alert\">&times;</a>\n" +
+        return "<div class=\"alert " + alertType + "\" role=\"alert\">\n" +
             "<ul>\n" + _msg
         "</ul>\n" +
+        "<button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button>\n" +
         "</div>";
     }
 
