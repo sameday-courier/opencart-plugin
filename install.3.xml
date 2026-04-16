@@ -116,17 +116,6 @@
             ]]></add>
         </operation>
     </file>
-    <file path="admin/view/template/sale/order_list.twig">
-        <operation>
-            <search><![CDATA[
-                <td class="text-right">{{ column_action }}</td>
-            ]]></search>
-            <add position="before"><![CDATA[
-                <td class="text-left">AWB Feedback</td>
-                <td class="text-left">AWB Actions</td>
-            ]]></add>
-        </operation>
-    </file>
     <file path="admin/view/template/sale/order_info.twig">
         <operation>
             <search><![CDATA[
