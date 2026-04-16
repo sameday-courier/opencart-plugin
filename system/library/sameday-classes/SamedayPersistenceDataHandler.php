@@ -14,6 +14,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
 
     protected $registry;
     protected $loader;
+
     /**
      * @var \SamedayVersionValidator
      */
@@ -72,9 +73,8 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     private function getModel()
     {
-//        $this->loader->model('extension/sameday/shipping/sameday');
-        $this->loader->model($this->modelPath);
+        $this->loader->model('extension/sameday/shipping/sameday');
 
-        return $this->registry->get($this->magicMethod);
+        return $this->registry->get('model_extension_sameday_shipping_sameday');
     }
 }
