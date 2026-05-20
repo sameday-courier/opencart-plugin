@@ -4,6 +4,7 @@
 $_['heading_title'] = 'Sameday';
 $_['heading_title_service'] = 'Edit Sameday service';
 $_['heading_title_add_awb'] = 'Add Awb';
+$_['heading_title_add_parcel'] = 'Add parcel to AWB';
 
 // Text
 $_['text_shipping'] = 'Shipping';
@@ -47,6 +48,25 @@ $_['text_sameday_awb'] = 'Sameday AWB';
 $_['text_button_add_awb'] = 'Generate AWB';
 $_['text_button_delete_awb'] = 'Delete AWB';
 $_['text_button_show_awb'] = 'Show AWB as pdf';
+$_['text_button_add_parcel'] = 'Add parcel';
+$_['text_create_parcel'] = 'Add parcel';
+$_['text_awb_number'] = 'AWB number';
+$_['text_existing_parcels'] = 'Parcels on this AWB';
+$_['text_parcel_added_success'] = 'Parcel %s was added successfully.';
+
+$_['heading_title_bulk_delete_awb'] = 'Bulk AWB removal';
+$_['text_bulk_delete_awb'] = 'Remove AWB';
+$_['text_bulk_delete_awb_confirm'] = 'You are about to remove Sameday AWB for %d order(s). This deletes the AWB in Sameday and in the shop.';
+$_['text_bulk_delete_awb_agree'] = 'I understand that AWB removal cannot be undone.';
+$_['text_bulk_delete_progress'] = 'Removing AWBs';
+$_['text_bulk_delete_complete'] = 'AWB removal complete';
+$_['text_bulk_delete_complete_sub'] = 'Bulk AWB removal finished';
+$_['text_bulk_delete_removed'] = 'Removed';
+$_['text_bulk_delete_removed_meta'] = 'AWB removed successfully';
+$_['text_bulk_delete_failed'] = 'Failed';
+$_['text_bulk_delete_failed_meta'] = 'Removal failed';
+$_['text_bulk_delete_logs'] = 'Removal logs';
+$_['text_awb_removed_success'] = 'AWB removed successfully';
 
 $_['text_awb_sync'] = 'Wait for the data to be synchronized...';
 $_['text_summary'] = 'Summary';
@@ -102,6 +122,8 @@ $_['entry_pickup_point'] = 'Pickup point';
 $_['entry_pickup_point_title'] = 'Choose from your pickup point list';
 $_['entry_third_party_pickup_title'] = 'Choose if you want to pickup from third party';
 $_['entry_observation_title'] = 'This will apear on awb ';
+$_['entry_parcel_last'] = 'Last parcel';
+$_['entry_parcel_last_title'] = 'Mark if this is the final parcel for this AWB';
 $_['entry_client_reference_title'] = 'Default value is Order ID';
 $_['entry_ramburs_title'] = 'Ramburs value (initial value is based on the total amount of order only for Cash on delivery (cod) payment method) If the client select another payment method the value of this field will be set as 0';
 $_['entry_package_type'] = 'Package Type';

@@ -9,4 +9,3 @@ require_once DIR_SYSTEM . 'library/sameday-classes/SamedayTraitCatalogModel.php'
 class ModelExtensionShippingSameday extends \Model{
     use \SamedayTraitCatalogModel;
 }
-class_alias(__NAMESPACE__ . '\\ModelExtensionShippingSameday', 'ModelExtensionShippingSameday');

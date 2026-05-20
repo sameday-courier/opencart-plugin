@@ -1,0 +1,840 @@
+<?php
+
+use Sameday\Exceptions\SamedayAuthenticationException;
+use Sameday\Exceptions\SamedayAuthorizationException;
+use Sameday\Exceptions\SamedayBadRequestException;
+use Sameday\Exceptions\SamedayNotFoundException;
+use Sameday\Exceptions\SamedayOtherException;
+use Sameday\Exceptions\SamedaySDKException;
+use Sameday\Exceptions\SamedayServerException;
+use Sameday\Objects\Locker\LockerObject;
+use Sameday\Objects\ParcelDimensionsObject;
+use Sameday\Objects\Types\AwbPaymentType;
+use Sameday\Objects\Types\PackageType;
+use Sameday\Responses\SamedayPostAwbEstimationResponse;
+
+trait SamedayTraitCatalogModel {
+    /**
+     * @var SamedayHelper
+     */
+    private $samedayHelper;
+
+    /**
+     * @var SamedayVersionValidator
+     *
+     */
+    private $samedayVersionValidator;
+
+    /**
+     * @param mixed $registry
+     */
+    public function __construct($registry)
+    {
+        parent::__construct($registry);
+        $this->samedayVersionValidator = Samedayclasses::getSamedayVersionValidator();
+        $this->samedayHelper = Samedayclasses::getSamedayHelper($this->buildRequest(), $registry, $this->getPrefix());
+    }
+
+    /**
+     * @param array $address
+     * @return array|null
+     * @throws SamedaySDKException
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
+     * @throws SamedayOtherException
+     * @throws SamedayServerException
+     */
+    public function getQuote(array $address)
+    {
+        try {
+            return $this->getQuoteInternal($address);
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * @param array $address
+     * @return array|null
+     */
+    private function getQuoteInternal(array $address)
+    {
+        if (!$this->config->get('shipping_sameday_status')) {
+            return [];
+        }
+
+        if (empty($address['country_id'])) {
+            return [];
+        }
+
+        if (!isset($address['iso_code_2']) || $address['iso_code_2'] === '') {
+            $country = $this->db->query("SELECT iso_code_2 FROM `" . DB_PREFIX . "country` WHERE country_id = '" . (int)$address['country_id'] . "'");
+            $address['iso_code_2'] = $country->num_rows ? $country->row['iso_code_2'] : '';
+        }
+
+        if (!isset($address['zone'])) {
+            $address['zone'] = '';
+        }
+
+        $table = DB_PREFIX . "zone_to_geo_zone";
+        $countryId = (int) $address['country_id'];
+        $zoneId = (int) ($address['zone_id'] ?? 0);
+
+        $query = $this->db->query(
+            "SELECT * FROM $table WHERE 
+            geo_zone_id='{$this->getConfig('sameday_geo_zone_id')}'
+            AND country_id=$countryId
+            AND (zone_id=$zoneId OR zone_id=0)"
+        );
+
+        if (!$this->getConfig('sameday_geo_zone_id')) {
+            $status = true;
+        } elseif ($query->num_rows) {
+            $status = true;
+        } else {
+            $status = false;
+        }
+
+        $this->load->language($this->samedayVersionValidator->buildModelPath());
+
+        $method_data = array();
+        if (!$status) {
+            return $method_data;
+        }
+
+        // Weight validation section
+        $weight_class_id = $this->config->get('config_weight_class_id');
+        $weight_value = (float)($this->db->query("SELECT value FROM " . DB_PREFIX .
+            "weight_class WHERE weight_class_id = '" . (int)$weight_class_id . "'")->row['value'] ?? 1);
+        $total_weight_kg = $this->cart->getWeight() / ($weight_value ?: 1);
+
+        if ($total_weight_kg > $this->samedayHelper::MAX_WEIGHT_KG) {
+            return array(
+                'code' => 'sameday',
+                'title' => 'Sameday',
+                'name' => 'Sameday',
+                'quote' => array(),
+                'sort_order' => $this->getConfig('sameday_sort_order'),
+                'error' => sprintf(
+                    'Your package weight (%s) exceeds the maximum allowed weight of %skg for 
+                            Sameday shipping. Contact owner for tailored solution.',
+                    $this->weight->format($this->cart->getWeight(), $weight_class_id),
+                    $this->samedayHelper::MAX_WEIGHT_KG
+                )
+            );
+        }
+        // End of weight validation section
+
+        $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
+        $hostCountry = $this->getHostCountry();
+        $destCountry = $address['iso_code_2'];
+
+        $eligibleServices = $hostCountry === $destCountry
+            ? $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES
+            : $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES_CROSSBORDER;
+        $availableService = array_filter(
+            $this->getAvailableServices(),
+            static function (array $service) use ($eligibleServices) {
+                return in_array($service['sameday_code'], $eligibleServices);
+            }
+        );
+
+        $quote_data = array();
+        $quoteText = '';
+
+        if (empty($availableService)) {
+            return [
+                'code'       => 'sameday',
+                'title'      => 'Sameday',
+                'name'       => 'Sameday',
+                'quote'      => [],
+                'sort_order' => (int) $this->getConfig('sameday_sort_order'),
+                'error'      => $this->language->get('text_no_services'),
+            ];
+        }
+
+        foreach ($availableService as $service) {
+            if ($service['sameday_code'] === $this->samedayHelper::SAMEDAY_6H_SERVICE
+                && $address['zone'] !== "Bucuresti"
+            ) {
+                continue;
+            }
+            $quoteTitle = $service['name'];
+
+            if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
+                if ('' === $lockerMaxItems = ($this->getConfig('sameday_locker_max_items') ?? '')) {
+                    $lockerMaxItems = $this->samedayHelper::DEFAULT_VALUE_LOCKER_MAX_ITEMS;
+                }
+
+                if ((count($this->cart->getProducts()) > $lockerMaxItems)) {
+                    continue;
+                }
+            }
+
+            $price = $service['price'];
+
+            if ($service['price_free'] !== null && $this->cart->getSubtotal() >= $service['price_free']) {
+                $price = 0;
+            }
+
+            if ($isEstimatedCostEnabled
+                && null !== $estimation = $this->estimateCost($address, $service['sameday_id'])
+            ) {
+                $price = $estimation->getCost();
+
+                // Business logic for Bulgaria Currency Rules
+                $storeCurrency = $this->session->data['currency'];
+                $estimatedCurrency = $estimation->getCurrency();
+                if (($storeCurrency !== $estimatedCurrency)) {
+                    if ($storeCurrency === $this->samedayHelper::EURO_CURRENCY) {
+                        $price = $this->samedayHelper::convertBGNtoEUR($price);
+                        $estimatedPrice = $estimation->getCost();
+                    }
+
+                    $bulgarianCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[
+                    $this->samedayHelper::API_HOST_LOCALE_BG
+                    ];
+                    if ($storeCurrency === $bulgarianCurrency) {
+                        $price = $this->samedayHelper::convertEURtoBGN($price);
+                        $estimatedPrice = $estimation->getCost();
+                    }
+
+                    if (isset($estimatedPrice)) {
+                        $quoteTitle .= sprintf(
+                            " (≈ %s %s) ",
+                            $estimatedPrice,
+                            $estimatedCurrency
+                        );
+                    }
+                }
+            }
+
+            $serviceCode = $service['sameday_code'];
+            if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
+                $serviceCode = $this->samedayHelper::OOH_SERVICE_CODE;
+            }
+
+            $quote_data[$serviceCode] = array(
+                'sameday_name' => $service['name'],
+                'code' => sprintf(
+                    '%s.%s.%s',
+                    'sameday',
+                    $serviceCode,
+                    $service['sameday_id']
+                ),
+                'name' => $service['name'],
+                'service_id' => $service['sameday_id'],
+                'title' => $quoteTitle,
+                'cost' => $price,
+                'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
+                'text' => $this->currency->format(
+                    $this->tax->calculate(
+                        $price,
+                        $this->getConfig('sameday_tax_class_id'),
+                        $this->getConfig('config_tax')
+                    ),
+                    $this->session->data['currency']
+                ),
+            );
+
+            if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
+                if (true === $this->isShowLockersMap()) {
+                    $quote_data[$serviceCode]['lockers'] = '';
+                    $quote_data[$serviceCode]['destCountry'] = $destCountry;
+                    $quote_data[$serviceCode]['destCity'] = $address['city'];
+                    $quote_data[$serviceCode]['destCounty'] = $address['zone'];
+                    $quote_data[$serviceCode]['apiUsername'] = $this->getApiUsername();
+                } else {
+                    $this->syncLockers();
+
+                    $quote_data[$serviceCode]['lockers'] = $this->showLockersList();
+                }
+            }
+        }
+
+        if (empty($quote_data)) {
+            return [
+                'code'       => 'sameday',
+                'title'      => 'Sameday',
+                'name'       => 'Sameday',
+                'quote'      => [],
+                'sort_order' => (int) $this->getConfig('sameday_sort_order'),
+                'error'      => $this->language->get('text_no_services'),
+            ];
+        }
+
+        return array(
+            'code' => 'sameday',
+            'title' => 'Sameday',
+            'name' => 'Sameday',
+            'quote' => $quote_data,
+            'sort_order' => $this->getConfig('sameday_sort_order'),
+            'error' => false
+        );
+    }
+
+    /**
+     * @return array
+     */
+    private function buildRequest(): array
+    {
+        $keys = \SamedayHelper::SAMEDAY_CATALOG_CONFIGS;
+
+        $entries = [];
+        foreach ($keys as $key) {
+            $entries["sameday_$key"] = $this->request->post["{$this->getPrefix()}sameday_$key"]
+                ?? $this->getConfig("sameday_$key")
+            ;
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @return void
+     *
+     * @throws SamedaySDKException
+     */
+    private function syncLockers()
+    {
+        $time = time();
+
+        if ($time >= (((int) $this->getConfig('sameday_sync_lockers_ts')) + $this->samedayHelper::AFTER_48_HOURS)) {
+            $this->lockersRefresh();
+        }
+    }
+
+    /**
+     * @return void
+     *
+     * @throws SamedaySDKException
+     */
+    private function lockersRefresh()
+    {
+        $this->load->model($this->samedayVersionValidator->buildModelPath());
+        $sameday = new \Sameday\Sameday($this->samedayHelper->initClient());
+
+        $request = new Sameday\Requests\SamedayGetLockersRequest();
+
+        try {
+            $lockers = $sameday->getLockers($request)->getLockers();
+        } catch (\Exception $exception) {
+            return;
+        }
+
+        $remoteLockers = [];
+        foreach ($lockers as $lockerObject) {
+            $locker = $this->getLockerSameday($lockerObject->getId());
+            if (!$locker) {
+                $this->addLocker($lockerObject);
+            } else {
+                $this->updateLocker($lockerObject, $locker['id']);
+            }
+
+            $remoteLockers[] = $lockerObject->getId();
+        }
+
+        // Build array of local lockers.
+        $localLockers = array_map(
+            static function ($locker) {
+                if (isset($locker['id'])) {
+                    return array(
+                        'id' => (int) $locker['id'],
+                        'sameday_id' => (int) $locker['locker_id'],
+                    );
+                }
+
+                return false;
+            },
+            $this->getLockers()
+        );
+
+        // Delete local lockers that aren't present in remote lockers anymore.
+        foreach ($localLockers as $localLocker) {
+            if (!in_array($localLocker['sameday_id'], $remoteLockers, true)) {
+                $this->deleteLocker($localLocker['id']);
+            }
+        }
+
+        $this->updateLastSyncTimestamp();
+    }
+
+    /**
+     * @return void
+     */
+    private function updateLastSyncTimestamp()
+    {
+        $store_id = 0;
+        $code = "{$this->getPrefix()}sameday";
+        $key = "{$this->getPrefix()}sameday_sync_lockers_ts";
+        $time = time();
+
+        $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
+
+        if ($lastTimeSynced === null) {
+            $this->db->query(
+                sprintf(
+                    "INSERT INTO %s SET `store_id` = %d, `code` = '%s', `key` = '%s', `value` = '%s'",
+                    DB_PREFIX . "setting",
+                    $store_id,
+                    $this->db->escape($code),
+                    $this->db->escape($key),
+                    $this->db->escape($time)
+                )
+            );
+        }
+
+        $lastTs = $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `store_id` = %d AND `code` = '%s' AND `key` = '%s'",
+                DB_PREFIX . "setting",
+                $store_id,
+                $this->db->escape($code),
+                $this->db->escape($key)
+            )
+        )->row;
+
+        $this->db->query(
+            sprintf(
+                "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%s'",
+                DB_PREFIX . "setting",
+                $this->db->escape($time),
+                $this->db->escape($lastTs['setting_id'])
+            )
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public function getLockers(): array
+    {
+        return (array) $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `testing` = '%s'",
+                DB_PREFIX . "sameday_locker",
+                $this->db->escape($this->getPrefix())
+            )
+        )->rows;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isShowLockersMap(): bool
+    {
+        if ($this->getConfig('sameday_show_lockers_map') === '0') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
+    public function showLockersList(): array
+    {
+        $lockers = array();
+        foreach ($this->getLockers() as $locker) {
+            if ('' !== $locker['city']) {
+                $lockers[$locker['city'] . ' (' . $locker['county'] . ')'][] = $locker;
+            }
+        }
+
+        return $lockers;
+    }
+
+    /**
+     * @param int $lockerId
+     *
+     * @return mixed
+     */
+    private function getLockerSameday(int $lockerId)
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `locker_id` = '%s' AND `testing` = '%s'",
+                DB_PREFIX . "sameday_locker",
+                $lockerId,
+                $this->isTesting()
+            )
+        )->row;
+    }
+
+    /**
+     * @param LockerObject $lockerObject
+     *
+     * @return void
+     */
+    private function addLocker(LockerObject $lockerObject)
+    {
+        $query = '
+            INSERT INTO ' . DB_PREFIX . "sameday_locker (
+                locker_id,
+                name,
+                county,
+                city,
+                address,
+                lat,
+                lng,
+                postal_code,
+                boxes,
+                testing
+            ) VALUES (
+                '{$this->db->escape($lockerObject->getId())}',
+                '{$this->db->escape($lockerObject->getName())}',
+                '{$this->db->escape($lockerObject->getCounty())}',
+                '{$this->db->escape($lockerObject->getCity())}',
+                '{$this->db->escape($lockerObject->getAddress())}',
+                '{$this->db->escape($lockerObject->getLat())}',
+                '{$this->db->escape($lockerObject->getLong())}',
+                '{$this->db->escape($lockerObject->getPostalCode())}',
+                '{$this->db->escape(serialize($lockerObject->getBoxes()))}',
+                '{$this->isTesting()}')";
+
+        $this->db->query($query);
+    }
+
+    /**
+     * @param LockerObject $lockerObject
+     * @param int $lockerId
+     *
+     * @return void
+     */
+    private function updateLocker(LockerObject $lockerObject, int $lockerId)
+    {
+        $this->db->query(
+            'UPDATE ' . DB_PREFIX . "sameday_locker SET 
+                name='{$this->db->escape($lockerObject->getName())}',
+                city='{$this->db->escape($lockerObject->getCity())}', 
+                county='{$this->db->escape($lockerObject->getCounty())}',
+                address='{$this->db->escape($lockerObject->getAddress())}',
+                lat='{$this->db->escape($lockerObject->getLat())}',
+                lng='{$this->db->escape($lockerObject->getLong())}',
+                postal_code='{$this->db->escape($lockerObject->getPostalCode())}',
+                boxes='{$this->db->escape(serialize($lockerObject->getBoxes()))}'
+            WHERE 
+                id='$lockerId'
+            "
+        );
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return void
+     */
+    private function deleteLocker(int $id)
+    {
+        $this->db->query(
+            sprintf(
+                "DELETE FROM %s WHERE `id` = %d",
+                DB_PREFIX . "sameday_locker",
+                $id
+            )
+        );
+    }
+
+    /**
+     * @return mixed
+     */
+    private function isTesting()
+    {
+        return $this->getConfig('sameday_testing');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHostCountry()
+    {
+        return $this->getConfig('sameday_host_country');
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiUsername(): string
+    {
+        return $this->getConfig('sameday_username');
+    }
+
+    /**
+     * @param array $address
+     * @param int $serviceId
+     *
+     * @return null|SamedayPostAwbEstimationResponse
+     *
+     * @throws SamedayAuthenticationException
+     * @throws SamedayAuthorizationException
+     * @throws SamedayNotFoundException
+     * @throws SamedayOtherException
+     * @throws SamedaySDKException
+     * @throws SamedayServerException
+     */
+    private function estimateCost(array $address, int $serviceId)
+    {
+        $pickupPointId = $this->getDefaultPickupPointId();
+        $weight = $this->cart->getWeight();
+
+        $selectedPaymentMethod = $this->request->cookie['selected_payment_method'] ?? null;
+        $repayment = 0;
+        if (null === $selectedPaymentMethod || $this->samedayHelper::CASH_ON_DELIVERY_CODE === $selectedPaymentMethod) {
+            $repayment = $this->cart->getTotal();
+        }
+
+        $estimateCostRequest = new Sameday\Requests\SamedayPostAwbEstimationRequest(
+            $pickupPointId,
+            null,
+            new Sameday\Objects\Types\PackageType(
+                PackageType::PARCEL
+            ),
+            [new ParcelDimensionsObject($weight)],
+            $serviceId,
+            new Sameday\Objects\Types\AwbPaymentType(
+                AwbPaymentType::CLIENT
+            ),
+            new Sameday\Objects\PostAwb\Request\AwbRecipientEntityObject(
+                ucwords(strtolower($address['city'])) !== 'Bucuresti' ? $address['city'] : 'Sector 1',
+                $address['zone'],
+                ltrim($address['address_1']) . " " . $address['address_2'],
+                null,
+                null,
+                null,
+                null,
+                $address['postcode']
+            ),
+            0,
+            $repayment,
+            null,
+            array()
+        );
+
+        $sameday = new Sameday\Sameday($this->samedayHelper->initClient());
+
+        try {
+            return $sameday->postAwbEstimation($estimateCostRequest);
+        } catch (SamedayBadRequestException $exception) {
+            return null;
+        } catch (SamedaySDKException $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * @return array
+     */
+    private function getAvailableServices(): array
+    {
+        $services = $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE testing='%s' AND status > 0",
+                DB_PREFIX . "sameday_service",
+                $this->isTesting()
+            )
+        )->rows;
+
+        $availableServices = array();
+        foreach ($services as $service) {
+            if (1 === (int) $service['status']) {
+                $availableServices[] = $service;
+            }
+        }
+
+        return $availableServices;
+    }
+
+    /**
+     * @return array|null
+     */
+    private function getDefaultPickupPointId()
+    {
+        $defaultPickupPoint = $this->db->query(
+            sprintf(
+                "SELECT sameday_id FROM %s WHERE testing='%s' AND default_pickup_point=1",
+                DB_PREFIX . "sameday_pickup_point",
+                $this->isTesting()
+            )
+        )->row;
+
+        if (empty($defaultPickupPoint)) {
+            return null;
+        }
+
+        return $defaultPickupPoint['sameday_id'];
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function getConfig(string $key)
+    {
+        return $this->config->get("{$this->getPrefix()}$key");
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrefix(): string
+    {
+        if (strpos(VERSION, '2') === 0) {
+            return '';
+        }
+
+        return 'shipping_';
+    }
+
+    /**
+     * Store order_id and locker_id in oc_sameday_orders_locker (used after order is created).
+     *
+     * @param int $order_id
+     * @param int $locker_id
+     * @return void
+     */
+    public function addOrderLocker(int $order_id, mixed $locker): void
+    {
+        if($order_id == null || $locker == null) {
+            return;
+        }
+        $this->db->query(sprintf(
+            "INSERT INTO %ssameday_orders_locker (order_id, locker) VALUES (%d, '%s')",
+            DB_PREFIX,
+            (int) $order_id,
+            $this->db->escape(json_encode($locker))
+        ));
+    }
+
+    /**
+     * @param string $code
+     * @param array $data
+     * @param int $store_id
+     *
+     * @return void
+     */
+    public function addAdditionalSetting(string $code, array $data, int $store_id = 0)
+    {
+        foreach ($data as $key => $value) {
+            if (substr($key, 0, strlen($code)) == $code) {
+                $this->db->query(sprintf(
+                    "DELETE FROM %s WHERE `store_id` = %d AND `code` = '%s' AND `key` = '%s'",
+                    DB_PREFIX . "setting",
+                    $store_id,
+                    $this->db->escape($code),
+                    $this->db->escape($key)
+                ));
+
+                $queryFormat = "INSERT INTO %s SET `store_id` = %d, `code` = '%s', key = '%s', `value` = '%s'" ;
+                if (is_array($value)) {
+                    $value = $this->db->escape(json_encode($value, true));
+                    $queryFormat .= ", `serialized` = 1";
+                }
+
+                $this->db->query(
+                    sprintf(
+                        $queryFormat,
+                        DB_PREFIX . "setting",
+                        $store_id,
+                        $this->db->escape($code),
+                        $this->db->escape($key),
+                        $value
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * @param string $isoCode
+     *
+     * @return int|null
+     */
+    public function getCountryIdByCode(string $isoCode)
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT `country_id` FROM %s WHERE `iso_code_2` = '%s'",
+                DB_PREFIX . "country",
+                $this->db->escape($isoCode)
+            )
+        )->row['country_id'] ?? null;
+    }
+
+    /**
+     * @param int $countryId
+     *
+     * @return array
+     */
+    public function getCountiesByCountryId(int $countryId): array
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `country_id` = %d",
+                DB_PREFIX . "zone",
+                $countryId
+            )
+        )->rows;
+    }
+
+    /**
+     * @param int $zoneId
+     *
+     * @return array
+     */
+    public function getCitiesByCountyId(int $zoneId): array
+    {
+        return $this->db->query(
+            sprintf(
+                "SELECT * FROM %s WHERE `zone_id` = %d",
+                DB_PREFIX . "sameday_cities",
+                $zoneId
+            )
+        )->rows;
+    }
+
+    /**
+     * @return string
+     */
+    public function displayCities(): string
+    {
+        // Display in Checkout zone
+        $countriesCodes = $this->getCountriesCodes();
+        $samedayCities = [];
+        foreach ($countriesCodes as $countryCode) {
+            $countryId = $this->getCountryIdByCode($countryCode);
+            $samedayCities[$countryId] = [];
+            if (null !== $countryId) {
+                $counties = $this->getCountiesByCountryId($countryId);
+                foreach ($counties as $county) {
+                    $zone_id = $county['zone_id'];
+                    $samedayCities[$countryId][$zone_id] = array_map(
+                        static function (array $city) {
+                            return [
+                                'name' => $city['city_name']
+                            ];
+                        },
+                        $this->getCitiesByCountyId($zone_id)
+                    );
+                }
+            }
+        }
+
+        return json_encode($samedayCities);
+    }
+
+    /**
+     * @return array
+     */
+    public function getCountriesCodes(): array
+    {
+        return [
+            SamedayHelper::API_HOST_LOCALE_RO,
+            SamedayHelper::API_HOST_LOCALE_BG,
+            SamedayHelper::API_HOST_LOCALE_HU,
+        ];
+    }
+    // End of file
+}

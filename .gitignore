@@ -13,6 +13,7 @@
 !admin/view/template/extension/shipping/sameday_4.twig
 !admin/view/template/extension/shipping/sameday_add_awb.tpl
 !admin/view/template/extension/shipping/sameday_add_awb.twig
+!admin/view/template/extension/shipping/sameday_add_parcel.twig
 !admin/view/template/extension/shipping/sameday_add_awb_4.twig
 !admin/view/template/extension/shipping/sameday_awb_history_status.tpl
 !admin/view/template/extension/shipping/sameday_awb_history_status.twig
@@ -32,8 +33,14 @@
 !catalog/model/extension/shipping/sameday.php
 !catalog/model/extension/shipping/sameday_catalog_model.3.php
 !catalog/model/extension/shipping/sameday_catalog_model.4.php
+!system/
+system/*
+!system/library/
+system/library/*
 !system/library/sameday-php-sdk/
+!system/library/sameday-php-sdk/**
 !system/library/sameday-classes/
+!system/library/sameday-classes/**
 !system/library/samedayclasses.php
 !admin/view/javascript/select2/
 !phpcs.xml.dist

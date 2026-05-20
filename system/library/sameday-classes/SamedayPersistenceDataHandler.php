@@ -20,7 +20,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     protected $versionValidator;
 
-    public function __construct($registry, SamedayVersionValidator $versionValidator)
+    public function __construct($registry, $versionValidator)
     {
         $this->registry = $registry;
         $this->loader = ($versionValidator->isOc4()) ?
@@ -73,8 +73,8 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
      */
     private function getModel()
     {
-        $this->loader->model('extension/sameday/shipping/sameday');
+        $this->loader->model($this->modelPath);
 
-        return $this->registry->get('model_extension_sameday_shipping_sameday');
+        return $this->registry->get($this->magicMethod);
     }
 }

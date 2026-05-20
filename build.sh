@@ -48,6 +48,7 @@ elif [ $VERSION -eq 3 ]; then
         admin/model/extension/shipping/sameday.php \
         admin/view/template/extension/shipping/sameday.twig \
         admin/view/template/extension/shipping/sameday_add_awb.twig \
+        admin/view/template/extension/shipping/sameday_add_parcel.twig \
         admin/view/template/extension/shipping/sameday_awb_history_status.twig \
         admin/view/template/extension/shipping/sameday_awb_history_status_refresh.twig \
         admin/view/template/extension/shipping/sameday_service.twig \
@@ -104,6 +105,7 @@ elif [ $VERSION -eq 4 ]; then
     cp -r system/library/sameday-php-sdk/. upload/system/library/sameday-php-sdk/
     cp system/library/samedayclasses.php upload/system/library/
     cp install.json upload/
+    cp install.4.xml upload/install.xml
 
     (cd upload && zip -r ../sameday.ocmod.zip .)
     rm -rf upload
