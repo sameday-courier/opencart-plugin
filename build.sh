@@ -109,6 +109,8 @@ elif [ $VERSION -eq 4 ]; then
 
     (cd upload && zip -r ../sameday.ocmod.zip .)
     rm -rf upload
+
+    exit 0
 fi
 
 echo "Unknown version $VERSION specified"

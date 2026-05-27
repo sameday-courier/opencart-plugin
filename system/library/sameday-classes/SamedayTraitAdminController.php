@@ -151,6 +151,24 @@ trait SamedayTraitAdminController {
                 'status'      => true,
                 'sort_order'  => 1
             ]);
+
+            $this->model_setting_event->addEvent([
+                'code'        => 'sameday_order_list_after',
+                'description' => 'Sameday bulk AWB modals and scripts on order list',
+                'trigger'     => 'admin/view/sale/order_list/after',
+                'action'      => 'extension/sameday/shipping/sameday.order_list_after',
+                'status'      => true,
+                'sort_order'  => 1
+            ]);
+
+            $this->model_setting_event->addEvent([
+                'code'        => 'sameday_order_page_after',
+                'description' => 'Sameday bulk AWB toolbar on order list page',
+                'trigger'     => 'admin/view/sale/order/after',
+                'action'      => 'extension/sameday/shipping/sameday.order_page_after',
+                'status'      => true,
+                'sort_order'  => 1
+            ]);
         }else{
             $this->model_setting_event->addEvent(
                 'sameday_order_info',
@@ -184,6 +202,8 @@ trait SamedayTraitAdminController {
             $this->model_setting_event->deleteEventByCode('sameday_order_save');
             $this->model_setting_event->deleteEventByCode('sameday_order_locker_save');
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
+            $this->model_setting_event->deleteEventByCode('sameday_order_list_after');
+            $this->model_setting_event->deleteEventByCode('sameday_order_page_after');
         }else{
             $this->model_setting_event->deleteEventByCode('sameday_order_info');
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
@@ -1977,7 +1997,9 @@ trait SamedayTraitAdminController {
         $this->load->model('sale/order');
         $this->load->model('catalog/product');
         $order = $this->model_sale_order->getOrder($order_id);
-        $orderProducts = $this->model_sale_order->getOrderProducts($order_id);
+        $orderProducts = ($this->samedayVersionValidator->isOc4())
+            ? $this->model_sale_order->getProducts($order_id)
+            : $this->model_sale_order->getOrderProducts($order_id);
 
         $pickupPoint = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getDefaultPickupPointId();
 
@@ -3099,6 +3121,21 @@ trait SamedayTraitAdminController {
 
     public function order_list_before(&$route, &$data, &$code = null): void
     {
+        $this->populateOrderListViewData($data);
+
+        if ($this->samedayVersionValidator->isOc4()) {
+            $templateFile = $this->samedayVersionValidator->buildOrderListTemplateFile();
+            if ($templateFile !== '' && is_file($templateFile)) {
+                $code = file_get_contents($templateFile);
+            }
+        }
+    }
+
+    /**
+     * @param array $data
+     */
+    private function populateOrderListViewData(array &$data): void
+    {
         $this->load->language($this->samedayVersionValidator->buildModelPath());
         $data['sameday_button_show_awb'] = $this->language->get('text_button_show_awb');
         $data['sameday_show_awb_pdf_url_base'] = html_entity_decode(
@@ -3130,9 +3167,15 @@ trait SamedayTraitAdminController {
             'UTF-8'
         );
 
-        if (empty($data['orders']) || !is_array($data['orders'])) {
-            return;
-        }
+        $data['ajax_url_bulk_delete'] = html_entity_decode(
+            $this->url->link(
+                $this->samedayVersionValidator->buildSamedayMethodPath('bulkDeleteAwb'),
+                $this->addToken(),
+                true
+            ),
+            ENT_QUOTES,
+            'UTF-8'
+        );
 
         $data['ajax_url_delete_awb'] = html_entity_decode(
             $this->url->link(
@@ -3153,6 +3196,10 @@ trait SamedayTraitAdminController {
             ENT_QUOTES,
             'UTF-8'
         );
+
+        if (empty($data['orders']) || !is_array($data['orders'])) {
+            return;
+        }
 
         $orderIds = array_column($data['orders'], 'order_id');
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
@@ -3212,6 +3259,34 @@ trait SamedayTraitAdminController {
             ) : '';
         }
         unset($order);
+    }
+
+    public function order_list_after(string &$route, array &$data, string &$output): void
+    {
+        if (!$this->samedayVersionValidator->isOc4()) {
+            return;
+        }
+
+        $this->populateOrderListViewData($data);
+        $output .= $this->load->view(
+            $this->samedayVersionValidator->buildOrderListModalsViewRoute(),
+            $data
+        );
+    }
+
+    public function order_page_after(string &$route, array &$data, string &$output): void
+    {
+        if (!$this->samedayVersionValidator->isOc4()) {
+            return;
+        }
+
+        $search = $this->samedayVersionValidator->getOrderToolbarInjectionSearch();
+        $replace = $search . $this->samedayVersionValidator->getOrderListToolbarHtml();
+        $pos = strpos($output, $search);
+
+        if ($pos !== false) {
+            $output = substr_replace($output, $replace, $pos, strlen($search));
+        }
     }
 
     public function checkout_scripts_before(string &$route, array &$args): void {
