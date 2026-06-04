@@ -18,6 +18,7 @@ if [ $VERSION -eq 2 ]; then
         admin/model/extension/shipping/sameday.php \
         admin/view/template/extension/shipping/sameday.tpl \
         admin/view/template/extension/shipping/sameday_add_awb.tpl \
+        admin/view/template/extension/shipping/sameday_add_parcel.tpl \
         admin/view/template/extension/shipping/sameday_awb_history_status.tpl \
         admin/view/template/extension/shipping/sameday_awb_history_status_refresh.tpl \
         admin/view/template/extension/shipping/sameday_service.tpl \
