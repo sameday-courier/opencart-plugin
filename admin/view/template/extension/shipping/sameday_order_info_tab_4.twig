@@ -1,0 +1,22 @@
+<div class="card">
+  <div class="card-body">
+    {% if awb_number is defined and awb_number %}
+      <p class="mb-2">
+        <strong>{{ samedayAwb }}</strong>
+        <a href="{{ buttonShowAwbHistory }}">{{ awb_number }}</a>
+      </p>
+      <p class="mb-2">
+        <a href="{{ EAWB_country_instance }}awb?awbOrParcelNumber={{ awb_number }}&tab=allAwbs" target="_blank">eAWB {{ awb_number }}</a>
+      </p>
+      <div class="btn-group">
+        <a href="{{ buttonShowAwbPdf }}" data-bs-toggle="tooltip" title="{{ buttonShowAwb }}" class="btn btn-info btn-sm" target="_blank"><i class="fa-solid fa-file-pdf"></i></a>
+        <a href="{{ buttonDeleteAwbLink }}" data-bs-toggle="tooltip" title="{{ buttonDeleteAwb }}" class="btn btn-danger btn-sm"><i class="fa-solid fa-times"></i></a>
+      </div>
+    {% else %}
+      <p class="mb-2">
+        <a href="{{ EAWB_country_instance }}" target="_blank">{{ samedayAwb }}</a>
+      </p>
+      <a href="{{ buttonAddAwbLink }}" data-bs-toggle="tooltip" title="{{ buttonAddAwb }}" class="btn btn-success btn-sm"><i class="fa-solid fa-plus-circle"></i> {{ buttonAddAwb }}</a>
+    {% endif %}
+  </div>
+</div>

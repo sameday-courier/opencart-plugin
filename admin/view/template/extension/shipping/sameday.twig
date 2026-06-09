@@ -1,832 +1,832 @@
 {{ header }}{{ column_left }}
 <div id="content">
-    <div class="page-header">
-        <div class="container-fluid">
-            <div class="pull-right">
-                <button type="submit" form="form-custom" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
-                <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
-            <h1>{{ heading_title }}</h1>
-            <ul class="breadcrumb">
-                {% for breadcrumb in breadcrumbs %}
-                    <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
+  <div class="page-header">
     <div class="container-fluid">
-        {% if error_success %}
-            <div class="alert alert-success"><i class="fa fa-check"></i> {{ error_success }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        {% endif %}
-        {% if error_warning %}
-            <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        {% endif %}
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }} </h3>
-            </div>
-            <div class="panel-body">
-                <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-custom" class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-username">{{ entry_username }}</label>
-                        <div class="col-sm-10">
-                            <input type="text" name="shipping_sameday_username" value="{{ sameday_username }}" placeholder="{{ entry_username }}" id="input-username" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-password">{{ entry_password }}</label>
-                        <div class="col-sm-10">
-                            <input type="password" name="shipping_sameday_password" placeholder="{{ entry_password }}" id="input-password" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-awb-format">{{ entry_awb_format }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_awb_format" id="input-awb-format" class="form-control">
-                                {% for type in awbFormatTypes %}
-                                    <option value="{{ type }}" {% if type == awbFormatType %} selected {% endif %}>{{ type }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-tax-class">{{ entry_tax_class }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_tax_class_id" id="input-tax-class" class="form-control">
-                                <option value="0">{{ text_none }}</option>
-                                {% for tax_class in tax_classes %}
-                                    <option value="{{ tax_class.tax_class_id }}" {% if tax_class.tax_class_id == sameday_tax_class_id %} selected="selected" {% endif %}>{{ tax_class.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-geo-zone">{{ entry_geo_zone }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_geo_zone_id" id="input-geo-zone" class="form-control">
-                                <option value="0">{{ text_all_zones }}</option>
-                                {% for geo_zone in geo_zones %}
-                                    <option value="{{ geo_zone.geo_zone_id }}" {% if  geo_zone.geo_zone_id == sameday_geo_zone_id%} selected="selected" {% endif %}>{{ geo_zone.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_status" id="shipping_sameday_status" class="form-control">
-                                <option value="0" {% if sameday_status == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
-                                <option value="1" {% if sameday_status == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-status">{{ entry_estimated_cost }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_estimated_cost" id="shipping_sameday_estimated_cost" class="form-control">
-                                <option value="0" {% if sameday_estimated_cost == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
-                                <option value="1" {% if sameday_estimated_cost == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-status">{{ entry_show_lockers_map }}</label>
-                        <div class="col-sm-10">
-                            <select name="shipping_sameday_show_lockers_map" id="shipping_sameday_show_lockers_map" class="form-control">
-                                <option value="0" {% if sameday_show_lockers_map == false %} selected="selected" {% endif %}>{{ entry_interactive_map }}</option>
-                                <option value="1" {% if sameday_show_lockers_map == true  %} selected="selected" {% endif %}>{{ entry_drop_down_list }}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-locker-max-items">{{ entry_locker_max_items }}</label>
-                        <div class="col-sm-10">
-                            <input type="number" step="1" min="1" name="shipping_sameday_locker_max_items" value="{{ sameday_locker_max_items }}" placeholder="{{ entry_locker_max_items }}" id="input-locker-max-items" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
-                        <div class="col-sm-10">
-                            <input type="number" step="1" min="0" name="shipping_sameday_sort_order" value="{{ sameday_sort_order }}" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-cod">{{ entry_cod }}</label>
-                        <div class="col-sm-10">
-                            <div class="input-group">
-                                <input type="text" id="input-cod" class="form-control" placeholder="COD References..." aria-describedby="references-submit">
-                                <span class="input-group-addon btn btn-primary" id="references-submit" data-url="{{ url_cod_ajax }}">Update</span>
-                            </div>
-                            <div><span><em>In case third party extensions are added that use different references for "cash on delivery", add them here. (default: cod)</em></span></div>
-                            <div class="references">
-                                {% for cod in cods %}
-                                    <span class="badge">{{ cod }} <sup data-url="{{ url_cod_ajax }}" data-cod="{{ cod }}">x</sup></span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-import-local-data">{{ entry_import_local_data }}</label>
-                        <div class="col-sm-10">
-                            <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="{{ import_local_data_href }}" data-actions='{{ import_local_data_actions }}'>
-                                {{ entry_import_local_data }}
-                            </button>
-                            <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label" for="input-import-nomenclator">{{ entry_import_nomenclator }}</label>
-                        <div class="col-sm-10">
-                            <button type="button" class="btn btn-primary fa fa-download" id="input-import-nomenclator" data-href="{{ import_geolocations }}">
-                                {{ entry_import_nomenclator_button }}
-                            </button>
-                            <br>
-                            <div class="form-group" style="padding-left: 15px;">
-                                <input type="checkbox" id="input-nomenclator-use" name="shipping_sameday_nomenclator_use" class="form-check-input" {{ sameday_nomenclator_use ? 'checked' : '' }}>
-                                <label role="button" for="input-nomenclator-use">Use imported locations</label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_services }} </h3>
-                <a class="btn btn-primary" href="{{ service_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                        <tr>
-                            <td class="text-left">{{ column_internal_name }}</td>
-                            <td class="text-left">{{ column_name }}</td>
-                            <td class="text-left">{{ column_price }}</td>
-                            <td class="text-left">{{ column_price_free }}</td>
-                            <td class="text-left">{{ column_status }}</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% if services is empty  %}
-                            <tr>
-                                <td class="text-center" colspan="6">{{ text_services_empty }}</td>
-                            </tr>
-                        {% else  %}
-                            {% for key, service in services %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ service_links[key] }}"
-                                                {% if service.column_ooh_label is not null %}
-                                                    title="{{ service.column_ooh_label }}"
-                                                {% endif %}
-                                        >{{ service.sameday_name }}
-                                        </a>
-                                    </td>
-                                    <td>{{ service.name }}</td>
-                                    <td>{{ service.price }}</td>
-                                    <td>{{ service.price_free }}</td>
-                                    <td>{{ statuses[service.status]['text'] }}</td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_pickup_points }} </h3>
-                <a class="btn btn-primary" href="{{ pickupPoint_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
-                <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="{{ text_pickupPoint_add }}"><i class="fa fa-plus"></i></a>
-            </div>
-            <div class="panel-body">
-                <div class="row" style="margin-bottom: 15px;">
-                    <div class="col-sm-6">
-                        <div class="input-group">
-                            <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                            <input type="text" id="pickup-point-search" class="form-control" placeholder="Search pickup points...">
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="input-group">
-                            <span class="input-group-addon">Show</span>
-                            <select id="pickup-point-per-page" class="form-control">
-                                <option value="10" selected>10</option>
-                                <option value="20" >20</option>
-                                <option value="50">50</option>
-                            </select>
-                            <span class="input-group-addon">per page</span>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div id="pickup-point-info" class="text-right" style="padding-top: 8px; color: #666;">
-                            <span id="pickup-point-count">0</span> pickup points
-                        </div>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="pickup-points-table">
-                        <thead>
-                        <tr>
-                            <td class="text-left">{{ column_pickupPoint_samedayId }}</td>
-                            <td class="text-left">{{ column_pickupPoint_alias }}</td>
-                            <td class="text-left">{{ column_pickupPoint_city }}</td>
-                            <td class="text-left">{{ column_pickupPoint_county }}</td>
-                            <td class="text-left">{{ column_pickupPoint_address }}</td>
-                            <td class="text-left">{{ column_pickupPoint_default_address }}</td>
-                            <td class="text-left">{{ column_pickupPoint_action }}</td>
-                        </tr>
-                        </thead>
-                        <tbody id="pickup-points-tbody">
-                        {% if pickupPoints is empty  %}
-                            <tr class="no-results">
-                                <td class="text-center" colspan="7">{{ text_pickup_points_empty }}</td>
-                            </tr>
-                        {% else %}
-                            {% for key, pickupPoint in pickupPoints %}
-                                <tr class="pickup-point-row" data-sameday-id="{{ pickupPoint.sameday_id }}"
-                                    data-alias="{{ pickupPoint.sameday_alias|lower }}"
-                                    data-city="{{ pickupPoint.city|lower }}"
-                                    data-county="{{ pickupPoint.county|lower }}"
-                                    data-address="{{ pickupPoint.address|lower }}">
-                                    <td>{{ pickupPoint.sameday_id }}</td>
-                                    <td>{{ pickupPoint.sameday_alias }}</td>
-                                    <td>{{ pickupPoint.city }}</td>
-                                    <td>{{ pickupPoint.county }}</td>
-                                    <td>{{ pickupPoint.address }}</td>
-                                    <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
-                                    <td><button data-id="{{ pickupPoint.sameday_id }}" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="row">
-                    <div class="col-sm-6">
-                        <div id="pickup-point-pagination-info" style="padding-top: 8px; color: #666;">
-                            Showing <span id="pickup-point-start">0</span> to <span id="pickup-point-end">0</span> of <span id="pickup-point-total">0</span> entries
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <nav aria-label="Pickup points pagination">
-                            <ul class="pagination pull-right" id="pickup-point-pagination">
-                                <!-- Pagination will be generated by JavaScript -->
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lockers -->
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_lockers }} </h3>
-                <a class="btn btn-primary" href="{{ lockers_refresh }}" data-toggle="tooltip" title="{{ text_lockers_refresh }}"><i class="fa fa-refresh"></i></a>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                        <tr>
-                            <td>{{ column_locker_name }}</td>
-                            <td>{{ column_locker_county }}</td>
-                            <td>{{ column_locker_city }}</td>
-                            <td>{{ column_locker_address }}</td>
-                            <td>{{ column_locker_lat }}</td>
-                            <td>{{ column_locker_lng }}</td>
-                            <td>{{ column_locker_postal_code }}</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% if lockers is empty  %}
-                            <tr>
-                                <td class="text-center" colspan="7">{{ text_lockers_empty }}</td>
-                            </tr>
-                        {% else %}
-                            {% for locker in lockers %}
-                                <tr>
-                                    <td>{{ locker.name }}</td>
-                                    <td>{{ locker.county }}</td>
-                                    <td>{{ locker.city }}</td>
-                                    <td>{{ locker.address }}</td>
-                                    <td>{{ locker.lat }}</td>
-                                    <td>{{ locker.lng }}</td>
-                                    <td>{{ locker.postal_code }}</td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
+      <div class="pull-right">
+        <button type="submit" form="form-custom" data-toggle="tooltip" title="{{ button_save }}" class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
     </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_success %}
+      <div class="alert alert-success"><i class="fa fa-check"></i> {{ error_success }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endif %}
+    {% if error_warning %}
+      <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endif %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit }} </h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-custom" class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-username">{{ entry_username }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="shipping_sameday_username" value="{{ sameday_username }}" placeholder="{{ entry_username }}" id="input-username" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-password">{{ entry_password }}</label>
+            <div class="col-sm-10">
+              <input type="password" name="shipping_sameday_password" placeholder="{{ entry_password }}" id="input-password" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-awb-format">{{ entry_awb_format }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_awb_format" id="input-awb-format" class="form-control">
+                {% for type in awbFormatTypes %}
+                  <option value="{{ type }}" {% if type == awbFormatType %} selected {% endif %}>{{ type }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-tax-class">{{ entry_tax_class }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_tax_class_id" id="input-tax-class" class="form-control">
+                <option value="0">{{ text_none }}</option>
+                {% for tax_class in tax_classes %}
+                  <option value="{{ tax_class.tax_class_id }}" {% if tax_class.tax_class_id == sameday_tax_class_id %} selected="selected" {% endif %}>{{ tax_class.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-geo-zone">{{ entry_geo_zone }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_geo_zone_id" id="input-geo-zone" class="form-control">
+                <option value="0">{{ text_all_zones }}</option>
+                {% for geo_zone in geo_zones %}
+                  <option value="{{ geo_zone.geo_zone_id }}" {% if  geo_zone.geo_zone_id == sameday_geo_zone_id%} selected="selected" {% endif %}>{{ geo_zone.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_status" id="shipping_sameday_status" class="form-control">
+                <option value="0" {% if sameday_status == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
+                <option value="1" {% if sameday_status == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_estimated_cost }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_estimated_cost" id="shipping_sameday_estimated_cost" class="form-control">
+                <option value="0" {% if sameday_estimated_cost == false %} selected="selected" {% endif %}>{{ text_disabled }}</option>
+                <option value="1" {% if sameday_estimated_cost == true  %} selected="selected" {% endif %}>{{ text_enabled }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-status">{{ entry_show_lockers_map }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_show_lockers_map" id="shipping_sameday_show_lockers_map" class="form-control">
+                <option value="0" {% if sameday_show_lockers_map == false %} selected="selected" {% endif %}>{{ entry_interactive_map }}</option>
+                <option value="1" {% if sameday_show_lockers_map == true  %} selected="selected" {% endif %}>{{ entry_drop_down_list }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-locker-max-items">{{ entry_locker_max_items }}</label>
+            <div class="col-sm-10">
+              <input type="number" step="1" min="1" name="shipping_sameday_locker_max_items" value="{{ sameday_locker_max_items }}" placeholder="{{ entry_locker_max_items }}" id="input-locker-max-items" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-sort-order">{{ entry_sort_order }}</label>
+            <div class="col-sm-10">
+              <input type="number" step="1" min="0" name="shipping_sameday_sort_order" value="{{ sameday_sort_order }}" placeholder="{{ entry_sort_order }}" id="input-sort-order" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-cod">{{ entry_cod }}</label>
+            <div class="col-sm-10">
+              <div class="input-group">
+                <input type="text" id="input-cod" class="form-control" placeholder="COD References..." aria-describedby="references-submit">
+                <span class="input-group-addon btn btn-primary" id="references-submit" data-url="{{ url_cod_ajax }}">Update</span>
+              </div>
+              <div><span><em>In case third party extensions are added that use different references for "cash on delivery", add them here. (default: cod)</em></span></div>
+              <div class="references">
+                {% for cod in cods %}
+                  <span class="badge">{{ cod }} <sup data-url="{{ url_cod_ajax }}" data-cod="{{ cod }}">x</sup></span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-import-local-data">{{ entry_import_local_data }}</label>
+            <div class="col-sm-10">
+              <button type="button" class="btn btn-success fa fa-download" id="input-import-local-data" data-href="{{ import_local_data_href }}" data-actions='{{ import_local_data_actions }}'>
+                {{ entry_import_local_data }}
+              </button>
+              <span id="importLocalDataSpinner" style="display: none; vertical-align: middle" class="loader"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-import-nomenclator">{{ entry_import_nomenclator }}</label>
+            <div class="col-sm-10">
+              <button type="button" class="btn btn-primary fa fa-download" id="input-import-nomenclator" data-href="{{ import_geolocations }}">
+                {{ entry_import_nomenclator_button }}
+              </button>
+              <br>
+              <div class="form-group" style="padding-left: 15px;">
+                <input type="checkbox" id="input-nomenclator-use" name="shipping_sameday_nomenclator_use" class="form-check-input" {{ sameday_nomenclator_use ? 'checked' : '' }}>
+                <label role="button" for="input-nomenclator-use">Use imported locations</label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_services }} </h3>
+        <a class="btn btn-primary" href="{{ service_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+              <td class="text-left">{{ column_internal_name }}</td>
+              <td class="text-left">{{ column_name }}</td>
+              <td class="text-left">{{ column_price }}</td>
+              <td class="text-left">{{ column_price_free }}</td>
+              <td class="text-left">{{ column_status }}</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% if services is empty  %}
+              <tr>
+                <td class="text-center" colspan="6">{{ text_services_empty }}</td>
+              </tr>
+            {% else  %}
+              {% for key, service in services %}
+                <tr>
+                  <td>
+                    <a href="{{ service_links[key] }}"
+                            {% if service.column_ooh_label is not null %}
+                              title="{{ service.column_ooh_label }}"
+                            {% endif %}
+                    >{{ service.sameday_name }}
+                    </a>
+                  </td>
+                  <td>{{ service.name }}</td>
+                  <td>{{ service.price }}</td>
+                  <td>{{ service.price_free }}</td>
+                  <td>{{ statuses[service.status]['text'] }}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_pickup_points }} </h3>
+        <a class="btn btn-primary" href="{{ pickupPoint_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
+        <a class="btn btn-primary" href="#" data-toggle="modal" data-target="#addPickupPoint" title="{{ text_pickupPoint_add }}"><i class="fa fa-plus"></i></a>
+      </div>
+      <div class="panel-body">
+        <div class="row" style="margin-bottom: 15px;">
+          <div class="col-sm-6">
+            <div class="input-group">
+              <span class="input-group-addon"><i class="fa fa-search"></i></span>
+              <input type="text" id="pickup-point-search" class="form-control" placeholder="Search pickup points...">
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <div class="input-group">
+              <span class="input-group-addon">Show</span>
+              <select id="pickup-point-per-page" class="form-control">
+                <option value="10" selected>10</option>
+                <option value="20" >20</option>
+                <option value="50">50</option>
+              </select>
+              <span class="input-group-addon">per page</span>
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <div id="pickup-point-info" class="text-right" style="padding-top: 8px; color: #666;">
+              <span id="pickup-point-count">0</span> pickup points
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover" id="pickup-points-table">
+            <thead>
+            <tr>
+              <td class="text-left">{{ column_pickupPoint_samedayId }}</td>
+              <td class="text-left">{{ column_pickupPoint_alias }}</td>
+              <td class="text-left">{{ column_pickupPoint_city }}</td>
+              <td class="text-left">{{ column_pickupPoint_county }}</td>
+              <td class="text-left">{{ column_pickupPoint_address }}</td>
+              <td class="text-left">{{ column_pickupPoint_default_address }}</td>
+              <td class="text-left">{{ column_pickupPoint_action }}</td>
+            </tr>
+            </thead>
+            <tbody id="pickup-points-tbody">
+            {% if pickupPoints is empty  %}
+              <tr class="no-results">
+                <td class="text-center" colspan="7">{{ text_pickup_points_empty }}</td>
+              </tr>
+            {% else %}
+              {% for key, pickupPoint in pickupPoints %}
+                <tr class="pickup-point-row" data-sameday-id="{{ pickupPoint.sameday_id }}"
+                    data-alias="{{ pickupPoint.sameday_alias|lower }}"
+                    data-city="{{ pickupPoint.city|lower }}"
+                    data-county="{{ pickupPoint.county|lower }}"
+                    data-address="{{ pickupPoint.address|lower }}">
+                  <td>{{ pickupPoint.sameday_id }}</td>
+                  <td>{{ pickupPoint.sameday_alias }}</td>
+                  <td>{{ pickupPoint.city }}</td>
+                  <td>{{ pickupPoint.county }}</td>
+                  <td>{{ pickupPoint.address }}</td>
+                  <td>{{ pickupPoint.default_pickup_point == 1 ? yes : no }}</td>
+                  <td><button data-id="{{ pickupPoint.sameday_id }}" class="btn btn-danger" data-toggle="modal" data-target="#pickupPointDelete"><i class="fa fa-trash"></i></button></td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div id="pickup-point-pagination-info" style="padding-top: 8px; color: #666;">
+              Showing <span id="pickup-point-start">0</span> to <span id="pickup-point-end">0</span> of <span id="pickup-point-total">0</span> entries
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <nav aria-label="Pickup points pagination">
+              <ul class="pagination pull-right" id="pickup-point-pagination">
+                <!-- Pagination will be generated by JavaScript -->
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lockers -->
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_lockers }} </h3>
+        <a class="btn btn-primary" href="{{ lockers_refresh }}" data-toggle="tooltip" title="{{ text_lockers_refresh }}"><i class="fa fa-refresh"></i></a>
+      </div>
+      <div class="panel-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead>
+            <tr>
+              <td>{{ column_locker_name }}</td>
+              <td>{{ column_locker_county }}</td>
+              <td>{{ column_locker_city }}</td>
+              <td>{{ column_locker_address }}</td>
+              <td>{{ column_locker_lat }}</td>
+              <td>{{ column_locker_lng }}</td>
+              <td>{{ column_locker_postal_code }}</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% if lockers is empty  %}
+              <tr>
+                <td class="text-center" colspan="7">{{ text_lockers_empty }}</td>
+              </tr>
+            {% else %}
+              {% for locker in lockers %}
+                <tr>
+                  <td>{{ locker.name }}</td>
+                  <td>{{ locker.county }}</td>
+                  <td>{{ locker.city }}</td>
+                  <td>{{ locker.address }}</td>
+                  <td>{{ locker.lat }}</td>
+                  <td>{{ locker.lng }}</td>
+                  <td>{{ locker.postal_code }}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
 {{ footer }}
 <div class="modal fade" id="addPickupPoint" tabindex="-1" aria-labelledby="addPickupPointLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="addPickupPointLabel">{{ text_pickupPoint_add }}</h3>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="addPickupPointLabel">{{ text_pickupPoint_add }}</h3>
+      </div>
+      <div class="modal-body">
+        <form action="{{ pickupPointsTest }}" method="post" enctype="multipart/form-data" id="form-pickupPoints" class="form-horizontal">
+
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointCountry">{{ text_pickupPointCountry }}</label>
+            <div class="col-sm-9">
+              <select name="pickupPointCountry" id="input-pickupPointCountry" class="form-control">
+                {% for country in pp_countries %}
+                  <option value="{{ country.value }}">{{ country.label }}</option>
+                {% endfor %}
+              </select>
             </div>
-            <div class="modal-body">
-                <form action="{{ pickupPointsTest }}" method="post" enctype="multipart/form-data" id="form-pickupPoints" class="form-horizontal">
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointCountry">{{ text_pickupPointCountry }}</label>
-                        <div class="col-sm-9">
-                            <select name="pickupPointCountry" id="input-pickupPointCountry" class="form-control">
-                                {% for country in pp_countries %}
-                                    <option value="{{ country.value }}">{{ country.label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointCounty">{{ text_pickupPointCounty }}</label>
-                        <div class="col-sm-9">
-                            <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="{{ url_cities_ajax }}">
-                                {% for county in pp_counties %}
-                                    <option value="{{ county.id }}">{{ county.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointCity">{{ text_pickupPointCity }}</label>
-                        <div class="col-sm-9">
-                            <select name="pickupPointCity" id="input-pickupPointCity" class="form-control" disabled>
-
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointAddress">{{ text_pickupPointAddress }}</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="pickupPointAddress" id="input-pickupPointAddress" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointDefault">{{ text_pickupPointDefault }}</label>
-                        <div class="col-sm-9">
-                            <input type="checkbox" name="pickupPointDefault" id="input-pickupPointDefault" class="form-check-input" value="1" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointPo">{{ text_pickupPointPo }}</label>
-                        <div class="col-sm-9">
-                            <input type="number" name="pickupPointPo" id="input-pickupPointPo" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointAlias">{{ text_pickupPointAlias }}</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="pickupPointAlias" id="input-pickupPointAlias" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointContactName">{{ text_pickupPointContactName }}</label>
-                        <div class="col-sm-9">
-                            <input type="text" name="pickupPointContactName" id="input-pickupPointContactName" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointPhoneNumber">{{ text_pickupPointPhoneNumber }}</label>
-                        <div class="col-sm-9">
-                            <input type="tel" name="pickupPointPhoneNumber" id="input-pickupPointPhoneNumber" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="input-pickupPointEmail">{{ text_pickupPointEmail }}</label>
-                        <div class="col-sm-9">
-                            <input type="email" name="pickupPointEmail" id="input-pickupPointEmail" class="form-control" />
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <input type="submit" class="btn btn-primary" value="Save">
-                    </div>
-                </form>
-                <div class="" id="pickupPointAddFeedback"></div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointCounty">{{ text_pickupPointCounty }}</label>
+            <div class="col-sm-9">
+              <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="{{ url_cities_ajax }}">
+                {% for county in pp_counties %}
+                  <option value="{{ county.id }}">{{ county.name }}</option>
+                {% endfor %}
+              </select>
             </div>
-        </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointCity">{{ text_pickupPointCity }}</label>
+            <div class="col-sm-9">
+              <select name="pickupPointCity" id="input-pickupPointCity" class="form-control" disabled>
+
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointAddress">{{ text_pickupPointAddress }}</label>
+            <div class="col-sm-9">
+              <input type="text" name="pickupPointAddress" id="input-pickupPointAddress" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointDefault">{{ text_pickupPointDefault }}</label>
+            <div class="col-sm-9">
+              <input type="checkbox" name="pickupPointDefault" id="input-pickupPointDefault" class="form-check-input" value="1" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointPo">{{ text_pickupPointPo }}</label>
+            <div class="col-sm-9">
+              <input type="number" name="pickupPointPo" id="input-pickupPointPo" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointAlias">{{ text_pickupPointAlias }}</label>
+            <div class="col-sm-9">
+              <input type="text" name="pickupPointAlias" id="input-pickupPointAlias" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointContactName">{{ text_pickupPointContactName }}</label>
+            <div class="col-sm-9">
+              <input type="text" name="pickupPointContactName" id="input-pickupPointContactName" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointPhoneNumber">{{ text_pickupPointPhoneNumber }}</label>
+            <div class="col-sm-9">
+              <input type="tel" name="pickupPointPhoneNumber" id="input-pickupPointPhoneNumber" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-3 control-label" for="input-pickupPointEmail">{{ text_pickupPointEmail }}</label>
+            <div class="col-sm-9">
+              <input type="email" name="pickupPointEmail" id="input-pickupPointEmail" class="form-control" />
+            </div>
+          </div>
+          <div class="text-center">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <input type="submit" class="btn btn-primary" value="Save">
+          </div>
+        </form>
+        <div class="" id="pickupPointAddFeedback"></div>
+      </div>
     </div>
+  </div>
 </div>
 <div class="modal fade" id="pickupPointDelete" tabindex="-1" aria-labelledby="pickupPointDelete" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title text-center" id="pickupPointDeleteLabel">{{ text_pickupPoint_delete }}</h3>
-            </div>
-            <div class="modal-body">
-                <h4 class="text-center">{{ text_pickupPoint_delete_question }}</h4>
-                <form action="{{ url_deletePickupPoint }}" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
-                    <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
-                    <button class="btn btn-secondary" data-dismiss="modal">{{ text_pickupPoint_delete_decline }}</button>
-                    <input type="submit" class="btn btn-danger" value="{{ text_pickupPoint_delete_confirm }}">
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title text-center" id="pickupPointDeleteLabel">{{ text_pickupPoint_delete }}</h3>
+      </div>
+      <div class="modal-body">
+        <h4 class="text-center">{{ text_pickupPoint_delete_question }}</h4>
+        <form action="{{ url_deletePickupPoint }}" method="post" enctype="multipart/form-data" id="form-pickupPointDelete" class="form-horizontal text-center">
+          <input type="hidden" name="deletePickUpPointId" id="deletePickUpPointId" />
+          <button class="btn btn-secondary" data-dismiss="modal">{{ text_pickupPoint_delete_decline }}</button>
+          <input type="submit" class="btn btn-danger" value="{{ text_pickupPoint_delete_confirm }}">
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 <script>
-    $(document).ready(() => {
-        $(document).on('click', '#input-import-local-data', (element) => {
-            let _target = element.target;
-            let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
-            let _url = _target.getAttribute('data-href');
+  $(document).ready(() => {
+    $(document).on('click', '#input-import-local-data', (element) => {
+      let _target = element.target;
+      let _actions = JSON.parse(_target.getAttribute('data-actions')) ;
+      let _url = _target.getAttribute('data-href');
 
-            importLocalData(_url, _actions);
-        });
-
-        function importLocalData(_url = '', _actions = []) {
-            const _action = _actions.shift();
-
-            if (typeof _action === "undefined") {
-                window.location.reload();
-
-                return true;
-            }
-
-            doAjaxRequest(_url, _actions, _action);
-        }
-
-        const doAjaxRequest = (_url = '', _actions = [], _action = '', _params = []) => {
-            $.ajax({
-                url: _url,
-                type: "POST",
-                dataType: "JSON",
-                data: jQuery.param({ 'action': _action}),
-                processData: false,
-                contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                beforeSend: () => {
-                    showSpinner(true);
-                    document.getElementById('input-import-local-data').setAttribute('disabled', true);
-                },
-                success: (data) => {
-                    showSpinner(false);
-                    console.log(data);
-                    importLocalData(_url, _actions, _action);
-                },
-                error: () => {
-                    showSpinner(false);
-                }
-            });
-        }
-
-        const showSpinner = (isShow = false) => {
-            let spinner = document.getElementById('importLocalDataSpinner');
-            spinner.style.display = 'none'
-
-            if (true === isShow) {
-                spinner.style.display = 'inline-block';
-            }
-        }
-
-        $('#form-pickupPoints').on('submit', function(e){
-            e.preventDefault();
-            $('[type="submit"]', this).prop('disabled', true);
-            let url = $(this).attr('action');
-            let data = $(this).serializeArray();
-            try{
-                doAjaxRequest(url, [], data);
-                $(this).hide(200);
-                $('#pickupPointAddFeedback').addClass('alert alert-success').text("{{ text_pickupPointAddFeedbackSuccess }}");
-            }catch(e){
-                console.log(e);
-                $(this).hide(200);
-                $('#pickupPointAddFeedback').addClass('alert alert-danger').text("{{ text_pickupPointAddFeedbackError }}");
-            }
-        });
-
-        $(document).on('change', '#input-pickupPointCounty', function(){
-            let id = $(this).val();
-            let url = $(this).attr('data-url');
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {id: id},
-                success: function(result){
-                    let arr = JSON.parse(result);
-                    let html = '';
-                    arr.map(function(item){
-                        html += '<option value="' + item['id'] + '">' + item['name'] + '</option>';
-                    });
-                    $('#input-pickupPointCity').html("");
-                    $('#input-pickupPointCity').append(html);
-                    $('#input-pickupPointCity').prop('disabled', false);
-                }
-            });
-        });
-
-        $(document).on('shown.bs.modal', '#pickupPointDelete', function(){
-            $('#form-pickupPointDelete').on('submit', function(e){
-                e.preventDefault();
-                let url = $(this).attr('action');
-                let id = $('#deletePickUpPointId').val();
-                console.log(url)
-                $.ajax({
-                    url: url,
-                    data: {id: id},
-                    type: "POST",
-                    success: function(result){
-                        if (result == true){
-                            $('[data-sameday-id="' + id + '"]').hide();
-                            $('#pickupPointDelete').modal('hide');
-                        }
-                    }
-                });
-            });
-        });
-
-        $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
-            document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
-        });
+      importLocalData(_url, _actions);
     });
 
-    $('#input-import-nomenclator').on('click', function(){
-        let url = $('#input-import-nomenclator').attr('data-href');
-        $(this).prop('disabled', true);
-        $(this).text('Importing...')
+    function importLocalData(_url = '', _actions = []) {
+      const _action = _actions.shift();
+
+      if (typeof _action === "undefined") {
+        window.location.reload();
+
+        return true;
+      }
+
+      doAjaxRequest(_url, _actions, _action);
+    }
+
+    const doAjaxRequest = (_url = '', _actions = [], _action = '', _params = []) => {
+      $.ajax({
+        url: _url,
+        type: "POST",
+        dataType: "JSON",
+        data: jQuery.param({ 'action': _action}),
+        processData: false,
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+        beforeSend: () => {
+          showSpinner(true);
+          document.getElementById('input-import-local-data').setAttribute('disabled', true);
+        },
+        success: (data) => {
+          showSpinner(false);
+          console.log(data);
+          importLocalData(_url, _actions, _action);
+        },
+        error: () => {
+          showSpinner(false);
+        }
+      });
+    }
+
+    const showSpinner = (isShow = false) => {
+      let spinner = document.getElementById('importLocalDataSpinner');
+      spinner.style.display = 'none'
+
+      if (true === isShow) {
+        spinner.style.display = 'inline-block';
+      }
+    }
+
+    $('#form-pickupPoints').on('submit', function(e){
+      e.preventDefault();
+      $('[type="submit"]', this).prop('disabled', true);
+      let url = $(this).attr('action');
+      let data = $(this).serializeArray();
+      try{
+        doAjaxRequest(url, [], data);
+        $(this).hide(200);
+        $('#pickupPointAddFeedback').addClass('alert alert-success').text("{{ text_pickupPointAddFeedbackSuccess }}");
+      }catch(e){
+        console.log(e);
+        $(this).hide(200);
+        $('#pickupPointAddFeedback').addClass('alert alert-danger').text("{{ text_pickupPointAddFeedbackError }}");
+      }
+    });
+
+    $(document).on('change', '#input-pickupPointCounty', function(){
+      let id = $(this).val();
+      let url = $(this).attr('data-url');
+      $.ajax({
+        url: url,
+        type: 'POST',
+        data: {id: id},
+        success: function(result){
+          let arr = JSON.parse(result);
+          let html = '';
+          arr.map(function(item){
+            html += '<option value="' + item['id'] + '">' + item['name'] + '</option>';
+          });
+          $('#input-pickupPointCity').html("");
+          $('#input-pickupPointCity').append(html);
+          $('#input-pickupPointCity').prop('disabled', false);
+        }
+      });
+    });
+
+    $(document).on('shown.bs.modal', '#pickupPointDelete', function(){
+      $('#form-pickupPointDelete').on('submit', function(e){
+        e.preventDefault();
+        let url = $(this).attr('action');
+        let id = $('#deletePickUpPointId').val();
+        console.log(url)
         $.ajax({
-            url: url,
-            success: function(result){
-                $('#input-import-nomenclator').prop('disabled', false);
-                $('#input-import-nomenclator').text('Finalizat');
-                console.log(result);
+          url: url,
+          data: {id: id},
+          type: "POST",
+          success: function(result){
+            if (result == true){
+              $('[data-sameday-id="' + id + '"]').hide();
+              $('#pickupPointDelete').modal('hide');
             }
+          }
         });
+      });
     });
 
-    $(document).ready(function(){
-        $('body').on('click', '#references-submit', function(){
+    $(document).on('click', '[data-target="#pickupPointDelete"]', function(){
+      document.getElementById('deletePickUpPointId').value = $(this).attr('data-id');
+    });
+  });
 
-            let newCod = $('#input-cod').val();
-            if(newCod !== ''){
-                let url = $(this).attr('data-url');
-                let cods = [];
-                $('.references span sup[data-cod]').each(function() {
-                    cods.push($(this).attr('data-cod'));
-                });
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {cods, newCod},
-                    success: function(data){
-                        console.log(data);
-                        let html = "";
-                        JSON.parse(data).map(cod => {
-                            html += '<span class="badge">' + cod + ' <sup data-url="{{ url_cod_ajax }}" data-cod="' + cod + '">x</sup></span>';
-                        });
-                        $('.references').html(html);
-                    }
-                });
-            }
-        });
+  $('#input-import-nomenclator').on('click', function(){
+    let url = $('#input-import-nomenclator').attr('data-href');
+    $(this).prop('disabled', true);
+    $(this).text('Importing...')
+    $.ajax({
+      url: url,
+      success: function(result){
+        $('#input-import-nomenclator').prop('disabled', false);
+        $('#input-import-nomenclator').text('Finalizat');
+        console.log(result);
+      }
+    });
+  });
 
-        $('body').on('click', '.references span sup', function(){
-            $(this).parent().remove();
-            let url = $(this).attr('data-url');
-            let cods = [];
-            $('.references span sup[data-cod]').each(function() {
-                cods.push($(this).attr('data-cod'));
-            });
-            $.ajax({
-                url: url,
-                type: "POST",
-                data: {cods},
-                success: function(data){
-                    console.log(data);
-                    let html = "";
-                    JSON.parse(data).map(cod => {
-                        html += '<span class="badge">' + cod + ' <sup data-url="{{ url_cod_ajax }}" data-cod="' + cod + '">x</sup></span>';
-                    });
-                    $('.references').html(html);
-                }
-            });
+  $(document).ready(function(){
+    $('body').on('click', '#references-submit', function(){
+
+      let newCod = $('#input-cod').val();
+      if(newCod !== ''){
+        let url = $(this).attr('data-url');
+        let cods = [];
+        $('.references span sup[data-cod]').each(function() {
+          cods.push($(this).attr('data-cod'));
         });
+        $.ajax({
+          url: url,
+          type: "POST",
+          data: {cods, newCod},
+          success: function(data){
+            console.log(data);
+            let html = "";
+            JSON.parse(data).map(cod => {
+              html += '<span class="badge">' + cod + ' <sup data-url="{{ url_cod_ajax }}" data-cod="' + cod + '">x</sup></span>';
+            });
+            $('.references').html(html);
+          }
+        });
+      }
     });
 
-    // Pickup Points Pagination and Search
-    (function() {
-        let currentPage = 1;
-        let itemsPerPage = 10;
-        let filteredRows = [];
-        console.log(filteredRows);
-
-        function getFilteredRows() {
-            const searchTerm = $('#pickup-point-search').val().toLowerCase().trim();
-            const allRows = $('.pickup-point-row');
-
-            if (searchTerm === '') {
-                return allRows.toArray();
-            }
-
-            return allRows.filter(function() {
-                const row = $(this);
-                const alias = row.attr('data-alias') || '';
-                const city = row.attr('data-city') || '';
-                const county = row.attr('data-county') || '';
-                const address = row.attr('data-address') || '';
-                const samedayId = String(row.attr('data-sameday-id') || '');
-
-                return alias.includes(searchTerm) ||
-                    city.includes(searchTerm) ||
-                    county.includes(searchTerm) ||
-                    address.includes(searchTerm) ||
-                    samedayId.includes(searchTerm);
-            });
+    $('body').on('click', '.references span sup', function(){
+      $(this).parent().remove();
+      let url = $(this).attr('data-url');
+      let cods = [];
+      $('.references span sup[data-cod]').each(function() {
+        cods.push($(this).attr('data-cod'));
+      });
+      $.ajax({
+        url: url,
+        type: "POST",
+        data: {cods},
+        success: function(data){
+          console.log(data);
+          let html = "";
+          JSON.parse(data).map(cod => {
+            html += '<span class="badge">' + cod + ' <sup data-url="{{ url_cod_ajax }}" data-cod="' + cod + '">x</sup></span>';
+          });
+          $('.references').html(html);
         }
+      });
+    });
+  });
 
-        function updateDisplay() {
-            filteredRows = getFilteredRows();
-            const totalItems = filteredRows.length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
+  // Pickup Points Pagination and Search
+  (function() {
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let filteredRows = [];
+    console.log(filteredRows);
 
-            // Update current page if it's out of bounds
-            if (currentPage > totalPages && totalPages > 0) {
-                currentPage = totalPages;
-            }
-            if (currentPage < 1) {
-                currentPage = 1;
-            }
+    function getFilteredRows() {
+      const searchTerm = $('#pickup-point-search').val().toLowerCase().trim();
+      const allRows = $('.pickup-point-row');
 
-            // Hide all rows first
-            $('.pickup-point-row').hide();
-            $('.no-results').hide();
+      if (searchTerm === '') {
+        return allRows.toArray();
+      }
 
-            // Show filtered and paginated rows
-            if (totalItems === 0) {
-                // Show existing no-results row or create one if it doesn't exist
-                if ($('.no-results').length === 0) {
-                    $('#pickup-points-tbody').append(
-                        '<tr class="no-results"><td class="text-center" colspan="7">No pickup points found</td></tr>'
-                    );
-                } else {
-                    $('.no-results').show();
-                }
-            } else {
-                // Hide no-results row if it exists
-                $('.no-results').hide();
+      return allRows.filter(function() {
+        const row = $(this);
+        const alias = row.attr('data-alias') || '';
+        const city = row.attr('data-city') || '';
+        const county = row.attr('data-county') || '';
+        const address = row.attr('data-address') || '';
+        const samedayId = String(row.attr('data-sameday-id') || '');
 
-                const startIndex = (currentPage - 1) * itemsPerPage;
-                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        return alias.includes(searchTerm) ||
+                city.includes(searchTerm) ||
+                county.includes(searchTerm) ||
+                address.includes(searchTerm) ||
+                samedayId.includes(searchTerm);
+      });
+    }
 
-                for (let i = startIndex; i < endIndex; i++) {
-                    $(filteredRows[i]).show();
-                }
-            }
+    function updateDisplay() {
+      filteredRows = getFilteredRows();
+      const totalItems = filteredRows.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-            // Update pagination info
-            const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-            const end = Math.min(currentPage * itemsPerPage, totalItems);
+      // Update current page if it's out of bounds
+      if (currentPage > totalPages && totalPages > 0) {
+        currentPage = totalPages;
+      }
+      if (currentPage < 1) {
+        currentPage = 1;
+      }
 
-            $('#pickup-point-start').text(start);
-            $('#pickup-point-end').text(end);
-            $('#pickup-point-total').text(totalItems);
-            $('#pickup-point-count').text(totalItems);
+      // Hide all rows first
+      $('.pickup-point-row').hide();
+      $('.no-results').hide();
 
-            // Generate pagination
-            generatePagination(totalPages);
+      // Show filtered and paginated rows
+      if (totalItems === 0) {
+        // Show existing no-results row or create one if it doesn't exist
+        if ($('.no-results').length === 0) {
+          $('#pickup-points-tbody').append(
+                  '<tr class="no-results"><td class="text-center" colspan="7">No pickup points found</td></tr>'
+          );
+        } else {
+          $('.no-results').show();
         }
+      } else {
+        // Hide no-results row if it exists
+        $('.no-results').hide();
 
-        function generatePagination(totalPages) {
-            const pagination = $('#pickup-point-pagination');
-            pagination.empty();
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
-            if (totalPages <= 1) {
-                return;
-            }
-
-            // Previous button
-            const prevDisabled = currentPage === 1 ? 'disabled' : '';
-            pagination.append(
-                '<li class="' + prevDisabled + '">' +
-                '<a href="#" aria-label="Previous" data-page="prev">' +
-                '<span aria-hidden="true">&laquo;</span>' +
-                '</a></li>'
-            );
-
-            // Page numbers
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-            if (endPage - startPage < maxVisiblePages - 1) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-
-            if (startPage > 1) {
-                pagination.append('<li><a href="#" data-page="1">1</a></li>');
-                if (startPage > 2) {
-                    pagination.append('<li class="disabled"><span>...</span></li>');
-                }
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                const active = i === currentPage ? 'active' : '';
-                pagination.append(
-                    '<li class="' + active + '">' +
-                    '<a href="#" data-page="' + i + '">' + i + '</a></li>'
-                );
-            }
-
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    pagination.append('<li class="disabled"><span>...</span></li>');
-                }
-                pagination.append('<li><a href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>');
-            }
-
-            // Next button
-            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            pagination.append(
-                '<li class="' + nextDisabled + '">' +
-                '<a href="#" aria-label="Next" data-page="next">' +
-                '<span aria-hidden="true">&raquo;</span>' +
-                '</a></li>'
-            );
+        for (let i = startIndex; i < endIndex; i++) {
+          $(filteredRows[i]).show();
         }
+      }
 
-        // Event handlers
-        $('#pickup-point-search').on('input', function() {
-            currentPage = 1;
-            updateDisplay();
-        });
+      // Update pagination info
+      const start = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+      const end = Math.min(currentPage * itemsPerPage, totalItems);
 
-        $('#pickup-point-per-page').on('change', function() {
-            itemsPerPage = parseInt($(this).val());
-            currentPage = 1;
-            updateDisplay();
-        });
+      $('#pickup-point-start').text(start);
+      $('#pickup-point-end').text(end);
+      $('#pickup-point-total').text(totalItems);
+      $('#pickup-point-count').text(totalItems);
 
-        $(document).on('click', '#pickup-point-pagination a', function(e) {
-            e.preventDefault();
-            const page = $(this).data('page');
+      // Generate pagination
+      generatePagination(totalPages);
+    }
 
-            if (page === 'prev' && currentPage > 1) {
-                currentPage--;
-            } else if (page === 'next') {
-                const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                }
-            } else if (typeof page === 'number') {
-                currentPage = page;
-            }
+    function generatePagination(totalPages) {
+      const pagination = $('#pickup-point-pagination');
+      pagination.empty();
 
-            updateDisplay();
-            $('html, body').animate({
-                scrollTop: $('#pickup-points-table').offset().top - 100
-            }, 300);
-        });
+      if (totalPages <= 1) {
+        return;
+      }
 
-        // Initialize on page load
-        $(document).ready(function() {
-            updateDisplay();
-        });
-    })();
+      // Previous button
+      const prevDisabled = currentPage === 1 ? 'disabled' : '';
+      pagination.append(
+              '<li class="' + prevDisabled + '">' +
+              '<a href="#" aria-label="Previous" data-page="prev">' +
+              '<span aria-hidden="true">&laquo;</span>' +
+              '</a></li>'
+      );
+
+      // Page numbers
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      if (startPage > 1) {
+        pagination.append('<li><a href="#" data-page="1">1</a></li>');
+        if (startPage > 2) {
+          pagination.append('<li class="disabled"><span>...</span></li>');
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        const active = i === currentPage ? 'active' : '';
+        pagination.append(
+                '<li class="' + active + '">' +
+                '<a href="#" data-page="' + i + '">' + i + '</a></li>'
+        );
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          pagination.append('<li class="disabled"><span>...</span></li>');
+        }
+        pagination.append('<li><a href="#" data-page="' + totalPages + '">' + totalPages + '</a></li>');
+      }
+
+      // Next button
+      const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+      pagination.append(
+              '<li class="' + nextDisabled + '">' +
+              '<a href="#" aria-label="Next" data-page="next">' +
+              '<span aria-hidden="true">&raquo;</span>' +
+              '</a></li>'
+      );
+    }
+
+    // Event handlers
+    $('#pickup-point-search').on('input', function() {
+      currentPage = 1;
+      updateDisplay();
+    });
+
+    $('#pickup-point-per-page').on('change', function() {
+      itemsPerPage = parseInt($(this).val());
+      currentPage = 1;
+      updateDisplay();
+    });
+
+    $(document).on('click', '#pickup-point-pagination a', function(e) {
+      e.preventDefault();
+      const page = $(this).data('page');
+
+      if (page === 'prev' && currentPage > 1) {
+        currentPage--;
+      } else if (page === 'next') {
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+        }
+      } else if (typeof page === 'number') {
+        currentPage = page;
+      }
+
+      updateDisplay();
+      $('html, body').animate({
+        scrollTop: $('#pickup-points-table').offset().top - 100
+      }, 300);
+    });
+
+    // Initialize on page load
+    $(document).ready(function() {
+      updateDisplay();
+    });
+  })();
 </script>
 
 <style>
-    input[type="radio"], .radio input[type="radio"], .radio-inline input[type="radio"]{
-        top: 3px;
-        margin-left: 15px;
-        cursor: pointer;
-    }
-    .loader {
-        margin: 5px;
-        width: 18px;
-        height: 18px;
-        border: 4px solid #515151;
-        border-bottom-color: #8fbb6c;
-        border-radius: 50%;
-        display: inline-block;
-        box-sizing: border-box;
-        animation: rotation 1s linear infinite;
-    }
+  input[type="radio"], .radio input[type="radio"], .radio-inline input[type="radio"]{
+    top: 3px;
+    margin-left: 15px;
+    cursor: pointer;
+  }
+  .loader {
+    margin: 5px;
+    width: 18px;
+    height: 18px;
+    border: 4px solid #515151;
+    border-bottom-color: #8fbb6c;
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
 
-    @keyframes rotation {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
+  @keyframes rotation {
+    0% {
+      transform: rotate(0deg);
     }
-    .references{
-        margin-top: 10px;
+    100% {
+      transform: rotate(360deg);
     }
-    .references span sup{
-        cursor: pointer;
-    }
+  }
+  .references{
+    margin-top: 10px;
+  }
+  .references span sup{
+    cursor: pointer;
+  }
 </style>

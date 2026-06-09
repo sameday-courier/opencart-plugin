@@ -1,5 +1,9 @@
 <?php
 
+if (!defined('SAMEDAY_OC_MAJOR')) {
+    define('SAMEDAY_OC_MAJOR', (defined('VERSION') && strpos((string)VERSION, '4') === 0) ? 4 : 3);
+}
+
 use Sameday\Exceptions\SamedaySDKException;
 use Sameday\SamedayClient;
 
@@ -113,6 +117,40 @@ class SamedayHelper
         self::API_HOST_LOCALE_BG => 'BGN',
     ];
     const EURO_CURRENCY = "EUR";
+
+    const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
+
+    const SAMEDAY_CONFIGS = [
+        'username' => null,
+        'password' => null,
+        'testing' => null,
+        'tax_class_id' => null,
+        'geo_zone_id' => null,
+        'status' => null,
+        'estimated_cost' => null,
+        'show_lockers_map' => null,
+        'locker_max_items' => self::DEFAULT_VALUE_LOCKER_MAX_ITEMS,
+        'sort_order' => 0,
+        'host_country' => null,
+    ];
+
+    const SAMEDAY_CATALOG_CONFIGS = [
+        'username',
+        'password',
+        'testing',
+        'host_country',
+    ];
+
+    const TOGGLE_HTML_ELEMENT = [
+        'show' => 'block',
+        'hide' => 'none',
+    ];
+
+    const IMPORT_LOCAL_DATA_ACTIONS = [
+        'importServices',
+        'importPickupPoint',
+        'importLockers',
+    ];
 
     /**
      * @return string[][]

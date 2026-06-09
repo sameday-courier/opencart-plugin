@@ -1,0 +1,854 @@
+    <style>
+    .sameday-bulk-awb-modal .modal-content { border: none; border-radius: 12px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15); overflow: hidden; }
+    .sameday-bulk-awb-modal .sameday-bulk-awb-header { display: flex; align-items: flex-start; padding: 24px 24px 16px; border-bottom: none; position: relative; }
+    .sameday-bulk-awb-modal .sameday-bulk-awb-header .btn-close { position: absolute; top: 18px; right: 18px; }
+    .sameday-bulk-awb-modal .sameday-bulk-header-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; font-size: 18px; }
+    .sameday-bulk-awb-modal .sameday-bulk-header-icon.is-confirm { background: #ede9fe; color: #7c3aed; }
+    .sameday-bulk-awb-modal .sameday-bulk-header-icon.is-progress { background: #ede9fe; color: #7c3aed; }
+    .sameday-bulk-awb-modal .sameday-bulk-header-icon.is-complete { background: #d1fae5; color: #059669; }
+    #bulkAwbAction #bulkAwbModalTitle,
+    #bulkDeleteAwbAction #bulkDeleteModalTitle { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #111827; }
+    #bulkAwbAction #bulkAwbModalSubtitle,
+    #bulkDeleteAwbAction #bulkDeleteModalSubtitle { margin: 0; font-size: 13px; color: #6b7280; }
+    .sameday-bulk-awb-modal .modal-body { padding: 0 24px 20px; }
+    .sameday-bulk-awb-modal .sameday-bulk-progress-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #374151; font-weight: 500; }
+    .sameday-bulk-awb-modal .sameday-bulk-progress-track { height: 10px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-bottom: 20px; }
+    #bulkAwbAction #bulkAwbProgressBar { height: 100%; width: 0; background: linear-gradient(90deg, #7c3aed, #8b5cf6); border-radius: 999px; transition: width 0.25s ease; }
+    #bulkDeleteAwbAction #bulkDeleteAwbProgressBar { height: 100%; width: 0; border-radius: 999px; transition: width 0.25s ease; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary { display: flex; gap: 12px; margin-bottom: 20px; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card { flex: 1; border-radius: 10px; padding: 14px 16px; border: 1px solid transparent; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-success { background: #ecfdf5; border-color: #a7f3d0; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-error { background: #fef2f2; border-color: #fecaca; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-total { background: #eff6ff; border-color: #bfdbfe; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-success .sameday-bulk-summary-top { color: #059669; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-error .sameday-bulk-summary-top { color: #dc2626; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-card.is-total .sameday-bulk-summary-top { color: #2563eb; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-count { font-size: 28px; font-weight: 700; line-height: 1.1; color: #111827; }
+    .sameday-bulk-awb-modal .sameday-bulk-summary-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .sameday-bulk-awb-modal .sameday-bulk-logs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .sameday-bulk-awb-modal .sameday-bulk-logs-title { font-size: 14px; font-weight: 600; color: #111827; }
+    .sameday-bulk-awb-modal .sameday-bulk-logs-title i { color: #7c3aed; margin-right: 6px; }
+    #bulkAwbAction #bulkAwbLogFilter,
+    #bulkDeleteAwbAction #bulkDeleteLogFilter { border-radius: 8px; border: 1px solid #d1d5db; padding: 4px 10px; font-size: 13px; height: 32px; }
+    #bulkAwbAction #bulkAwbLog,
+    #bulkDeleteAwbAction #bulkDeleteLog { max-height: 240px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-row:last-child { border-bottom: none; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-row.is-error { background: #fef2f2; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-icon { width: 22px; text-align: center; flex-shrink: 0; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-icon.is-success { color: #059669; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-icon.is-error { color: #dc2626; }
+    .sameday-bulk-awb-modal .sameday-bulk-log-icon.is-info { color: #d97706; }
+    .sameday-bulk-awb-modal .sameday-bulk-awb-pill { background: #f3f4f6; color: #374151; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; margin-left: 12px; }
+    .sameday-bulk-awb-modal .sameday-bulk-confirm-list { max-height: 200px; overflow-y: auto; margin-top: 12px; padding-left: 18px; color: #374151; }
+    .sameday-bulk-awb-modal .sameday-bulk-confirm-agree { margin-top: 16px; padding: 12px 14px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .sameday-bulk-awb-modal .modal-footer { border-top: 1px solid #f3f4f6; padding: 16px 24px; background: #fafafa; }
+    .sameday-bulk-awb-modal .sameday-bulk-btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; padding: 8px 16px; font-weight: 500; }
+    .sameday-bulk-awb-modal .sameday-bulk-btn-primary { background: #7c3aed; border: 1px solid #7c3aed; color: #fff; border-radius: 8px; padding: 8px 18px; font-weight: 600; }
+    .sameday-bulk-awb-modal .sameday-bulk-btn-primary:hover, .sameday-bulk-awb-modal .sameday-bulk-btn-primary:focus { background: #6d28d9; border-color: #6d28d9; color: #fff; }
+    .sameday-bulk-awb-modal .sameday-bulk-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    #bulkDeleteAwbAction #bulkDeleteAwbProgressBar { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    #bulkDeleteAwbAction .sameday-bulk-header-icon.is-confirm { background: #fee2e2; color: #dc2626; }
+    #bulkDeleteAwbAction .sameday-bulk-logs-title i { color: #dc2626; }
+    #bulkDeleteAwbAction .sameday-bulk-btn-primary { background: #dc2626; border-color: #dc2626; }
+    #bulkDeleteAwbAction .sameday-bulk-btn-primary:hover, #bulkDeleteAwbAction .sameday-bulk-btn-primary:focus { background: #b91c1c; border-color: #b91c1c; }
+    </style>
+    <div id="bulkAwbAction" class="modal fade sameday-bulk-awb-modal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header sameday-bulk-awb-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div id="bulkAwbHeaderIcon" class="sameday-bulk-header-icon is-confirm"><i class="fa-solid fa-cube"></i></div>
+                    <div>
+                        <h4 class="modal-title" id="bulkAwbModalTitle">AWB Bulk Generation</h4>
+                        <p id="bulkAwbModalSubtitle">Review selected orders before generating shipment labels</p>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="bulkAwbPhaseConfirm">
+                        <p id="bulkAwbActionSummary" style="margin-bottom: 0; color: #374151;">Select orders from the list, then confirm bulk AWB generation.</p>
+                        <ul id="bulkAwbActionOrderList" class="sameday-bulk-confirm-list"></ul>
+                        <div class="sameday-bulk-confirm-agree">
+                            <label style="font-weight: normal; margin-bottom: 0;">
+                                <input type="checkbox" id="bulkConfirm">
+                                <small>I agree that the price estimations are subject to change due to bulk generation inaccuracy potential.</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="bulkAwbPhaseProgress" style="display: none;">
+                        <div class="sameday-bulk-progress-label">
+                            <span>Generating AWBs</span>
+                            <span id="bulkAwbProgressPercent">0%</span>
+                        </div>
+                        <div class="sameday-bulk-progress-track">
+                            <div id="bulkAwbProgressBar" role="progressbar"></div>
+                        </div>
+                        <div id="bulkAwbReport" class="sameday-bulk-summary" style="display: none;">
+                            <div class="sameday-bulk-summary-card is-success">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-circle-check"></i> Generated</div>
+                                <div class="sameday-bulk-summary-count" id="bulkAwbReportSuccess">0</div>
+                                <div class="sameday-bulk-summary-meta">Successfully generated</div>
+                            </div>
+                            <div class="sameday-bulk-summary-card is-error">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-circle-xmark"></i> Failed</div>
+                                <div class="sameday-bulk-summary-count" id="bulkAwbReportErrors">0</div>
+                                <div class="sameday-bulk-summary-meta">Generation failed</div>
+                            </div>
+                            <div class="sameday-bulk-summary-card is-total">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-box-archive"></i> Orders</div>
+                                <div class="sameday-bulk-summary-count" id="bulkAwbReportSelected">0</div>
+                                <div class="sameday-bulk-summary-meta">Total orders selected</div>
+                            </div>
+                        </div>
+                        <div id="bulkAwbLogsSection" style="display: none;">
+                            <div class="sameday-bulk-logs-head">
+                                <div class="sameday-bulk-logs-title"><i class="fa-solid fa-file-lines"></i> Generation Logs</div>
+                                <select id="bulkAwbLogFilter" class="form-control input-sm" style="width: auto;">
+                                    <option value="all">All</option>
+                                    <option value="success">Generated</option>
+                                    <option value="error">Failed</option>
+                                </select>
+                            </div>
+                            <div id="bulkAwbLog"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="bulkAwbFooterConfirm" class="clearfix">
+                        <button type="button" class="btn btn-default float-start" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn sameday-bulk-btn-primary float-end" id="bulkAwbActionConfirm" disabled>Confirm</button>
+                    </div>
+                    <div id="bulkAwbFooterComplete" style="display: none;" class="text-right">
+                        <button type="button" class="btn sameday-bulk-btn-outline" id="bulkAwbDownloadReport" disabled><i class="fa-solid fa-download"></i> Download Report</button>
+                        <button type="button" class="btn sameday-bulk-btn-primary" data-bs-dismiss="modal">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkDeleteAwbAction" class="modal fade sameday-bulk-awb-modal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header sameday-bulk-awb-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div id="bulkDeleteHeaderIcon" class="sameday-bulk-header-icon is-confirm"><i class="fa-solid fa-trash"></i></div>
+                    <div>
+                        <h4 class="modal-title" id="bulkDeleteModalTitle">Bulk AWB removal</h4>
+                        <p id="bulkDeleteModalSubtitle">Review selected orders before removing shipment labels</p>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="bulkDeletePhaseConfirm">
+                        <p id="bulkDeleteActionSummary" style="margin-bottom: 0; color: #374151;">Select orders from the list, then confirm bulk AWB removal.</p>
+                        <ul id="bulkDeleteActionOrderList" class="sameday-bulk-confirm-list"></ul>
+                        <div class="sameday-bulk-confirm-agree">
+                            <label style="font-weight: normal; margin-bottom: 0;">
+                                <input type="checkbox" id="bulkDeleteConfirm">
+                                <small>I understand that AWB removal cannot be undone.</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="bulkDeletePhaseProgress" style="display: none;">
+                        <div class="sameday-bulk-progress-label">
+                            <span>Removing AWBs</span>
+                            <span id="bulkDeleteProgressPercent">0%</span>
+                        </div>
+                        <div class="sameday-bulk-progress-track">
+                            <div id="bulkDeleteAwbProgressBar" role="progressbar"></div>
+                        </div>
+                        <div id="bulkDeleteReport" class="sameday-bulk-summary" style="display: none;">
+                            <div class="sameday-bulk-summary-card is-success">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-circle-check"></i> Removed</div>
+                                <div class="sameday-bulk-summary-count" id="bulkDeleteReportSuccess">0</div>
+                                <div class="sameday-bulk-summary-meta">AWB removed successfully</div>
+                            </div>
+                            <div class="sameday-bulk-summary-card is-error">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-circle-xmark"></i> Failed</div>
+                                <div class="sameday-bulk-summary-count" id="bulkDeleteReportErrors">0</div>
+                                <div class="sameday-bulk-summary-meta">Removal failed</div>
+                            </div>
+                            <div class="sameday-bulk-summary-card is-total">
+                                <div class="sameday-bulk-summary-top"><i class="fa-solid fa-box-archive"></i> Orders</div>
+                                <div class="sameday-bulk-summary-count" id="bulkDeleteReportSelected">0</div>
+                                <div class="sameday-bulk-summary-meta">Total orders selected</div>
+                            </div>
+                        </div>
+                        <div id="bulkDeleteLogsSection" style="display: none;">
+                            <div class="sameday-bulk-logs-head">
+                                <div class="sameday-bulk-logs-title"><i class="fa-solid fa-file-lines"></i> Removal logs</div>
+                                <select id="bulkDeleteLogFilter" class="form-control input-sm" style="width: auto;">
+                                    <option value="all">All</option>
+                                    <option value="success">Removed</option>
+                                    <option value="error">Failed</option>
+                                </select>
+                            </div>
+                            <div id="bulkDeleteLog"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="bulkDeleteFooterConfirm" class="clearfix">
+                        <button type="button" class="btn btn-default float-start" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn sameday-bulk-btn-primary float-end" id="bulkDeleteActionConfirm" disabled>Confirm</button>
+                    </div>
+                    <div id="bulkDeleteFooterComplete" style="display: none;" class="text-right">
+                        <button type="button" class="btn sameday-bulk-btn-outline" id="bulkDeleteDownloadReport" disabled><i class="fa-solid fa-download"></i> Download Report</button>
+                        <button type="button" class="btn sameday-bulk-btn-primary" data-bs-dismiss="modal">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <script type="text/javascript"><!--
+      var bulkAwbUrl = '{{ ajax_url_bulk|e('js') }}';
+      var bulkDeleteAwbUrl = '{{ ajax_url_bulk_delete|e('js') }}';
+      var deleteAwbUrl = '{{ ajax_url_delete_awb|e('js') }}';
+      var clearBulkErrorsUrl = '{{ ajax_url_clear_bulk_errors|e('js') }}';
+      var showAwbPdfUrlBase = '{{ sameday_show_awb_pdf_url_base|e('js') }}';
+      var showAwbHistoryUrlBase = '{{ sameday_show_awb_history_url_base|e('js') }}';
+      var samedayButtonShowAwb = '{{ sameday_button_show_awb|e('js') }}';
+
+      function getSelectedBulkOrderIds() {
+          var ids = [];
+          $('#form-order input[name^="selected"]:checked').each(function() {
+              var id = $(this).val();
+              if (id && id !== 'on') {
+                  ids.push(id);
+              }
+          });
+          return ids;
+      }
+
+      function renderBulkFeedbackCell(orderId, bulk) {
+          var $cell = $('.feedback[data-id="' + orderId + '"]');
+          if (!bulk) {
+              $cell.html('&mdash;');
+              return;
+          }
+          if (bulk.error) {
+              $cell.html('<span class="text-danger">' + $('<div>').text(bulk.error).html() + '</span>');
+          } else if (bulk.awb_number) {
+              $cell.html(
+                  '<a href="' + showAwbHistoryUrlBase + encodeURIComponent(orderId) + '">' + $('<div>').text(bulk.awb_number).html() + '</a>' +
+                  ' <a href="' + showAwbPdfUrlBase + encodeURIComponent(orderId) + '" target="_blank" rel="noopener noreferrer" data-bs-toggle="tooltip" title="' + samedayButtonShowAwb + '" class="btn btn-info btn-sm"><i class="fa-solid fa-file"></i></a>' +
+                  ' <button type="button" class="btn btn-danger btn-sm btn-delete-sameday-awb" data-order-id="' + orderId + '" data-bs-toggle="tooltip" title="Remove AWB"><i class="fa-solid fa-trash"></i></button>'
+              );
+          } else {
+              $cell.html('<span class="text-muted">Pending</span>');
+          }
+      }
+
+      function setBulkAwbModalHeader(mode) {
+          var $icon = $('#bulkAwbHeaderIcon');
+          $icon.removeClass('is-confirm is-progress is-complete');
+          if (mode === 'complete') {
+              $icon.addClass('is-complete').html('<i class="fa-solid fa-check"></i>');
+              $('#bulkAwbModalTitle').text('AWB Generation Complete');
+              $('#bulkAwbModalSubtitle').text('Shipment labels processed successfully');
+          } else if (mode === 'progress') {
+              $icon.addClass('is-progress').html('<i class="fa-solid fa-spinner fa-spin"></i>');
+              $('#bulkAwbModalTitle').text('Generating AWBs');
+              $('#bulkAwbModalSubtitle').text('Please wait while shipment labels are being created');
+          } else {
+              $icon.addClass('is-confirm').html('<i class="fa-solid fa-cube"></i>');
+              $('#bulkAwbModalTitle').text('AWB Bulk Generation');
+              $('#bulkAwbModalSubtitle').text('Review selected orders before generating shipment labels');
+          }
+      }
+
+      function resetBulkAwbModal() {
+          setBulkAwbModalHeader('confirm');
+          $('#bulkAwbPhaseConfirm').show();
+          $('#bulkAwbPhaseProgress').hide();
+          $('#bulkAwbFooterConfirm').show();
+          $('#bulkAwbFooterComplete').hide();
+          $('#bulkAwbReport').hide();
+          $('#bulkAwbLogsSection').hide();
+          $('#bulkAwbLog').empty();
+          $('#bulkAwbLogFilter').val('all');
+          $('#bulkAwbProgressBar').css('width', '0%');
+          $('#bulkAwbProgressPercent').text('0%');
+          $('#bulkAwbDownloadReport').prop('disabled', true);
+          $('#bulkAwbAction').removeData('bulkResults');
+      }
+
+      function prepareBulkAwbModal(orderIds) {
+          resetBulkAwbModal();
+          var $list = $('#bulkAwbActionOrderList').empty();
+          orderIds.forEach(function(orderId) {
+              $list.append('<li>Order #' + orderId + '</li>');
+          });
+          $('#bulkAwbActionSummary').text(
+              'You are about to generate AWB for ' + orderIds.length + ' order(s).'
+          );
+          $('#bulkConfirm').prop('checked', false);
+          $('#bulkAwbActionConfirm').prop('disabled', true);
+          $('#bulkAwbAction').data('orderIds', orderIds);
+      }
+
+      function setBulkAwbProgress(done, total) {
+          var percent = total ? Math.round((done / total) * 100) : 0;
+          $('#bulkAwbProgressBar').css('width', percent + '%');
+          $('#bulkAwbProgressPercent').text(percent + '%');
+      }
+
+      function filterBulkAwbLogs() {
+          var filter = $('#bulkAwbLogFilter').val();
+          $('#bulkAwbLog .sameday-bulk-log-row').each(function() {
+              var status = $(this).data('log-status');
+              var show = filter === 'all'
+                  || (filter === 'success' && (status === 'success' || status === 'info'))
+                  || (filter === 'error' && status === 'error');
+              $(this).toggle(show);
+          });
+      }
+
+      function appendBulkAwbLog(orderId, type, message, awbNumber) {
+          var logStatus = type === 'success' ? 'success' : (type === 'error' ? 'error' : 'info');
+          var iconClass = type === 'success' ? 'is-success' : (type === 'error' ? 'is-error' : 'is-info');
+          var icon = type === 'success' ? 'fa-check' : (type === 'error' ? 'fa-times' : 'fa-info-circle');
+          var rowClass = type === 'error' ? ' sameday-bulk-log-row is-error' : ' sameday-bulk-log-row';
+          var label = '#' + orderId + ' ' + $('<div>').text(message).html();
+          var pill = (awbNumber && type !== 'error')
+              ? '<span class="sameday-bulk-awb-pill">' + $('<div>').text(awbNumber).html() + '</span>'
+              : '';
+          var line = '<div class="' + rowClass.trim() + '" data-log-status="' + logStatus + '">' +
+              '<div class="sameday-bulk-log-left">' +
+              '<span class="sameday-bulk-log-icon ' + iconClass + '"><i class="fa ' + icon + '"></i></span>' +
+              '<span>' + label + '</span></div>' + pill + '</div>';
+          $('#bulkAwbLog').append(line);
+          filterBulkAwbLogs();
+          $('#bulkAwbLog').scrollTop($('#bulkAwbLog')[0].scrollHeight);
+      }
+
+      function parseBulkAwbResponse(orderId, json) {
+          if (json.sameday_bulk) {
+              if (json.sameday_bulk.error) {
+                  return {
+                      order_id: orderId,
+                      status: 'error',
+                      awb_number: '',
+                      error: json.sameday_bulk.error,
+                      message: json.sameday_bulk.error
+                  };
+              }
+              if (json.sameday_bulk.awb_number) {
+                  return {
+                      order_id: orderId,
+                      status: 'success',
+                      awb_number: json.sameday_bulk.awb_number,
+                      error: '',
+                      message: 'Successfully generated'
+                  };
+              }
+              return {
+                  order_id: orderId,
+                  status: 'pending',
+                  awb_number: '',
+                  error: '',
+                  message: 'Pending'
+              };
+          }
+          if (json.error) {
+              return {
+                  order_id: orderId,
+                  status: 'error',
+                  awb_number: '',
+                  error: json.error,
+                  message: json.error
+              };
+          }
+          return {
+              order_id: orderId,
+              status: 'error',
+              awb_number: '',
+              error: 'Unknown response',
+              message: 'Unknown response'
+          };
+      }
+
+      function finishBulkAwbReport(results, total) {
+          var successCount = 0;
+          var errorCount = 0;
+          results.forEach(function(row) {
+              if (row.status === 'success') {
+                  successCount++;
+              } else if (row.status === 'error') {
+                  errorCount++;
+              }
+          });
+
+          setBulkAwbModalHeader('complete');
+          $('#bulkAwbReportSelected').text(total);
+          $('#bulkAwbReportSuccess').text(successCount);
+          $('#bulkAwbReportErrors').text(errorCount);
+          $('#bulkAwbReport').show();
+          $('#bulkAwbDownloadReport').prop('disabled', false);
+          $('#bulkAwbAction').data('bulkResults', results);
+      }
+
+      function downloadBulkAwbCsv() {
+          var results = $('#bulkAwbAction').data('bulkResults') || [];
+          if (!results.length) {
+              return;
+          }
+
+          var lines = ['Order ID,Status,AWB Number,Message'];
+          results.forEach(function(row) {
+              var cells = [
+                  row.order_id,
+                  row.status,
+                  row.awb_number || '',
+                  (row.error || row.message || '').replace(/"/g, '""')
+              ];
+              lines.push(cells.map(function(c) { return '"' + c + '"'; }).join(','));
+          });
+
+          var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+          var link = document.createElement('a');
+          var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'sameday-bulk-awb-report-' + stamp + '.csv';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+      }
+
+      function runBulkAwbQueue(orderIds) {
+          var results = [];
+          var total = orderIds.length;
+          var index = 0;
+
+          setBulkAwbModalHeader('progress');
+          $('#bulkAwbPhaseConfirm').hide();
+          $('#bulkAwbPhaseProgress').show();
+          $('#bulkAwbFooterConfirm').hide();
+          $('#bulkAwbFooterComplete').show();
+          $('#bulkAwbReport').hide();
+          $('#bulkAwbLogsSection').show();
+          $('#bulkAwbLog').empty();
+          $('#bulkAwbLogFilter').val('all');
+          setBulkAwbProgress(0, total);
+
+          function processNext() {
+              if (index >= total) {
+                  setBulkAwbProgress(total, total);
+                  finishBulkAwbReport(results, total);
+                  return;
+              }
+
+              var orderId = orderIds[index];
+
+              $.ajax({
+                  url: bulkAwbUrl + '&order_id=' + encodeURIComponent(orderId),
+                  type: 'GET',
+                  dataType: 'json'
+              }).done(function(json) {
+                  if (json.already_exists) {
+                      results.push({
+                          order_id: orderId,
+                          status: 'already_exists',
+                          awb_number: json.awb_number || '',
+                          error: '',
+                          message: json.message
+                      });
+                      appendBulkAwbLog(orderId, 'info', json.message, json.awb_number || '');
+                      return;
+                  }
+
+                  $('.feedback[data-id="' + orderId + '"]').html(
+                      '<div class="progress" style="margin-bottom: 0;"><div class="progress-bar progress-bar-striped active" style="width: 100%;"></div></div>'
+                  );
+
+                  var row = parseBulkAwbResponse(orderId, json);
+                  results.push(row);
+                  appendBulkAwbLog(
+                      orderId,
+                      row.status === 'success' ? 'success' : 'error',
+                      row.message,
+                      row.awb_number || ''
+                  );
+                  renderBulkFeedbackCell(orderId, json.sameday_bulk || (row.error ? { error: row.error } : null));
+              }).fail(function(xhr) {
+                  var msg = 'Request failed';
+                  try {
+                      var json = JSON.parse(xhr.responseText);
+                      if (json.error) {
+                          msg = json.error;
+                      }
+                  } catch (err) {}
+                  var row = {
+                      order_id: orderId,
+                      status: 'error',
+                      awb_number: '',
+                      error: msg,
+                      message: msg
+                  };
+                  results.push(row);
+                  appendBulkAwbLog(orderId, 'error', msg, '');
+                  renderBulkFeedbackCell(orderId, { error: msg });
+              }).always(function() {
+                  index++;
+                  setBulkAwbProgress(index, total);
+                  processNext();
+              });
+          }
+
+          processNext();
+      }
+
+      $('#bulkClearErrorsButton').on('click', function() {
+          if (!confirm('Remove all bulk AWB feedback for orders that do not have a generated AWB yet?')) {
+              return;
+          }
+
+          var $btn = $(this).prop('disabled', true);
+
+          $.ajax({
+              url: clearBulkErrorsUrl + '&ajax=1',
+              type: 'GET',
+              dataType: 'json'
+          }).done(function(json) {
+              if (json.success) {
+                  (json.order_ids || []).forEach(function(orderId) {
+                      $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
+                  });
+                  alert('Cleared ' + (json.deleted || 0) + ' bulk feedback record(s).');
+              } else if (json.error) {
+                  alert(json.error);
+              }
+          }).fail(function(xhr) {
+              var msg = 'Request failed';
+              try {
+                  var json = JSON.parse(xhr.responseText);
+                  if (json.error) {
+                      msg = json.error;
+                  }
+              } catch (err) {}
+              alert(msg);
+          }).always(function() {
+              $btn.prop('disabled', false);
+          });
+      });
+
+      $('#bulkAwbActionButton').on('click', function(e) {
+          if (!getSelectedBulkOrderIds().length) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              alert('Please select at least one order.');
+              return false;
+          }
+      });
+
+      $('#bulkAwbAction').on('show.bs.modal', function() {
+          prepareBulkAwbModal(getSelectedBulkOrderIds());
+      });
+
+      $('#bulkAwbAction').on('hidden.bs.modal', function() {
+          resetBulkAwbModal();
+      });
+
+      $('#bulkConfirm').on('change', function() {
+          $('#bulkAwbActionConfirm').prop('disabled', !this.checked);
+      });
+
+      $('#bulkAwbActionConfirm').on('click', function() {
+          var orderIds = $('#bulkAwbAction').data('orderIds') || [];
+          if (!orderIds.length || !$('#bulkConfirm').is(':checked')) {
+              return;
+          }
+          runBulkAwbQueue(orderIds);
+      });
+
+      $('#bulkAwbDownloadReport').on('click', function() {
+          downloadBulkAwbCsv();
+      });
+
+      $('#bulkAwbLogFilter').on('change', function() {
+          filterBulkAwbLogs();
+      });
+
+      function setBulkDeleteModalHeader(mode) {
+          var $icon = $('#bulkDeleteHeaderIcon');
+          $icon.removeClass('is-confirm is-progress is-complete');
+          if (mode === 'complete') {
+              $icon.addClass('is-complete').html('<i class="fa-solid fa-check"></i>');
+              $('#bulkDeleteModalTitle').text('AWB removal complete');
+              $('#bulkDeleteModalSubtitle').text('Bulk AWB removal finished');
+          } else if (mode === 'progress') {
+              $icon.addClass('is-progress').html('<i class="fa-solid fa-spinner fa-spin"></i>');
+              $('#bulkDeleteModalTitle').text('Removing AWBs');
+              $('#bulkDeleteModalSubtitle').text('Please wait while AWBs are being removed');
+          } else {
+              $icon.addClass('is-confirm').html('<i class="fa-solid fa-trash"></i>');
+              $('#bulkDeleteModalTitle').text('Bulk AWB removal');
+              $('#bulkDeleteModalSubtitle').text('Review selected orders before removing shipment labels');
+          }
+      }
+
+      function resetBulkDeleteModal() {
+          setBulkDeleteModalHeader('confirm');
+          $('#bulkDeletePhaseConfirm').show();
+          $('#bulkDeletePhaseProgress').hide();
+          $('#bulkDeleteFooterConfirm').show();
+          $('#bulkDeleteFooterComplete').hide();
+          $('#bulkDeleteReport').hide();
+          $('#bulkDeleteLogsSection').hide();
+          $('#bulkDeleteLog').empty();
+          $('#bulkDeleteLogFilter').val('all');
+          $('#bulkDeleteAwbProgressBar').css('width', '0%');
+          $('#bulkDeleteProgressPercent').text('0%');
+          $('#bulkDeleteDownloadReport').prop('disabled', true);
+          $('#bulkDeleteAwbAction').removeData('bulkDeleteResults');
+      }
+
+      function prepareBulkDeleteModal(orderIds) {
+          resetBulkDeleteModal();
+          var $list = $('#bulkDeleteActionOrderList').empty();
+          orderIds.forEach(function(orderId) {
+              $list.append('<li>Order #' + orderId + '</li>');
+          });
+          $('#bulkDeleteActionSummary').text(
+              'You are about to remove Sameday AWB for ' + orderIds.length + ' order(s).'
+          );
+          $('#bulkDeleteConfirm').prop('checked', false);
+          $('#bulkDeleteActionConfirm').prop('disabled', true);
+          $('#bulkDeleteAwbAction').data('orderIds', orderIds);
+      }
+
+      function setBulkDeleteProgress(done, total) {
+          var percent = total ? Math.round((done / total) * 100) : 0;
+          $('#bulkDeleteAwbProgressBar').css('width', percent + '%');
+          $('#bulkDeleteProgressPercent').text(percent + '%');
+      }
+
+      function filterBulkDeleteLogs() {
+          var filter = $('#bulkDeleteLogFilter').val();
+          $('#bulkDeleteLog .sameday-bulk-log-row').each(function() {
+              var status = $(this).data('log-status');
+              var show = filter === 'all'
+                  || (filter === 'success' && status === 'success')
+                  || (filter === 'error' && status === 'error');
+              $(this).toggle(show);
+          });
+      }
+
+      function appendBulkDeleteLog(orderId, type, message, awbNumber) {
+          var logStatus = type === 'success' ? 'success' : 'error';
+          var iconClass = type === 'success' ? 'is-success' : 'is-error';
+          var icon = type === 'success' ? 'fa-check' : 'fa-times';
+          var rowClass = type === 'error' ? ' sameday-bulk-log-row is-error' : ' sameday-bulk-log-row';
+          var label = '#' + orderId + ' ' + $('<div>').text(message).html();
+          var pill = (awbNumber && type === 'success')
+              ? '<span class="sameday-bulk-awb-pill">' + $('<div>').text(awbNumber).html() + '</span>'
+              : '';
+          var line = '<div class="' + rowClass.trim() + '" data-log-status="' + logStatus + '">' +
+              '<div class="sameday-bulk-log-left">' +
+              '<span class="sameday-bulk-log-icon ' + iconClass + '"><i class="fa ' + icon + '"></i></span>' +
+              '<span>' + label + '</span></div>' + pill + '</div>';
+          $('#bulkDeleteLog').append(line);
+          filterBulkDeleteLogs();
+          $('#bulkDeleteLog').scrollTop($('#bulkDeleteLog')[0].scrollHeight);
+      }
+
+      function finishBulkDeleteReport(results, total) {
+          var successCount = 0;
+          var errorCount = 0;
+          results.forEach(function(row) {
+              if (row.status === 'success') {
+                  successCount++;
+              } else if (row.status === 'error') {
+                  errorCount++;
+              }
+          });
+          setBulkDeleteModalHeader('complete');
+          $('#bulkDeleteReportSelected').text(total);
+          $('#bulkDeleteReportSuccess').text(successCount);
+          $('#bulkDeleteReportErrors').text(errorCount);
+          $('#bulkDeleteReport').show();
+          $('#bulkDeleteDownloadReport').prop('disabled', false);
+          $('#bulkDeleteAwbAction').data('bulkDeleteResults', results);
+      }
+
+      function downloadBulkDeleteCsv() {
+          var results = $('#bulkDeleteAwbAction').data('bulkDeleteResults') || [];
+          if (!results.length) {
+              return;
+          }
+          var lines = ['Order ID,Status,AWB Number,Message'];
+          results.forEach(function(row) {
+              var cells = [
+                  row.order_id,
+                  row.status,
+                  row.awb_number || '',
+                  (row.error || row.message || '').replace(/"/g, '""')
+              ];
+              lines.push(cells.map(function(c) { return '"' + c + '"'; }).join(','));
+          });
+          var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+          var link = document.createElement('a');
+          var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'sameday-bulk-delete-awb-report-' + stamp + '.csv';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+      }
+
+      function runBulkDeleteAwbQueue(orderIds) {
+          var results = [];
+          var total = orderIds.length;
+          var index = 0;
+
+          setBulkDeleteModalHeader('progress');
+          $('#bulkDeletePhaseConfirm').hide();
+          $('#bulkDeletePhaseProgress').show();
+          $('#bulkDeleteFooterConfirm').hide();
+          $('#bulkDeleteFooterComplete').show();
+          $('#bulkDeleteReport').hide();
+          $('#bulkDeleteLogsSection').show();
+          $('#bulkDeleteLog').empty();
+          $('#bulkDeleteLogFilter').val('all');
+          setBulkDeleteProgress(0, total);
+
+          function processNext() {
+              if (index >= total) {
+                  setBulkDeleteProgress(total, total);
+                  finishBulkDeleteReport(results, total);
+                  return;
+              }
+
+              var orderId = orderIds[index];
+
+              $.ajax({
+                  url: bulkDeleteAwbUrl + '&order_id=' + encodeURIComponent(orderId),
+                  type: 'GET',
+                  dataType: 'json'
+              }).done(function(json) {
+                  if (json.success) {
+                      results.push({
+                          order_id: orderId,
+                          status: 'success',
+                          awb_number: json.awb_number || '',
+                          error: '',
+                          message: json.message || 'AWB removed successfully'
+                      });
+                      appendBulkDeleteLog(orderId, 'success', json.message || 'AWB removed successfully', json.awb_number || '');
+                      $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
+                  } else {
+                      var msg = json.error || 'Unknown error';
+                      results.push({
+                          order_id: orderId,
+                          status: 'error',
+                          awb_number: json.awb_number || '',
+                          error: msg,
+                          message: msg
+                      });
+                      appendBulkDeleteLog(orderId, 'error', msg, '');
+                  }
+              }).fail(function(xhr) {
+                  var msg = 'Request failed';
+                  try {
+                      var json = JSON.parse(xhr.responseText);
+                      if (json.error) {
+                          msg = json.error;
+                      }
+                  } catch (err) {}
+                  results.push({
+                      order_id: orderId,
+                      status: 'error',
+                      awb_number: '',
+                      error: msg,
+                      message: msg
+                  });
+                  appendBulkDeleteLog(orderId, 'error', msg, '');
+              }).always(function() {
+                  index++;
+                  setBulkDeleteProgress(index, total);
+                  processNext();
+              });
+          }
+
+          processNext();
+      }
+
+      $('#bulkDeleteAwbActionButton').on('click', function(e) {
+          if (!getSelectedBulkOrderIds().length) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              alert('Please select at least one order.');
+              return false;
+          }
+      });
+
+      $('#bulkDeleteAwbAction').on('show.bs.modal', function() {
+          prepareBulkDeleteModal(getSelectedBulkOrderIds());
+      });
+
+      $('#bulkDeleteAwbAction').on('hidden.bs.modal', function() {
+          resetBulkDeleteModal();
+      });
+
+      $('#bulkDeleteConfirm').on('change', function() {
+          $('#bulkDeleteActionConfirm').prop('disabled', !this.checked);
+      });
+
+      $('#bulkDeleteActionConfirm').on('click', function() {
+          var orderIds = $('#bulkDeleteAwbAction').data('orderIds') || [];
+          if (!orderIds.length || !$('#bulkDeleteConfirm').is(':checked')) {
+              return;
+          }
+          runBulkDeleteAwbQueue(orderIds);
+      });
+
+      $('#bulkDeleteDownloadReport').on('click', function() {
+          downloadBulkDeleteCsv();
+      });
+
+      $('#bulkDeleteLogFilter').on('change', function() {
+          filterBulkDeleteLogs();
+      });
+
+      $(document).on('click', '.btn-delete-sameday-awb', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (!confirm('Remove Sameday AWB for this order?')) {
+              return;
+          }
+
+          var orderId = $(this).data('order-id');
+          var $btn = $(this);
+          $btn.prop('disabled', true);
+
+          $.ajax({
+              url: deleteAwbUrl + '&order_id=' + encodeURIComponent(orderId) + '&ajax=1',
+              type: 'GET',
+              dataType: 'json'
+          }).done(function(json) {
+              if (json.success) {
+                  $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
+              } else if (json.error) {
+                  alert(json.error);
+                  $btn.prop('disabled', false);
+              }
+          }).fail(function(xhr) {
+              var msg = 'Request failed';
+              try {
+                  var json = JSON.parse(xhr.responseText);
+                  if (json.error) {
+                      msg = json.error;
+                  }
+              } catch (err) {}
+              alert(msg);
+              $btn.prop('disabled', false);
+          });
+      });
+//-->
+</script>

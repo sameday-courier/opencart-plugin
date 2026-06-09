@@ -1,0 +1,81 @@
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <td> {{ text_summary }} </td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <td class="text-left"> {{ column_parcel_number }} </td>
+                    <td class="text-left"> {{ column_parcel_weight }} </td>
+                    <td class="text-left"> {{ column_delivered }} </td>
+                    <td class="text-left"> {{ column_delivery_attempts }} </td>
+                    <td class="text-left"> {{ column_is_picked_up }} </td>
+                    <td class="text-left"> {{ column_picked_up_at }} </td>
+                </tr>
+                </thead>
+                <tbody>
+                {% for package in packages %}
+                    <tr>
+                        <td> {{ package.summary.getParcelAwbNumber() }}</td>
+                        <td> {{ package.summary.getParcelWeight() }}</td>
+                        <td> {{ package.summary.isDelivered() ? 'Yes' : 'No'}}</td>
+                        <td> {{ package.summary.getDeliveryAttempts() }}</td>
+                        <td> {{ package.summary.isPickedUp() ? 'Yes' : 'No'}}</td>
+                        <td> {{ package.summary.getPickedUpAt() ? package.summary.getPickedUpAt()|date("d-m-Y H:i:s") : '' }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <td> {{ text_history }} </td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>
+            {% for package in packages %}
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>{{ column_parcel_number }}</th>
+                        <th>{{ column_status }}</th>
+                        <th>{{ column_status_label }}</th>
+                        <th>{{ column_status_state }}</th>
+                        <th>{{ column_status_date }}</th>
+                        <th>{{ column_county }}</th>
+                        <th>{{ column_transit_location }}</th>
+                        <th>{{ column_reason }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for history in package.history %}
+                        <tr>
+                            <td> {{ package.awb_parcel }} </td>
+                            <td> {{ history.getName() }} </td>
+                            <td> {{ history.getLabel() }} </td>
+                            <td> {{ history.getState() }} </td>
+                            <td> {{ history.getDate()|date('d-m-Y H:i:s') }} </td>
+                            <td> {{ history.getCounty() }} </td>
+                            <td> {{ history.getTransitLocation() }} </td>
+                            <td> {{ history.getReason() }} </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
+        </td>
+    </tr>
+    </tbody>
+</table>
