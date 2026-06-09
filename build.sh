@@ -106,7 +106,6 @@ elif [ $VERSION -eq 4 ]; then
     cp -r system/library/sameday-php-sdk/. upload/system/library/sameday-php-sdk/
     cp system/library/samedayclasses.php upload/system/library/
     cp install.json upload/
-    cp install.4.xml upload/install.xml
 
     (cd upload && zip -r ../sameday.ocmod.zip .)
     rm -rf upload
