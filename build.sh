@@ -85,6 +85,7 @@ elif [ $VERSION -eq 4 ]; then
     mkdir -p upload/system/library/sameday-classes
     mkdir -p upload/system/library/sameday-php-sdk
 
+    # OC4 entrypoints must come from *_*.4.php (DIR_EXTENSION). Never ship OC2/OC3 DIR_SYSTEM wrappers as sameday.php.
     cp admin/controller/extension/shipping/sameday_admin_controller.4.php upload/admin/controller/shipping/sameday.php
     cp admin/controller/extension/shipping/sameday_admin_controller.3.php upload/admin/controller/shipping/
     cp admin/controller/extension/shipping/sameday_admin_controller.4.php upload/admin/controller/shipping/
@@ -108,6 +109,29 @@ elif [ $VERSION -eq 4 ]; then
     cp -r system/library/sameday-php-sdk/. upload/system/library/sameday-php-sdk/
     cp system/library/samedayclasses.php upload/system/library/
     cp install.json upload/
+
+    for entry in \
+        upload/admin/controller/shipping/sameday.php \
+        upload/admin/model/shipping/sameday.php \
+        upload/catalog/controller/shipping/sameday.php \
+        upload/catalog/model/shipping/sameday.php
+    do
+        if grep -Eq 'require(_once)?[[:space:]]+DIR_SYSTEM' "$entry"; then
+            echo "ERROR: $entry must not require DIR_SYSTEM (OC4 entrypoints are gated to DIR_EXTENSION)" >&2
+            rm -rf upload
+            exit 1
+        fi
+        if ! grep -Eq 'DIR_EXTENSION' "$entry"; then
+            echo "ERROR: $entry is missing DIR_EXTENSION bootstrap" >&2
+            rm -rf upload
+            exit 1
+        fi
+        if ! grep -Eq 'namespace Opencart\\' "$entry"; then
+            echo "ERROR: $entry is missing OC4 namespace (wrong wrapper packaged as sameday.php)" >&2
+            rm -rf upload
+            exit 1
+        fi
+    done
 
     (cd upload && zip -r ../sameday.ocmod.zip .)
     rm -rf upload
