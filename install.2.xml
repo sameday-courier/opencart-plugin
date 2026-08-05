@@ -1091,7 +1091,7 @@ $('#button-filter').on('click', function() {
                         data-dest_country="<?php echo $quote['destCountry']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['apiUsername'])) { ?>
-                        data-dest_country="<?php echo $quote['apiUsername']; ?>"
+                        data-api_username="<?php echo $quote['apiUsername']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['destCity'])) { ?>
                         data-dest_city="<?php echo $quote['destCity']; ?>"
@@ -1118,7 +1118,7 @@ $('#button-filter').on('click', function() {
                         data-dest_country="<?php echo $quote['destCountry']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['apiUsername'])) { ?>
-                        data-dest_country="<?php echo $quote['apiUsername']; ?>"
+                        data-api_username="<?php echo $quote['apiUsername']; ?>"
                     <?php } ?>
                     <?php if (isset($quote['destCity'])) { ?>
                         data-dest_city="<?php echo $quote['destCity']; ?>"

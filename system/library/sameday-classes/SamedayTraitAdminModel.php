@@ -78,7 +78,7 @@ trait SamedayTraitAdminModel {
         $this->db->query($query);
     }
 
-    public function updateAwbParcels(int $orderId, string $serializedParcels): void
+    public function updateAwbParcels(int $orderId, string $serializedParcels)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . 'sameday_awb SET parcels = \''
@@ -98,38 +98,52 @@ trait SamedayTraitAdminModel {
     public function updateShippingMethodAfterPostAwb(
         int $orderId,
         array $service,
-        int $lockerId = null,
-        string $lockerAddress = null
+        $lockerId = null,
+        $lockerAddress = null
     ) {
-        $shippingCode = sprintf(
-            'sameday.%s.%s',
-            $this->db->escape($service['sameday_code']),
-            $this->db->escape($service['sameday_id'])
-        );
-
-        if (null !== $lockerId && null !== $lockerAddress) {
-            $shippingCode .= sprintf('.%s.%s', $this->db->escape($lockerId), $this->db->escape($lockerAddress));
+        if ($service === []) {
+            return;
         }
 
-        if($this->samedayVersionValidator->isOc4()){
-            $shippingMethodData = json_decode($this->db->query("SELECT shipping_method FROM " . DB_PREFIX . "order WHERE order_id = " . $orderId)->row['shipping_method']);
+        $shippingCode = sprintf(
+            'sameday.%s.%s',
+            $this->db->escape((string)($service['sameday_code'] ?? '')),
+            $this->db->escape((string)($service['sameday_id'] ?? ''))
+        );
 
-            $shippingMethodData->sameday_name = $service['name'];
-            $shippingMethodData->code = $shippingCode;
+        if ($lockerId !== null && $lockerAddress !== null && $lockerAddress !== '') {
+            $shippingCode .= sprintf(
+                '.%s.%s',
+                $this->db->escape((string)$lockerId),
+                $this->db->escape($lockerAddress)
+            );
+        }
 
+        if ($this->samedayVersionValidator->isOc4()) {
+            $row = $this->db->query(
+                'SELECT shipping_method FROM ' . DB_PREFIX . 'order WHERE order_id = ' . (int)$orderId
+            )->row;
+            $shippingMethodData = json_decode((string)($row['shipping_method'] ?? ''), true);
+            if (!is_array($shippingMethodData)) {
+                $shippingMethodData = [];
+            }
+
+            $serviceName = (string)($service['name'] ?? '');
             $shippingMethod = new SamedayShippingMethod(
-                $shippingMethodData->sameday_name,
-                $shippingMethodData->name,
-                $shippingMethodData->code,
-                $shippingMethodData->service_id,
-                $shippingMethodData->title,
-                $shippingMethodData->cost,
-                $shippingMethodData->tax_class_id,
-                $shippingMethodData->text
+                $serviceName !== ''
+                    ? $serviceName
+                    : (string)($shippingMethodData['sameday_name'] ?? $shippingMethodData['name'] ?? ''),
+                (string)($shippingMethodData['name'] ?? $serviceName),
+                $shippingCode,
+                (int)($service['sameday_id'] ?? $shippingMethodData['service_id'] ?? 0),
+                (string)($shippingMethodData['title'] ?? $serviceName),
+                (string)($shippingMethodData['cost'] ?? '0'),
+                (int)($shippingMethodData['tax_class_id'] ?? 0),
+                (string)($shippingMethodData['text'] ?? '')
             );
 
             $this->updateShippingMethod($shippingMethod, $orderId);
-        }else{
+        } else {
             $this->db->query('
             UPDATE ' . DB_PREFIX . "order SET 
                 shipping_method='{$this->db->escape($service['name'])}',
@@ -140,7 +154,7 @@ trait SamedayTraitAdminModel {
         }
     }
 
-    public function updateShippingMethod(SamedayShippingMethod $shippingMethod, $orderId): void{
+    public function updateShippingMethod(SamedayShippingMethod $shippingMethod, $orderId){
         $this->db->query('
             UPDATE ' . DB_PREFIX . "order SET 
                 shipping_method='" . $shippingMethod->toJson() . "' 
@@ -243,7 +257,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    public function ensureSamedayServiceCodeColumn(): void
+    public function ensureSamedayServiceCodeColumn()
     {
         $query = 'SHOW COLUMNS FROM ' . DB_PREFIX . "sameday_service LIKE 'sameday_code'";
         $row = $this->db->query($query)->row;
@@ -263,7 +277,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    public function ensureSamedayServiceOptionalTaxColumn(): void
+    public function ensureSamedayServiceOptionalTaxColumn()
     {
         $query = 'SHOW COLUMNS FROM ' . DB_PREFIX . "sameday_service LIKE 'service_optional_taxes'";
         $row = $this->db->query($query)->row;
@@ -286,7 +300,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function editService(int $id, ServiceObject $serviceObject): void
+    public function editService(int $id, ServiceObject $serviceObject)
     {
         $serviceOptionalTaxes = $this->db->escape($this->buildServiceOptionalTaxes($serviceObject->getOptionalTaxes()));
         $this->db->query('
@@ -306,7 +320,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function updateServiceStatus(int $id, int $status): void
+    public function updateServiceStatus(int $id, int $status)
     {
         $this->db->query(
             sprintf(
@@ -323,7 +337,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addService(ServiceObject $service): void
+    public function addService(ServiceObject $service)
     {
         $testing = $this->getConfig("sameday_testing");
         $query = '
@@ -352,7 +366,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function updateService(int $id, array $postFields): void
+    public function updateService(int $id, array $postFields)
     {
         if ('' === $priceFree = $this->db->escape($postFields['price_free'] ?? '')) {
             $priceFree =  'NULL';
@@ -374,7 +388,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function deleteService(int $id): void
+    public function deleteService(int $id)
     {
         $query = 'DELETE FROM ' . DB_PREFIX . "sameday_service WHERE id='{$this->db->escape($id)}'";
 
@@ -481,7 +495,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addPickupPoint(PickupPointObject $pickupPointObject): void
+    public function addPickupPoint(PickupPointObject $pickupPointObject)
     {
         $testing = $this->getConfig('sameday_testing');
         $query = '
@@ -511,7 +525,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addLocker(LockerObject $lockerObject): void
+    public function addLocker(LockerObject $lockerObject)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_locker (
@@ -546,7 +560,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function updatePickupPoint(PickupPointObject $pickupPointObject, int $pickupPointId): void
+    public function updatePickupPoint(PickupPointObject $pickupPointObject, int $pickupPointId)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . "sameday_pickup_point SET 
@@ -565,7 +579,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function updateLocker(LockerObject $lockerObject, int $lockerId): void
+    public function updateLocker(LockerObject $lockerObject, int $lockerId)
     {
         $this->db->query(
             'UPDATE ' . DB_PREFIX . "sameday_locker SET 
@@ -586,7 +600,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function deletePickupPoint(int $id): void
+    public function deletePickupPoint(int $id)
     {
         $table = DB_PREFIX . "sameday_pickup_point";
         $id = $this->db->escape($id);
@@ -601,7 +615,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function deleteLocker(int $id): void
+    public function deleteLocker(int $id)
     {
         $table = DB_PREFIX . "sameday_locker";
         $id = $this->db->escape($id);
@@ -616,7 +630,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function deleteAwb(string $awbNumber): void
+    public function deleteAwb(string $awbNumber)
     {
         $table = DB_PREFIX . "sameday_awb";
         $awbNumber = $this->db->escape($awbNumber);
@@ -681,7 +695,7 @@ trait SamedayTraitAdminModel {
         SummaryObject $summary,
         array $history,
         ExpeditionObject $expedition
-    ): void {
+    ) {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_package (
                 order_id,
@@ -755,7 +769,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addCounty(string $county): void
+    public function addCounty(string $county)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_counties (
@@ -771,12 +785,12 @@ trait SamedayTraitAdminModel {
     }
 
     /**
-     * @param mixed $city
+     * @param $city
      * @param int $zone_id
      *
      * @return void
      */
-    public function addCity($city, int $zone_id): void
+    public function addCity($city, int $zone_id)
     {
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_cities (
@@ -797,7 +811,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function addCodCode(): void
+    private function addCodCode()
     {
         $value = json_encode(['cod']);
 
@@ -812,7 +826,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function removeCodCode(): void
+    private function removeCodCode()
     {
         $query = "DELETE FROM " . DB_PREFIX . "setting WHERE `key` = 'shipping_sameday_cod'";
         $this->db->query($query);
@@ -821,7 +835,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    public function checkCodSetting(): void
+    public function checkCodSetting()
     {
         $value = json_encode(['cod']);
         $codKey = $this->getKey('sameday_cod');
@@ -837,10 +851,10 @@ trait SamedayTraitAdminModel {
     }
 
     /**
-     * @param mixed $data
+     * @param $data
      * @return void
      */
-    public function updateCod($data): void
+    public function updateCod($data)
     {
         $codKey = $this->getKey('sameday_cod');
         $query = "UPDATE " . DB_PREFIX . "setting SET 
@@ -851,7 +865,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function createAwbTable(): void
+    private function createAwbTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_awb (
@@ -870,7 +884,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function createServiceTable(): void
+    private function createServiceTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_service (
@@ -893,7 +907,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function createLockerTable(): void
+    private function createLockerTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_locker (
@@ -918,10 +932,12 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function createPickUpPointTable(): void
+    private function createPickUpPointTable()
     {
-        $query = '
-            CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_pickup_point (
+        $table = DB_PREFIX . 'sameday_pickup_point';
+
+        $this->db->query('
+            CREATE TABLE IF NOT EXISTS `' . $table . '` (
                 id INT(11) NOT NULL AUTO_INCREMENT,
                 sameday_id INT(11) NOT NULL,
                 sameday_alias VARCHAR(255),
@@ -933,15 +949,28 @@ trait SamedayTraitAdminModel {
                 default_pickup_point TINYINT(1),
                 PRIMARY KEY (id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
-        ';
+        ');
 
-        $this->db->query($query);
+        // Older / partially recreated schemas may omit contactPersons.
+        $columns = array();
+        $result = $this->db->query('SHOW COLUMNS FROM `' . $table . '`');
+        foreach ($result->rows as $row) {
+            $columns[] = $row['Field'];
+        }
+
+        if (!in_array('contactPersons', $columns, true)) {
+            $this->db->query('ALTER TABLE `' . $table . '` ADD COLUMN `contactPersons` TEXT NULL AFTER `address`');
+        }
+
+        if (!in_array('default_pickup_point', $columns, true)) {
+            $this->db->query('ALTER TABLE `' . $table . '` ADD COLUMN `default_pickup_point` TINYINT(1) NULL DEFAULT 0 AFTER `contactPersons`');
+        }
     }
 
     /**
      * @return void
      */
-    private function createPackageTable(): void
+    private function createPackageTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_package (
@@ -961,7 +990,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function createCountiesTable(): void
+    private function createCountiesTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_counties (
@@ -979,7 +1008,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    public function createCitiesTable(): void
+    public function createCitiesTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_cities (
@@ -995,7 +1024,7 @@ trait SamedayTraitAdminModel {
         $this->db->query($query);
     }
 
-    public function createOrdersLockerTable(): void
+    public function createOrdersLockerTable()
     {
         $query = '
             CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_orders_locker (
@@ -1007,7 +1036,7 @@ trait SamedayTraitAdminModel {
         $this->db->query($query);
     }
 
-    public function createBulkAwbTable(): void
+    public function createBulkAwbTable()
     {
         $table = DB_PREFIX . 'sameday_orders_bulk_awb';
 
@@ -1019,6 +1048,28 @@ trait SamedayTraitAdminModel {
                 UNIQUE KEY order_id (order_id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
         ');
+
+        // Migrate legacy schemas (e.g. id/awb_number/error/created_at) to status+feedback.
+        $columns = array();
+        foreach ($this->db->query('SHOW COLUMNS FROM `' . $table . '`')->rows as $column) {
+            $columns[$column['Field']] = true;
+        }
+
+        $needsRebuild = isset($columns['awb_number']) || isset($columns['error']) || isset($columns['created_at']);
+        if ($needsRebuild || !isset($columns['status']) || !isset($columns['feedback'])) {
+            // Rebuild to the current schema; pending/error state can be regenerated.
+            $this->db->query('DROP TABLE IF EXISTS `' . $table . '`');
+            $this->db->query('
+                CREATE TABLE `' . $table . '` (
+                    order_id INT(11) NOT NULL,
+                    status INT(11) NOT NULL,
+                    feedback TEXT NOT NULL,
+                    UNIQUE KEY order_id (order_id)
+                ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
+            ');
+
+            return;
+        }
 
         $index = $this->db->query("SHOW INDEX FROM `" . $table . "` WHERE Key_name = 'order_id'");
         if (!$index->num_rows) {
@@ -1053,7 +1104,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    public function truncateNomenclator(): void
+    public function truncateNomenclator()
     {
         $this->db->query('TRUNCATE TABLE ' . DB_PREFIX . 'sameday_cities');
     }
@@ -1076,7 +1127,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropPickUpPointTable(): void
+    private function dropPickUpPointTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_pickup_point';
 
@@ -1086,7 +1137,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropCountiesTable(): void
+    private function dropCountiesTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_counties';
 
@@ -1096,14 +1147,14 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropCitiesTable(): void
+    private function dropCitiesTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_cities';
 
         $this->db->query($query);
     }
 
-    private function dropOrdersLockerTable(): void
+    private function dropOrdersLockerTable()
     {
         $query  = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_orders_locker';
 
@@ -1113,7 +1164,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropAwbTable(): void
+    private function dropAwbTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_awb';
 
@@ -1123,7 +1174,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropServiceTable(): void
+    private function dropServiceTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_service';
 
@@ -1133,7 +1184,7 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropPackageTable(): void
+    private function dropPackageTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_package';
 
@@ -1143,14 +1194,14 @@ trait SamedayTraitAdminModel {
     /**
      * @return void
      */
-    private function dropLockerTable(): void
+    private function dropLockerTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_locker';
 
         $this->db->query($query);
     }
 
-    private function dropBulkAwbTable(): void
+    private function dropBulkAwbTable()
     {
         $query = 'DROP TABLE IF EXISTS ' . DB_PREFIX . 'sameday_orders_bulk_awb';
 
@@ -1197,7 +1248,23 @@ trait SamedayTraitAdminModel {
     public static function sanitizeInputs(array $inputs): array
     {
         foreach ($inputs as $key => $value) {
-            $inputs[$key] = self::sanitizeInput($value);
+            // Nested POST arrays (e.g. pickup form data) must not be coerced to string.
+            if (is_array($value)) {
+                $inputs[$key] = self::sanitizeInputs($value);
+                continue;
+            }
+
+            // Never mutate the API password — strip_tags / quote rewriting breaks auth.
+            if (is_string($key) && substr($key, -strlen('sameday_password')) === 'sameday_password') {
+                $inputs[$key] = is_string($value) ? stripslashes($value) : $value;
+                continue;
+            }
+
+            if (!is_string($value) && !is_numeric($value)) {
+                continue;
+            }
+
+            $inputs[$key] = self::sanitizeInput((string)$value);
         }
 
         return $inputs;
@@ -1232,7 +1299,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addAdditionalSetting(string $code, array $data, int $store_id = 0): void
+    public function addAdditionalSetting(string $code, array $data, int $store_id = 0)
     {
         foreach ($data as $key => $value) {
             if (substr($key, 0, strlen($code)) == $code) {
@@ -1279,7 +1346,7 @@ trait SamedayTraitAdminModel {
      *
      * @return mixed
      */
-    public function getCountryByCode(string $isoCode): mixed
+    public function getCountryByCode(string $isoCode)
     {
         $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "country WHERE iso_code_2 = '$isoCode'");
 
@@ -1292,7 +1359,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function addZoneCounty(int $country_id, array $county): void
+    public function addZoneCounty(int $country_id, array $county)
     {
         $county_name = $this->db->escape($county['county']);
         $county_code = $this->db->escape($county['code']);
@@ -1334,7 +1401,7 @@ trait SamedayTraitAdminModel {
         return $query->row['locker'];
     }
 
-    public function deleteBulkAwbByOrderId(int $orderId): void
+    public function deleteBulkAwbByOrderId(int $orderId)
     {
         $this->db->query(
             'DELETE FROM ' . DB_PREFIX . 'sameday_orders_bulk_awb WHERE order_id = ' . (int)$orderId
@@ -1370,8 +1437,10 @@ trait SamedayTraitAdminModel {
         return $orderIds;
     }
 
-    public function ensureBulkAwbEntry(int $orderId): void
+    public function ensureBulkAwbEntry(int $orderId)
     {
+        $this->createBulkAwbTable();
+
         $orderId = (int)$orderId;
         $exists = $this->db->query(
             'SELECT order_id FROM ' . DB_PREFIX . 'sameday_orders_bulk_awb WHERE order_id = ' . $orderId . ' LIMIT 1'
@@ -1384,6 +1453,7 @@ trait SamedayTraitAdminModel {
 
     public function bulkEntry($order)
     {
+        $this->createBulkAwbTable();
         $query = "INSERT INTO " . DB_PREFIX . "sameday_orders_bulk_awb SET order_id = " . (int)$order . ", status = 0, feedback = ''";
         $this->db->query($query);
     }
@@ -1538,7 +1608,7 @@ trait SamedayTraitAdminModel {
      *
      * @return string|null
      */
-    private function formatBulkFeedbackErrors(array $payload): ?string
+    private function formatBulkFeedbackErrors(array $payload)
     {
         $errors = $payload['errors'] ?? $payload;
         if (!is_array($errors)) {

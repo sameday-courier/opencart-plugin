@@ -1,6 +1,6 @@
 <?php
 trait SamedayTraitCatalogController {
-    private \SamedayVersionValidator $samedayVersionValidator;
+    private $samedayVersionValidator;
 
     public function __construct($registry){
         parent::__construct($registry);
@@ -12,8 +12,8 @@ trait SamedayTraitCatalogController {
      *
      * @return void
      */
-    public function saveLocker(): void {
-        $json = [];
+    public function saveLocker() {
+        $json = array();
 
         if (isset($this->request->post['locker_id']) && isset($this->request->post['locker_address'])) {
             $this->session->data['locker_id'] = $this->request->post['locker_id'];
@@ -25,6 +25,9 @@ trait SamedayTraitCatalogController {
         } else {
             $json['error'] = 'Locker ID missing';
         }
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($json));
     }
 
     /**
@@ -35,13 +38,13 @@ trait SamedayTraitCatalogController {
      * @param mixed  $output
      * @return void
      */
-    public function order_model_after(string &$route, array &$args, &$output): void {
-        $locker = [
+    public function order_model_after(&$route, &$args, &$output) {
+        $locker = array(
             'lockerId' => isset($this->session->data['locker_id']) ? (int) $this->session->data['locker_id'] : null,
             'lockerAddress' => isset($this->session->data['locker_address']) ? (string) $this->session->data['locker_address'] : null
-        ];
+        );
         $order_id = isset($this->session->data['order_id']) ? (int) $this->session->data['order_id'] : null;
-        if ($locker == null || $order_id == null) {
+        if ($locker['lockerId'] === null || $order_id === null) {
             return;
         }
         $this->load->model($this->samedayVersionValidator->buildModelPath());
@@ -55,30 +58,36 @@ trait SamedayTraitCatalogController {
         );
     }
 
-    public function order_add_after(string &$route, array &$args, &$output): void {
+    public function order_add_after(&$route, &$args, &$output) {
         $this->session->data['order_id'] = (int) $output;
     }
 
     /**
      * Add Sameday locker and payment scripts on checkout (called via event catalog/controller/common/footer/before).
      *
-     * @param string $route  Controller route being invoked (e.g. common/footer)
-     * @param array  $args  Controller arguments
+     * @param string $route
+     * @param array  $args
      * @return void
      */
-    public function checkout_scripts_before(string &$route, array &$args): void {
-        $main_route = $this->request->get['route'] ?? '';
+    public function checkout_scripts_before(&$route, &$args) {
+        $main_route = isset($this->request->get['route']) ? $this->request->get['route'] : '';
         if (strpos($main_route, 'checkout') !== 0) {
             return;
         }
 
-        if (!$this->config->get('shipping_sameday_status')) {
+        if (!$this->isSamedayShippingEnabled()) {
             return;
         }
 
         $this->document->addScript('https://cdn.sameday.ro/locker-plugin/lockerpluginsdk.js', 'footer');
-        $this->document->addScript('extension/sameday/catalog/view/javascript/sameday/assets/sameday-locker.js?v='. time(), 'footer');
-        $this->document->addScript('extension/sameday/catalog/view/javascript/sameday/assets/update-payment.js', 'footer');
+
+        if ($this->samedayVersionValidator->isOc4()) {
+            $this->document->addScript('extension/sameday/catalog/view/javascript/sameday/assets/sameday-locker.js?v=' . time(), 'footer');
+            $this->document->addScript('extension/sameday/catalog/view/javascript/sameday/assets/update-payment.js', 'footer');
+        } else {
+            $this->document->addScript('catalog/view/javascript/sameday/assets/sameday-locker.js?v=' . time(), 'footer');
+            $this->document->addScript('catalog/view/javascript/sameday/assets/update-payment.js', 'footer');
+        }
     }
 
     /**
@@ -90,8 +99,8 @@ trait SamedayTraitCatalogController {
      * @param string $output
      * @return void
      */
-    public function payment_method_view_after(string &$route, array &$data, string &$output): void {
-        if (!$this->config->get('shipping_sameday_status')) {
+    public function payment_method_view_after(&$route, &$data, &$output) {
+        if (!$this->isSamedayShippingEnabled()) {
             return;
         }
 
@@ -104,5 +113,17 @@ trait SamedayTraitCatalogController {
                 })();
             </script>
         ';
+    }
+
+    /**
+     * @return bool
+     */
+    private function isSamedayShippingEnabled()
+    {
+        if ((int)$this->config->get('sameday_status')) {
+            return true;
+        }
+
+        return (bool)(int)$this->config->get('shipping_sameday_status');
     }
 }

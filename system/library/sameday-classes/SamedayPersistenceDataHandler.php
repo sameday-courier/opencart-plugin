@@ -44,7 +44,7 @@ class SamedayPersistenceDataHandler implements SamedayPersistentDataInterface
     /**
      * @param string $key
      *
-     * @param mixed $value
+     * @param $value
      *
      * @throws Exception
      */
