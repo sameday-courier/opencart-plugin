@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.tpl">
@@ -120,7 +120,6 @@
         <operation>
             <search><![CDATA[
       <div class="pull-right">
-        <button type="submit" id="button-shipping"
             ]]></search>
             <add position="after"><![CDATA[
         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#bulkAwbAction" id="bulkAwbActionButton">AWB</button>
@@ -139,11 +138,9 @@
         <operation>
             <search><![CDATA[
                   <td class="text-left"><?php echo $order['date_modified']; ?></td>
-                  <td class="text-right"><a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $order['edit']; ?>"
             ]]></search>
-            <add position="replace"><![CDATA[
-                  <td class="text-left"><?php echo $order['date_modified']; ?></td>
-<td class="text-center feedback" data-id="<?php echo $order['order_id']; ?>">
+            <add position="after"><![CDATA[
+                <td class="text-center feedback" data-id="<?php echo $order['order_id']; ?>">
                   <?php if (!empty($order['sameday_bulk'])) { ?>
                     <?php if (!empty($order['sameday_bulk']['error'])) { ?>
                       <span class="text-danger"><?php echo $order['sameday_bulk']['error']; ?></span>
@@ -164,16 +161,14 @@
                     &mdash;
                   <?php } ?>
                 </td>
-<td class="text-right">
-                    <?php if (!empty($order['add_awb_link'])) { ?>
-                    <a href="<?php echo $order['add_awb_link']; ?>" data-toggle="tooltip" title="Generate AWB" class="btn btn-success btn-xs"><i class="fa fa-truck"></i></a>
-                    <?php } ?>
-                    <?php if (!empty($order['add_parcel_link'])) { ?>
-                    <a href="<?php echo $order['add_parcel_link']; ?>" data-toggle="tooltip" title="Add parcel" class="btn btn-default btn-xs"><i class="fa fa-plus"></i></a>
-                    <?php } ?>
-                    <a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info btn-xs"><i class="fa fa-eye"></i></a>
-                    <a href="<?php echo $order['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary btn-xs"><i class="fa fa-pencil"></i></a>
-                  </td>
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+                  <td class="text-right"><a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $order['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
+            ]]></search>
+            <add position="replace"><![CDATA[
+                  <td class="text-right"><?php if (!empty($order['add_awb_link'])) { ?><a href="<?php echo $order['add_awb_link']; ?>" data-toggle="tooltip" title="Generate AWB" class="btn btn-success btn-xs"><i class="fa fa-truck"></i></a> <?php } ?><?php if (!empty($order['add_parcel_link'])) { ?><a href="<?php echo $order['add_parcel_link']; ?>" data-toggle="tooltip" title="Add parcel" class="btn btn-default btn-xs"><i class="fa fa-plus"></i></a> <?php } ?><a href="<?php echo $order['view']; ?>" data-toggle="tooltip" title="<?php echo $button_view; ?>" class="btn btn-info"><i class="fa fa-eye"></i></a> <a href="<?php echo $order['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>
             ]]></add>
         </operation>
         <operation>
@@ -185,10 +180,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-<script type="text/javascript"><!--
-$('#button-filter').on('click', function() {
-            ]]></search>
+            <search index="0"><![CDATA[<script type="text/javascript"><!--]]></search>
             <add position="before"><![CDATA[
     <style>
     .sameday-bulk-awb-modal .modal-content { border: none; border-radius: 12px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15); overflow: hidden; }
@@ -394,9 +386,13 @@ $('#button-filter').on('click', function() {
             </div>
         </div>
     </div>
-
-
-    <script type="text/javascript"><!--
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+$('#button-filter').on('click', function() {
+            ]]></search>
+            <add position="before"><![CDATA[
       var bulkAwbUrl = '<?php echo $ajax_url_bulk; ?>';
       var bulkDeleteAwbUrl = '<?php echo $ajax_url_bulk_delete; ?>';
       var deleteAwbUrl = '<?php echo $ajax_url_delete_awb; ?>';
@@ -1043,8 +1039,6 @@ $('#button-filter').on('click', function() {
               $btn.prop('disabled', false);
           });
       });
-
-    //--></script>
 
             ]]></add>
         </operation>

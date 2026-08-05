@@ -1009,15 +1009,25 @@ trait SamedayTraitAdminModel {
 
     public function createBulkAwbTable(): void
     {
-        $query = '
-            CREATE TABLE IF NOT EXISTS ' . DB_PREFIX . 'sameday_orders_bulk_awb (
+        $table = DB_PREFIX . 'sameday_orders_bulk_awb';
+
+        $this->db->query('
+            CREATE TABLE IF NOT EXISTS ' . $table . ' (
                 order_id INT(11) NOT NULL,
                 status INT(11) NOT NULL,
-                feedback TEXT NOT NULL
+                feedback TEXT NOT NULL,
+                UNIQUE KEY order_id (order_id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
-        ';
+        ');
 
-        $this->db->query($query);
+        $index = $this->db->query("SHOW INDEX FROM `" . $table . "` WHERE Key_name = 'order_id'");
+        if (!$index->num_rows) {
+            try {
+                $this->db->query('ALTER TABLE `' . $table . '` ADD UNIQUE KEY order_id (order_id)');
+            } catch (\Throwable $e) {
+                // Ignore: legacy duplicate rows may block UNIQUE until cleaned manually.
+            }
+        }
     }
 
     /**
@@ -1380,8 +1390,14 @@ trait SamedayTraitAdminModel {
 
     public function getDefaultPickupPointId()
     {
-        $query = "SELECT sameday_id FROM " . DB_PREFIX . "sameday_pickup_point WHERE testing = " . $this->getConfig('sameday_testing') . " AND default_pickup_point = 1";
-        return $this->db->query($query)->row['sameday_id'];
+        $query = "SELECT sameday_id FROM " . DB_PREFIX . "sameday_pickup_point WHERE testing = " . (int)$this->getConfig('sameday_testing') . " AND default_pickup_point = 1 LIMIT 1";
+        $result = $this->db->query($query);
+
+        if (empty($result->row['sameday_id'])) {
+            return null;
+        }
+
+        return $result->row['sameday_id'];
     }
 
     public function updateBulkFeedback($payload, $order_id)

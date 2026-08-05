@@ -10,6 +10,9 @@
       </p>
       <div class="btn-group">
         <a href="{{ buttonShowAwbPdf }}" data-bs-toggle="tooltip" title="{{ buttonShowAwb }}" class="btn btn-info btn-sm" target="_blank"><i class="fa-solid fa-file-pdf"></i></a>
+        {% if buttonAddParcelLink %}
+        <a href="{{ buttonAddParcelLink }}" data-bs-toggle="tooltip" title="{{ buttonAddParcel }}" class="btn btn-success btn-sm"><i class="fa-solid fa-plus"></i></a>
+        {% endif %}
         <a href="{{ buttonDeleteAwbLink }}" data-bs-toggle="tooltip" title="{{ buttonDeleteAwb }}" class="btn btn-danger btn-sm"><i class="fa-solid fa-times"></i></a>
       </div>
     {% else %}

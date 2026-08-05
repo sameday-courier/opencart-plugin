@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v3</name>
     <code>ocmod-editor</code>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.twig">
@@ -118,9 +118,8 @@
     </file>
     <file path="admin/view/template/sale/order_list.twig">
         <operation>
-            <search><![CDATA[
-    <div class="pull-right">
-      <button type="button" data-toggle="tooltip" title="{{ button_filter }}"
+            <search error="skip"><![CDATA[
+        <div class="pull-right">
             ]]></search>
             <add position="after"><![CDATA[
         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#bulkAwbAction" id="bulkAwbActionButton">AWB</button>
@@ -129,7 +128,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
+            <search error="skip"><![CDATA[
                 <td class="text-right">{{ column_action }}</td>
             ]]></search>
             <add position="before"><![CDATA[
@@ -137,11 +136,8 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-                        <ul class="dropdown-menu dropdown-menu-right">
-                          <li><a href="{{ order.edit }}"><i class="fa fa-pencil"></i> {{ button_edit }}</a></li>
-            ]]></search>
-            <add position="before"><![CDATA[
+            <search error="skip"><![CDATA[<ul class="dropdown-menu dropdown-menu-right">]]></search>
+            <add position="after"><![CDATA[
                           {% if order.add_awb_link %}
                           <li><a href="{{ order.add_awb_link }}"><i class="fa fa-truck"></i> Generate AWB</a></li>
                           {% endif %}
@@ -151,7 +147,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
+            <search error="skip"><![CDATA[
                 <td class="text-left">{{ order.date_modified }}</td>
             ]]></search>
             <add position="after"><![CDATA[
@@ -179,7 +175,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
+            <search error="skip"><![CDATA[
                 <td class="text-center" colspan="8">{{ text_no_results }}</td>
             ]]></search>
             <add position="replace"><![CDATA[
@@ -187,10 +183,7 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-  </div>
-  <script type="text/javascript"><!--
-            ]]></search>
+            <search index="0" error="skip"><![CDATA[<script type="text/javascript"><!--]]></search>
             <add position="before"><![CDATA[
     <style>
     .sameday-bulk-awb-modal .modal-content { border: none; border-radius: 12px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15); overflow: hidden; }
@@ -400,14 +393,11 @@
             ]]></add>
         </operation>
         <operation>
-            <search><![CDATA[
-  <script type="text/javascript"><!--
-$('#button-filter').on('click', function() {
-            ]]></search>
+            <search error="skip"><![CDATA[$('#button-filter').on('click', function() {]]></search>
             <add position="before"><![CDATA[
-      var bulkAwbUrl = 'index.php?route=extension/shipping/sameday/bulkAwb&user_token={{ user_token }}';
-      var bulkDeleteAwbUrl = 'index.php?route=extension/shipping/sameday/bulkDeleteAwb&user_token={{ user_token }}';
-      var deleteAwbUrl = 'index.php?route=extension/shipping/sameday/deleteAwb&user_token={{ user_token }}';
+      var bulkAwbUrl = '{{ ajax_url_bulk|e('js') }}';
+      var bulkDeleteAwbUrl = '{{ ajax_url_bulk_delete|e('js') }}';
+      var deleteAwbUrl = '{{ ajax_url_delete_awb|e('js') }}';
       var clearBulkErrorsUrl = '{{ ajax_url_clear_bulk_errors|e('js') }}';
       var showAwbPdfUrlBase = '{{ sameday_show_awb_pdf_url_base|e('js') }}';
       var showAwbHistoryUrlBase = '{{ sameday_show_awb_history_url_base|e('js') }}';

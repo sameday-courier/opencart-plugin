@@ -15,6 +15,7 @@
 !admin/view/template/extension/shipping/sameday_add_awb.twig
 !admin/view/template/extension/shipping/sameday_add_parcel.twig
 !admin/view/template/extension/shipping/sameday_add_parcel.tpl
+!admin/view/template/extension/shipping/sameday_add_parcel_4.twig
 !admin/view/template/extension/shipping/sameday_add_awb_4.twig
 !admin/view/template/extension/shipping/sameday_awb_history_status.tpl
 !admin/view/template/extension/shipping/sameday_awb_history_status.twig
@@ -47,3 +48,4 @@ system/library/*
 !system/library/samedayclasses.php
 !admin/view/javascript/select2/
 !phpcs.xml.dist
+!install.json

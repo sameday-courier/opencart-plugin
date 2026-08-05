@@ -96,95 +96,143 @@ trait SamedayTraitAdminController {
             [$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_sync_lockers_ts') => 0]
         );
 
+        $this->registerSamedayEvents();
+    }
+
+    /**
+     * Register (missing) Sameday admin/catalog events for the current OC version.
+     * Safe to call on install and again after upgrades without uninstall.
+     */
+    private function registerSamedayEvents(): void
+    {
+        $this->{$this->samedayVersionValidator->buildMagicMethod()}->createBulkAwbTable();
+
+        if ($this->samedayVersionValidator->isOc4()) {
+            $this->load->model('setting/event');
+            $events = [
+                [
+                    'code'        => 'sameday_order_info',
+                    'description' => 'Sameday AWB on order info',
+                    'trigger'     => 'admin/view/sale/order_info/before',
+                    'action'      => 'extension/sameday/shipping/sameday.order_info_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_checkout_scripts',
+                    'description' => 'Add Sameday locker and payment scripts on checkout',
+                    'trigger'     => 'catalog/controller/common/footer/before',
+                    'action'      => 'extension/sameday/shipping/sameday.checkout_scripts_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_payment_method_view',
+                    'description' => 'Sameday paymentMethod class on payment modal (OC4)',
+                    'trigger'     => 'view/checkout/payment_method/after',
+                    'action'      => 'extension/sameday/shipping/sameday.payment_method_view_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_save',
+                    'description' => 'Saving the order id when temporary order is generated',
+                    'trigger'     => 'catalog/model/checkout/order.addOrder/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_add_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_locker_save',
+                    'description' => 'Save Sameday locker_id to oc_sameday_orders_locker when order is created',
+                    'trigger'     => 'catalog/model/checkout/order.addHistory/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_model_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_list',
+                    'description' => 'Sameday bulk AWB feedback on order list',
+                    'trigger'     => 'admin/view/sale/order_list/before',
+                    'action'      => 'extension/sameday/shipping/sameday.order_list_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_list_after',
+                    'description' => 'Sameday bulk AWB modals and scripts on order list',
+                    'trigger'     => 'admin/view/sale/order_list/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_list_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_page_after',
+                    'description' => 'Sameday bulk AWB toolbar on order list page',
+                    'trigger'     => 'admin/view/sale/order/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_page_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+            ];
+
+            foreach ($events as $event) {
+                if (empty($this->model_setting_event->getEventByCode($event['code']))) {
+                    $this->model_setting_event->addEvent($event);
+                }
+            }
+
+            return;
+        }
+
+        $legacyEvents = [
+            [
+                'code'    => 'sameday_order_info',
+                'trigger' => 'admin/view/sale/order_info/before',
+                'action'  => 'extension/shipping/sameday/order_info_before',
+            ],
+            [
+                'code'    => 'sameday_order_list',
+                'trigger' => 'admin/view/sale/order_list/before',
+                'action'  => 'extension/shipping/sameday/order_list_before',
+            ],
+        ];
+
+        if ($this->samedayVersionValidator->isOc2()) {
+            $this->load->model('extension/event');
+
+            foreach ($legacyEvents as $event) {
+                $existing = $this->model_extension_event->getEvent(
+                    $event['code'],
+                    $event['trigger'],
+                    $event['action']
+                );
+
+                if (empty($existing)) {
+                    $this->model_extension_event->addEvent(
+                        $event['code'],
+                        $event['trigger'],
+                        $event['action'],
+                        1
+                    );
+                }
+            }
+
+            return;
+        }
+
         $this->load->model('setting/event');
-        if($this->samedayVersionValidator->isOc4()){
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_info',
-                'description' => 'Sameday AWB on order info',
-                'trigger'     => 'admin/view/sale/order_info/before',
-                'action'      => 'extension/sameday/shipping/sameday.order_info_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
 
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_checkout_scripts',
-                'description' => 'Add Sameday locker and payment scripts on checkout',
-                'trigger'     => 'catalog/controller/common/footer/before',
-                'action'      => 'extension/sameday/shipping/sameday.checkout_scripts_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_payment_method_view',
-                'description' => 'Sameday paymentMethod class on payment modal (OC4)',
-                'trigger'     => 'view/checkout/payment_method/after',
-                'action'      => 'extension/sameday/shipping/sameday.payment_method_view_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_save',
-                'description' => 'Saving the order id when temporary order is generated',
-                'trigger'     => 'catalog/model/checkout/order.addOrder/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_add_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_locker_save',
-                'description' => 'Save Sameday locker_id to oc_sameday_orders_locker when order is created',
-                'trigger'     => 'catalog/model/checkout/order.addHistory/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_model_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_list',
-                'description' => 'Sameday bulk AWB feedback on order list',
-                'trigger'     => 'admin/view/sale/order_list/before',
-                'action'      => 'extension/sameday/shipping/sameday.order_list_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_list_after',
-                'description' => 'Sameday bulk AWB modals and scripts on order list',
-                'trigger'     => 'admin/view/sale/order_list/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_list_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_page_after',
-                'description' => 'Sameday bulk AWB toolbar on order list page',
-                'trigger'     => 'admin/view/sale/order/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_page_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-        }else{
-            $this->model_setting_event->addEvent(
-                'sameday_order_info',
-                'admin/view/sale/order_info/before',
-                'extension/shipping/sameday/order_info_before',
-                1,
-                1
-            );
-            // If you also want to feed the order list page:
-            $this->model_setting_event->addEvent(
-                'sameday_order_list',
-                'admin/view/sale/order_list/before',
-                'extension/shipping/sameday/order_list_before',
-                1,
-                1
-            );
+        foreach ($legacyEvents as $event) {
+            if (empty($this->model_setting_event->getEventByCode($event['code']))) {
+                $this->model_setting_event->addEvent(
+                    $event['code'],
+                    $event['trigger'],
+                    $event['action'],
+                    1,
+                    1
+                );
+            }
         }
     }
 
@@ -193,9 +241,10 @@ trait SamedayTraitAdminController {
      */
     public function uninstall()
     {
-        $this->load->model('setting/event');
         $this->{$this->samedayVersionValidator->buildMagicMethod()}->uninstall();
-        if($this->samedayVersionValidator->isOc4()){
+
+        if ($this->samedayVersionValidator->isOc4()) {
+            $this->load->model('setting/event');
             $this->model_setting_event->deleteEventByCode('sameday_order_info');
             $this->model_setting_event->deleteEventByCode('sameday_checkout_scripts');
             $this->model_setting_event->deleteEventByCode('sameday_payment_method_view');
@@ -204,7 +253,12 @@ trait SamedayTraitAdminController {
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
             $this->model_setting_event->deleteEventByCode('sameday_order_list_after');
             $this->model_setting_event->deleteEventByCode('sameday_order_page_after');
-        }else{
+        } elseif ($this->samedayVersionValidator->isOc2()) {
+            $this->load->model('extension/event');
+            $this->model_extension_event->deleteEvent('sameday_order_info');
+            $this->model_extension_event->deleteEvent('sameday_order_list');
+        } else {
+            $this->load->model('setting/event');
             $this->model_setting_event->deleteEventByCode('sameday_order_info');
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
         }
@@ -217,6 +271,8 @@ trait SamedayTraitAdminController {
      */
     public function index()
     {
+        $this->registerSamedayEvents();
+
         $this->load->language($this->samedayVersionValidator->buildModelPath());
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
@@ -1718,36 +1774,36 @@ trait SamedayTraitAdminController {
             return;
         }
 
-        $this->request->get['sameday_insured_value'] = 0;
-        $this->request->get['sameday_package_number'] = 1;
-        $this->request->get['sameday_package_weight[]'] = 1;
-        $this->request->get['sameday_client_reference'] = '';
-        $this->request->get['sameday_repayment'] = 100;
-        $this->request->get['sameday_locker_id'] = '100';
+        try {
+            $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+            $existingAwb = $model->getAwbForOrderId($order_id);
 
-        $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
-        $existingAwb = $model->getAwbForOrderId($order_id);
+            if (!empty($existingAwb['awb_number'])) {
+                $this->sendBulkAwbJson([
+                    'order_id' => $order_id,
+                    'already_exists' => true,
+                    'awb_number' => $existingAwb['awb_number'],
+                    'message' => 'AWB is already generated (' . $existingAwb['awb_number'] . ')',
+                ]);
+                return;
+            }
 
-        if (!empty($existingAwb['awb_number'])) {
+            $model->ensureBulkAwbEntry($order_id);
+            $this->postAwbShort($order_id);
+
+            $bulkRows = $model->getBulkAwbByOrderIds([$order_id]);
+            $json['order_id'] = $order_id;
+            $json['sameday_bulk'] = isset($bulkRows[$order_id])
+                ? $model->formatBulkAwbRow($bulkRows[$order_id])
+                : null;
+
+            $this->sendBulkAwbJson($json);
+        } catch (\Throwable $e) {
             $this->sendBulkAwbJson([
                 'order_id' => $order_id,
-                'already_exists' => true,
-                'awb_number' => $existingAwb['awb_number'],
-                'message' => 'AWB is already generated (' . $existingAwb['awb_number'] . ')',
+                'error' => $e->getMessage(),
             ]);
-            return;
         }
-
-        $model->bulkEntry($order_id);
-        $this->postAwbShort($order_id);
-
-        $bulkRows = $model->getBulkAwbByOrderIds([$order_id]);
-        $json['order_id'] = $order_id;
-        $json['sameday_bulk'] = isset($bulkRows[$order_id])
-            ? $model->formatBulkAwbRow($bulkRows[$order_id])
-            : null;
-
-        $this->sendBulkAwbJson($json);
     }
 
     private function sendBulkAwbJson(array $json): void
@@ -1993,132 +2049,153 @@ trait SamedayTraitAdminController {
     }
 
     public function postAwbShort($order_id){
-
-        $this->load->model('sale/order');
-        $this->load->model('catalog/product');
-        $order = $this->model_sale_order->getOrder($order_id);
-        $orderProducts = ($this->samedayVersionValidator->isOc4())
-            ? $this->model_sale_order->getProducts($order_id)
-            : $this->model_sale_order->getOrderProducts($order_id);
-
-        $pickupPoint = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getDefaultPickupPointId();
-
-        $weight = [];
-        foreach($orderProducts as $orderProduct){
-            $orderData = $this->model_catalog_product->getProduct($orderProduct['product_id']);
-            array_push($weight, $orderData['weight']);
-        }
-        $parcelDimensions = $weight;
-        $address = trim($order['shipping_address_1'] . ' ' . $order['shipping_address_2']);
-        $phone = $order['telephone'];
-        $email = $order['email'];
-        $companyObject = null;
-        if (strlen($order['payment_company'])) {
-            $companyObject = new CompanyEntityObject(
-                $order['payment_company'],
-                '',
-                '',
-                '',
-                ''
-            );
-        }
-        $shippingCode = ($this->samedayVersionValidator->isOc4()) ? $order['shipping_method']['code'] : $order['shipping_code'];
-        $serviceId = explode('.', $shippingCode)[2];
-        $lockerAddress = explode('.', $shippingCode)[4];
-        $awbPaymentType = new AwbPaymentType(AwbPaymentType::CLIENT);
-        $shippingCity = $order['shipping_city'];
-        $shippingZone = $order['shipping_zone'];
-        $name = $order['shipping_firstname'] . ' ' . $order['shipping_lastname'];
-        $shippingPostcode = $order['shipping_postcode'];
-        $repayment = 0;
-        $paymentMethod = ($this->samedayVersionValidator->isOc4()) ?
-            $this->samedayHelper::isCodCode($order['payment_method']['code'], $this->getConfig('sameday_cod')) :
-            $this->samedayHelper::isCodCode($order['payment_code'], $this->getConfig('sameday_cod'));
-        if ($paymentMethod) {
-            $repayment = $this->currency->format(
-                $order['total'],
-                $order['currency_code'],
-                $order['currency_value'],
-                false
-            );
-        }
-
-        $thirdPartyPickUp = null;
-        $serviceTaxes = '';
-        $reference = '';
-        $observation = '';
-        $lockerLastMile = explode('.', $shippingCode)[3];
-        $oohLastMile= '';
-
-        $service = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getServiceSameday(
-            (int)$serviceId,
-            $this->isTesting()
-        );
-
-        $request = new SamedayPostAwbRequest(
-            (int)$pickupPoint,
-            null,
-            new PackageType(PackageType::PARCEL), //[PackageType::PARCEL, PackageType::ENVELOPE, PackageType::LARGE], // must find a way to autodetect
-            [new ParcelDimensionsObject((float)$parcelDimensions)],
-            (int)($serviceId ?? null),
-            $awbPaymentType,
-            new AwbRecipientEntityObject(
-                $shippingCity,
-                $shippingZone,
-                $address,
-                $name,
-                $phone,
-                $email,
-                $companyObject,
-                $shippingPostcode
-            ),
-            0,
-            $repayment,
-            new CodCollectorType(CodCollectorType::CLIENT),
-            $thirdPartyPickUp,
-            [],
-            null,
-            $reference,
-            $observation,
-            '',
-            '',
-            null,
-            $lockerLastMile,
-            null,
-            $oohLastMile,
-            $order['currency_code']
-        );
-
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
         $awb = null;
         $errors = null;
 
         try {
-            $sameday = new SamedayAlias($this->samedayHelper->initClient());
-        } catch (SamedaySDKException $exception) {
-            $errors = [
-                [
-                    'key' => ['SDK Error'],
-                    'errors' => [$exception->getMessage()],
-                ],
-            ];
-            $model->updateBulkFeedback(['errors' => $errors], $order_id);
+            $this->load->model('sale/order');
+            $this->load->model('catalog/product');
+            $order = $this->model_sale_order->getOrder($order_id);
 
-            return [
-                'awb' => null,
-                'errors' => $errors,
-            ];
-        }
+            if (empty($order)) {
+                throw new \RuntimeException('Order not found');
+            }
 
-        try {
+            $orderProducts = ($this->samedayVersionValidator->isOc4())
+                ? $this->model_sale_order->getProducts($order_id)
+                : $this->model_sale_order->getOrderProducts($order_id);
+
+            $pickupPoint = $model->getDefaultPickupPointId();
+            if ($pickupPoint === null) {
+                throw new \RuntimeException('No default Sameday pickup point configured');
+            }
+
+            $totalWeight = 0.0;
+            foreach ($orderProducts as $orderProduct) {
+                $orderData = $this->model_catalog_product->getProduct((int)$orderProduct['product_id']);
+                $productWeight = (float)($orderData['weight'] ?? 0);
+                $quantity = max(1, (int)($orderProduct['quantity'] ?? 1));
+                $totalWeight += $productWeight * $quantity;
+            }
+
+            $parcelDimensions = [
+                new ParcelDimensionsObject(max(0.1, $totalWeight > 0 ? $totalWeight : 1.0)),
+            ];
+
+            $address = trim($order['shipping_address_1'] . ' ' . $order['shipping_address_2']);
+            $phone = $order['telephone'];
+            $email = $order['email'];
+            $companyObject = null;
+            if (strlen((string)($order['payment_company'] ?? ''))) {
+                $companyObject = new CompanyEntityObject(
+                    $order['payment_company'],
+                    '',
+                    '',
+                    '',
+                    ''
+                );
+            }
+
+            $shippingCode = ($this->samedayVersionValidator->isOc4())
+                ? ($order['shipping_method']['code'] ?? '')
+                : ($order['shipping_code'] ?? '');
+            $shippingParts = explode('.', (string)$shippingCode);
+            $serviceId = $shippingParts[2] ?? null;
+            $lockerLastMile = $shippingParts[3] ?? '';
+            $lockerAddress = $shippingParts[4] ?? '';
+
+            if ($serviceId === null || $serviceId === '') {
+                throw new \RuntimeException('Invalid Sameday shipping method on order');
+            }
+
+            $awbPaymentType = new AwbPaymentType(AwbPaymentType::CLIENT);
+            $shippingCity = $order['shipping_city'];
+            $shippingZone = $order['shipping_zone'];
+            $name = $order['shipping_firstname'] . ' ' . $order['shipping_lastname'];
+            $shippingPostcode = $order['shipping_postcode'];
+            $repayment = 0;
+            $paymentMethod = ($this->samedayVersionValidator->isOc4())
+                ? $this->samedayHelper::isCodCode($order['payment_method']['code'] ?? '', $this->getConfig('sameday_cod'))
+                : $this->samedayHelper::isCodCode($order['payment_code'] ?? '', $this->getConfig('sameday_cod'));
+            if ($paymentMethod) {
+                $repayment = $this->currency->format(
+                    $order['total'],
+                    $order['currency_code'],
+                    $order['currency_value'],
+                    false
+                );
+            }
+
+            $thirdPartyPickUp = null;
+            $reference = '';
+            $observation = '';
+            $oohLastMile = '';
+
+            $service = $model->getServiceSameday(
+                (int)$serviceId,
+                $this->isTesting()
+            );
+
+            $request = new SamedayPostAwbRequest(
+                (int)$pickupPoint,
+                null,
+                new PackageType(PackageType::PARCEL),
+                $parcelDimensions,
+                (int)$serviceId,
+                $awbPaymentType,
+                new AwbRecipientEntityObject(
+                    $shippingCity,
+                    $shippingZone,
+                    $address,
+                    $name,
+                    $phone,
+                    $email,
+                    $companyObject,
+                    $shippingPostcode
+                ),
+                0,
+                $repayment,
+                new CodCollectorType(CodCollectorType::CLIENT),
+                $thirdPartyPickUp,
+                [],
+                null,
+                $reference,
+                $observation,
+                '',
+                '',
+                null,
+                $lockerLastMile,
+                null,
+                $oohLastMile,
+                $order['currency_code']
+            );
+
+            try {
+                $sameday = new SamedayAlias($this->samedayHelper->initClient());
+            } catch (SamedaySDKException $exception) {
+                $errors = [
+                    [
+                        'key' => ['SDK Error'],
+                        'errors' => [$exception->getMessage()],
+                    ],
+                ];
+                $model->updateBulkFeedback(['errors' => $errors], $order_id);
+
+                return [
+                    'awb' => null,
+                    'errors' => $errors,
+                ];
+            }
+
             $awb = $sameday->postAwb($request);
             if ($awb !== null && !is_array($awb)) {
-                $model->saveAwb(array(
+                $model->saveAwb([
                     'order_id' => $order['order_id'],
                     'awb_number' => $awb->getAwbNumber(),
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' => $awb->getCost()
-                ));
+                ]);
 
                 $model->updateShippingMethodAfterPostAwb(
                     $order['order_id'],
@@ -2141,7 +2218,7 @@ trait SamedayTraitAdminController {
                 ],
             ];
             $model->updateBulkFeedback(['errors' => $errors], $order_id);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $errors = [
                 [
                     'key' => ['Generic Error'],
