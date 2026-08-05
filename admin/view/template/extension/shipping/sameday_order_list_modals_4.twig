@@ -326,6 +326,15 @@
       }
 
       function parseBulkAwbResponse(orderId, json) {
+          if (!json || typeof json !== 'object') {
+              return {
+                  order_id: orderId,
+                  status: 'error',
+                  awb_number: '',
+                  error: 'Empty response',
+                  message: 'Empty response'
+              };
+          }
           if (json.sameday_bulk) {
               if (json.sameday_bulk.error) {
                   return {
@@ -343,6 +352,15 @@
                       awb_number: json.sameday_bulk.awb_number,
                       error: '',
                       message: 'Successfully generated'
+                  };
+              }
+              if (json.sameday_bulk.label && json.sameday_bulk.label !== 'Pending') {
+                  return {
+                      order_id: orderId,
+                      status: 'error',
+                      awb_number: '',
+                      error: json.sameday_bulk.label,
+                      message: json.sameday_bulk.label
                   };
               }
               return {
@@ -732,17 +750,18 @@
                   dataType: 'json'
               }).done(function(json) {
                   if (json.success) {
+                      var successMsg = json.message || 'AWB removed successfully';
                       results.push({
                           order_id: orderId,
                           status: 'success',
                           awb_number: json.awb_number || '',
                           error: '',
-                          message: json.message || 'AWB removed successfully'
+                          message: successMsg
                       });
-                      appendBulkDeleteLog(orderId, 'success', json.message || 'AWB removed successfully', json.awb_number || '');
+                      appendBulkDeleteLog(orderId, 'success', successMsg, json.awb_number || '');
                       $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
                   } else {
-                      var msg = json.error || 'Unknown error';
+                      var msg = json.error || json.message || 'Unknown error';
                       results.push({
                           order_id: orderId,
                           status: 'error',
@@ -834,8 +853,36 @@
           }).done(function(json) {
               if (json.success) {
                   $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
+                  $btn.closest('td').find('.btn-delete-sameday-awb').remove();
+                  if (json.local_only && json.message) {
+                      alert(json.message);
+                  }
               } else if (json.error) {
-                  alert(json.error);
+                  var force = confirm(
+                      json.error + '\n\nRemove the local AWB link anyway so you can continue with this order?'
+                  );
+                  if (force) {
+                      $.ajax({
+                          url: deleteAwbUrl + '&order_id=' + encodeURIComponent(orderId) + '&ajax=1&force_local=1',
+                          type: 'GET',
+                          dataType: 'json'
+                      }).done(function(forceJson) {
+                          if (forceJson.success) {
+                              $('.feedback[data-id="' + orderId + '"]').html('&mdash;');
+                              $btn.closest('td').find('.btn-delete-sameday-awb').remove();
+                              if (forceJson.message) {
+                                  alert(forceJson.message);
+                              }
+                          } else {
+                              alert(forceJson.error || 'Failed to remove local AWB link');
+                              $btn.prop('disabled', false);
+                          }
+                      }).fail(function() {
+                          alert('Request failed');
+                          $btn.prop('disabled', false);
+                      });
+                      return;
+                  }
                   $btn.prop('disabled', false);
               }
           }).fail(function(xhr) {

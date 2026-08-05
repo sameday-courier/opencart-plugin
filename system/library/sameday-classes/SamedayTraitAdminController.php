@@ -55,7 +55,7 @@ trait SamedayTraitAdminController {
     private $samedayVersionValidator;
 
     /**
-     * @param mixed $registry
+     * @param $registry
      *
      * @throws Exception
      */
@@ -84,107 +84,194 @@ trait SamedayTraitAdminController {
     public function install()
     {
         $this->{$this->samedayVersionValidator->buildMagicMethod()}->install();
+        $this->ensureShippingExtensionRegistered();
 
-        $this->load->model('setting/setting');
-        $this->model_setting_setting->editSetting(
-            $this->{$this->samedayVersionValidator->buildMagicMethod()}->getPrefix() . "sameday",
-            [$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_sync_until_ts') => time()]
+        // Do NOT use editSetting() here — it deletes the entire `sameday` settings
+        // group and would wipe credentials/status on every Install click.
+        $settingsModel = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+        $code = $settingsModel->getPrefix() . 'sameday';
+
+        if ($this->getConfig('sameday_sync_until_ts') === null || $this->getConfig('sameday_sync_until_ts') === '') {
+            $settingsModel->addAdditionalSetting(
+                $code,
+                [$settingsModel->getKey('sameday_sync_until_ts') => time()]
+            );
+        }
+
+        if ($this->getConfig('sameday_sync_lockers_ts') === null || $this->getConfig('sameday_sync_lockers_ts') === '') {
+            $settingsModel->addAdditionalSetting(
+                $code,
+                [$settingsModel->getKey('sameday_sync_lockers_ts') => 0]
+            );
+        }
+
+        // Default to enabled on first install if status was never set.
+        if ($this->getConfig('sameday_status') === null || $this->getConfig('sameday_status') === '') {
+            $settingsModel->addAdditionalSetting(
+                $code,
+                [$settingsModel->getKey('sameday_status') => 1]
+            );
+        }
+
+        $this->registerSamedayEvents();
+    }
+
+    /**
+     * Checkout only loads shipping codes present in oc_extension.
+     * OCMOD "installed" is not enough — register the shipping extension row.
+     */
+    private function ensureShippingExtensionRegistered()
+    {
+        $query = $this->db->query(
+            "SELECT * FROM `" . DB_PREFIX . "extension` WHERE `type` = 'shipping' AND `code` = 'sameday'"
         );
 
-        $this->model_setting_setting->editSetting(
-            $this->{$this->samedayVersionValidator->buildMagicMethod()}->getPrefix() . "sameday",
-            [$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_sync_lockers_ts') => 0]
-        );
+        if (!$query->num_rows) {
+            $this->db->query(
+                "INSERT INTO `" . DB_PREFIX . "extension` SET `type` = 'shipping', `code` = 'sameday'"
+            );
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function registerSamedayEvents()
+    {
+        $this->{$this->samedayVersionValidator->buildMagicMethod()}->createBulkAwbTable();
+
+        if ($this->samedayVersionValidator->isOc4()) {
+            $this->load->model('setting/event');
+            $events = [
+                [
+                    'code'        => 'sameday_order_info',
+                    'description' => 'Sameday AWB on order info',
+                    'trigger'     => 'admin/view/sale/order_info/before',
+                    'action'      => 'extension/sameday/shipping/sameday.order_info_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_checkout_scripts',
+                    'description' => 'Add Sameday locker and payment scripts on checkout',
+                    'trigger'     => 'catalog/controller/common/footer/before',
+                    'action'      => 'extension/sameday/shipping/sameday.checkout_scripts_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_payment_method_view',
+                    'description' => 'Sameday paymentMethod class on payment modal (OC4)',
+                    'trigger'     => 'view/checkout/payment_method/after',
+                    'action'      => 'extension/sameday/shipping/sameday.payment_method_view_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_save',
+                    'description' => 'Saving the order id when temporary order is generated',
+                    'trigger'     => 'catalog/model/checkout/order.addOrder/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_add_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_locker_save',
+                    'description' => 'Save Sameday locker_id to oc_sameday_orders_locker when order is created',
+                    'trigger'     => 'catalog/model/checkout/order.addHistory/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_model_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_list',
+                    'description' => 'Sameday bulk AWB feedback on order list',
+                    'trigger'     => 'admin/view/sale/order_list/before',
+                    'action'      => 'extension/sameday/shipping/sameday.order_list_before',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_list_after',
+                    'description' => 'Sameday bulk AWB modals and scripts on order list',
+                    'trigger'     => 'admin/view/sale/order_list/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_list_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+                [
+                    'code'        => 'sameday_order_page_after',
+                    'description' => 'Sameday bulk AWB toolbar on order list page',
+                    'trigger'     => 'admin/view/sale/order/after',
+                    'action'      => 'extension/sameday/shipping/sameday.order_page_after',
+                    'status'      => true,
+                    'sort_order'  => 1
+                ],
+            ];
+
+            foreach ($events as $event) {
+                if (empty($this->model_setting_event->getEventByCode($event['code']))) {
+                    $this->model_setting_event->addEvent($event);
+                }
+            }
+
+            return;
+        }
+
+        $legacyEvents = [
+            [
+                'code'    => 'sameday_order_info',
+                'trigger' => 'admin/view/sale/order_info/before',
+                'action'  => 'extension/shipping/sameday/order_info_before',
+            ],
+            [
+                'code'    => 'sameday_order_list',
+                'trigger' => 'admin/view/sale/order_list/before',
+                'action'  => 'extension/shipping/sameday/order_list_before',
+            ],
+            [
+                'code'    => 'sameday_checkout_scripts',
+                'trigger' => 'catalog/controller/common/footer/before',
+                'action'  => 'extension/shipping/sameday/checkout_scripts_before',
+            ],
+        ];
+
+        if ($this->samedayVersionValidator->isOc2()) {
+            $this->load->model('extension/event');
+
+            foreach ($legacyEvents as $event) {
+                $existing = $this->model_extension_event->getEvent(
+                    $event['code'],
+                    $event['trigger'],
+                    $event['action']
+                );
+
+                if (empty($existing)) {
+                    $this->model_extension_event->addEvent(
+                        $event['code'],
+                        $event['trigger'],
+                        $event['action'],
+                        1
+                    );
+                }
+            }
+
+            return;
+        }
 
         $this->load->model('setting/event');
-        if($this->samedayVersionValidator->isOc4()){
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_info',
-                'description' => 'Sameday AWB on order info',
-                'trigger'     => 'admin/view/sale/order_info/before',
-                'action'      => 'extension/sameday/shipping/sameday.order_info_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
 
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_checkout_scripts',
-                'description' => 'Add Sameday locker and payment scripts on checkout',
-                'trigger'     => 'catalog/controller/common/footer/before',
-                'action'      => 'extension/sameday/shipping/sameday.checkout_scripts_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_payment_method_view',
-                'description' => 'Sameday paymentMethod class on payment modal (OC4)',
-                'trigger'     => 'view/checkout/payment_method/after',
-                'action'      => 'extension/sameday/shipping/sameday.payment_method_view_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_save',
-                'description' => 'Saving the order id when temporary order is generated',
-                'trigger'     => 'catalog/model/checkout/order.addOrder/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_add_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_locker_save',
-                'description' => 'Save Sameday locker_id to oc_sameday_orders_locker when order is created',
-                'trigger'     => 'catalog/model/checkout/order.addHistory/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_model_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_list',
-                'description' => 'Sameday bulk AWB feedback on order list',
-                'trigger'     => 'admin/view/sale/order_list/before',
-                'action'      => 'extension/sameday/shipping/sameday.order_list_before',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_list_after',
-                'description' => 'Sameday bulk AWB modals and scripts on order list',
-                'trigger'     => 'admin/view/sale/order_list/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_list_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-
-            $this->model_setting_event->addEvent([
-                'code'        => 'sameday_order_page_after',
-                'description' => 'Sameday bulk AWB toolbar on order list page',
-                'trigger'     => 'admin/view/sale/order/after',
-                'action'      => 'extension/sameday/shipping/sameday.order_page_after',
-                'status'      => true,
-                'sort_order'  => 1
-            ]);
-        }else{
-            $this->model_setting_event->addEvent(
-                'sameday_order_info',
-                'admin/view/sale/order_info/before',
-                'extension/shipping/sameday/order_info_before',
-                1,
-                1
-            );
-            // If you also want to feed the order list page:
-            $this->model_setting_event->addEvent(
-                'sameday_order_list',
-                'admin/view/sale/order_list/before',
-                'extension/shipping/sameday/order_list_before',
-                1,
-                1
-            );
+        foreach ($legacyEvents as $event) {
+            // OC3: skip checkout_scripts here if using twig OCMOD path only — still register scripts event.
+            if (empty($this->model_setting_event->getEventByCode($event['code']))) {
+                $this->model_setting_event->addEvent(
+                    $event['code'],
+                    $event['trigger'],
+                    $event['action'],
+                    1,
+                    1
+                );
+            }
         }
     }
 
@@ -193,9 +280,11 @@ trait SamedayTraitAdminController {
      */
     public function uninstall()
     {
-        $this->load->model('setting/event');
-        $this->{$this->samedayVersionValidator->buildMagicMethod()}->uninstall();
-        if($this->samedayVersionValidator->isOc4()){
+        // Do not drop Sameday tables here. OC core already removes the extension row
+        // and settings with code=sameday; dropping tables made reinstall look broken
+        // (empty services / missing schema) and forced a full re-import.
+        if ($this->samedayVersionValidator->isOc4()) {
+            $this->load->model('setting/event');
             $this->model_setting_event->deleteEventByCode('sameday_order_info');
             $this->model_setting_event->deleteEventByCode('sameday_checkout_scripts');
             $this->model_setting_event->deleteEventByCode('sameday_payment_method_view');
@@ -204,9 +293,16 @@ trait SamedayTraitAdminController {
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
             $this->model_setting_event->deleteEventByCode('sameday_order_list_after');
             $this->model_setting_event->deleteEventByCode('sameday_order_page_after');
-        }else{
+        } elseif ($this->samedayVersionValidator->isOc2()) {
+            $this->load->model('extension/event');
+            $this->model_extension_event->deleteEvent('sameday_order_info');
+            $this->model_extension_event->deleteEvent('sameday_order_list');
+            $this->model_extension_event->deleteEvent('sameday_checkout_scripts');
+        } else {
+            $this->load->model('setting/event');
             $this->model_setting_event->deleteEventByCode('sameday_order_info');
             $this->model_setting_event->deleteEventByCode('sameday_order_list');
+            $this->model_setting_event->deleteEventByCode('sameday_checkout_scripts');
         }
     }
 
@@ -217,6 +313,11 @@ trait SamedayTraitAdminController {
      */
     public function index()
     {
+        // Ensure schema exists after OCMOD upgrades without a full reinstall (CREATE IF NOT EXISTS).
+        $this->{$this->samedayVersionValidator->buildMagicMethod()}->install();
+        $this->ensureShippingExtensionRegistered();
+        $this->registerSamedayEvents();
+
         $this->load->language($this->samedayVersionValidator->buildModelPath());
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('setting/setting');
@@ -252,12 +353,61 @@ trait SamedayTraitAdminController {
             }
             $post[$passKey] = $password;
 
+            // editSetting() wipes the whole code group — keep API token / sync keys.
+            foreach ([
+                'sameday_token',
+                'sameday_token_expire_at',
+                'sameday_sync_until_ts',
+                'sameday_sync_lockers_ts',
+                'sameday_cod',
+                'sameday_awb_format',
+                'sameday_nomenclator_use',
+            ] as $preserveKey) {
+                $fullKey = $settingsModel->getKey($preserveKey);
+                if (!isset($post[$fullKey]) || $post[$fullKey] === '' || $post[$fullKey] === null) {
+                    $existing = $this->getConfig($preserveKey);
+                    if ($existing !== null && $existing !== '') {
+                        $post[$fullKey] = $existing;
+                    }
+                }
+            }
+
             $this->model_setting_setting->editSetting(
                 $this->{$this->samedayVersionValidator->buildMagicMethod()}->getPrefix() . "sameday",
                 $post
             );
 
             $this->{$this->samedayVersionValidator->buildMagicMethod()}->checkCodSetting();
+
+            // Keep runtime config / API client in sync with what we just persisted.
+            foreach ($post as $configKey => $configValue) {
+                if (strpos($configKey, 'sameday') !== false) {
+                    $this->config->set($configKey, $configValue);
+                }
+            }
+            $this->samedayHelper = Samedayclasses::getSamedayHelper(
+                $this->buildRequest(),
+                $this->registry,
+                $settingsModel->getPrefix()
+            );
+
+            // After credentials are stored, pull remote data if local tables are empty
+            // or a fresh API login just succeeded.
+            $shouldImport = (null !== $this->testing && null !== $this->hostCountry);
+            if (!$shouldImport && $this->getConfig('sameday_username') && $this->getConfig('sameday_password')) {
+                $existingServices = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getServices();
+                $shouldImport = empty($existingServices);
+            }
+
+            if ($shouldImport) {
+                try {
+                    $this->importServices(false);
+                    $this->importPickupPoint(false);
+                    $this->importLockers(false);
+                } catch (Exception $exception) {
+                    $this->session->data['error_warning'] = $exception->getMessage();
+                }
+            }
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
@@ -442,8 +592,15 @@ trait SamedayTraitAdminController {
         );
 
         $data['sameday_nomenclator_use'] = $this->getConfig('sameday_nomenclator_use');
-        // For Add Pickup-Point Form
-//        $data['pp_counties'] = $this->getCounties();
+        // For Add Pickup-Point Form (never leave unset — OC2 tpl foreach fatals otherwise)
+        $data['pp_counties'] = [];
+        try {
+            if ($this->getConfig('sameday_username') && $this->getConfig('sameday_password')) {
+                $data['pp_counties'] = $this->getCounties();
+            }
+        } catch (\Exception $exception) {
+            $data['pp_counties'] = [];
+        }
         $data['pp_countries'] = array_filter(
             $this->samedayHelper::SAMEDAY_COUNTRIES,
             static function ($country) use ($hostCountry) {
@@ -490,27 +647,24 @@ trait SamedayTraitAdminController {
     {
         $this->load->language($this->samedayVersionValidator->buildModelPath());
 
-        $actionKeys = $this->request->post['data'];
+        $fields = $this->extractPickupPointFormFields(
+            isset($this->request->post['data']) ? $this->request->post['data'] : []
+        );
 
-        $country = $actionKeys[0]['value'];
-        $county = $actionKeys[1]['value'];
-        $city = $actionKeys[2]['value'];
-        $address = $actionKeys[3]['value'];
-        $default = (int)$actionKeys[4]['value'];
-        $postalCode = $actionKeys[5]['value'];
-        $alias = $actionKeys[6]['value'];
-        $fullname = $actionKeys[7]['value'];
-        $phone = $actionKeys[8]['value'];
+        $country = $fields['pickupPointCountry'];
+        $county = $fields['pickupPointCounty'];
+        $city = $fields['pickupPointCity'];
+        $address = $fields['pickupPointAddress'];
+        $default = (int)$fields['pickupPointDefault'];
+        $postalCode = $fields['pickupPointPo'];
+        $alias = $fields['pickupPointAlias'];
+        $person = $fields['pickupPointContactName'];
+        $phone = $fields['pickupPointPhoneNumber'];
 
-        $contact = [new PickupPointContactPersonObject($fullname, $phone, true)];
+        $contact = [new PickupPointContactPersonObject($person, $phone, true)];
 
         try {
             $sameday = new SamedayAlias($this->samedayHelper->initClient());
-        } catch (Exception $exception) {
-            $this->response->setOutput($exception->getMessage());
-        }
-
-        try {
             $sameday->postPickupPoint(
                 new SamedayPostPickupPointRequest(
                     $country,
@@ -526,9 +680,48 @@ trait SamedayTraitAdminController {
             $this->session->data['error_success'] = $this->buildLanguage('text_pickupPointAddFeedbackSuccess');
         } catch (Exception $exception) {
             $this->session->data['error_warning'] = $exception->getMessage();
+            $this->response->setOutput($exception->getMessage());
+
+            return;
         }
 
-        return json_encode('ceva');
+        $this->response->setOutput(json_encode(['success' => true]));
+    }
+
+    /**
+     * Map jQuery serializeArray() rows by field name.
+     * Index-based access breaks when unchecked checkboxes / disabled city are omitted.
+     *
+     * @param array $actionKeys
+     *
+     * @return array
+     */
+    private function extractPickupPointFormFields(array $actionKeys)
+    {
+        $defaults = [
+            'pickupPointCountry' => '',
+            'pickupPointCounty' => '',
+            'pickupPointCity' => '',
+            'pickupPointAddress' => '',
+            'pickupPointDefault' => 0,
+            'pickupPointPo' => '',
+            'pickupPointAlias' => '',
+            'pickupPointContactName' => '',
+            'pickupPointPhoneNumber' => '',
+            'pickupPointEmail' => '',
+        ];
+
+        foreach ($actionKeys as $row) {
+            if (!is_array($row) || !isset($row['name'])) {
+                continue;
+            }
+            $name = $row['name'];
+            if (array_key_exists($name, $defaults)) {
+                $defaults[$name] = isset($row['value']) ? $row['value'] : '';
+            }
+        }
+
+        return $defaults;
     }
 
     /**
@@ -700,7 +893,11 @@ trait SamedayTraitAdminController {
      */
     private function isTesting()
     {
-        return $this->getConfig('sameday_testing');
+        if (null !== $this->testing) {
+            return (int)$this->testing;
+        }
+
+        return (int)$this->getConfig('sameday_testing');
     }
 
     /**
@@ -1027,43 +1224,39 @@ trait SamedayTraitAdminController {
         $store_id = 0;
         $code = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday');
         $key = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_sync_lockers_ts');
+        $time = (string)time();
 
-        $time = time();
+        $existing = $this->db->query(
+            sprintf(
+                "SELECT `setting_id` FROM %s WHERE `store_id` = '%s' AND `code` = '%s' AND `key` = '%s' LIMIT 1",
+                DB_PREFIX . "setting",
+                (int)$store_id,
+                $this->db->escape($code),
+                $this->db->escape($key)
+            )
+        )->row;
 
-        $lastTimeSynced = $this->getConfig('sameday_sync_lockers_ts');
-
-        if ($lastTimeSynced === null) {
-            $value = $time;
-
+        if (empty($existing['setting_id'])) {
             $this->db->query(
                 sprintf(
                     "INSERT INTO %s SET `store_id` = '%s', `code` = '%s', `key` = '%s', `value` = '%s'",
                     DB_PREFIX . "setting",
-                    $store_id,
+                    (int)$store_id,
                     $this->db->escape($code),
                     $this->db->escape($key),
-                    $this->db->escape($value)
+                    $this->db->escape($time)
                 )
             );
-        }
 
-        $lastTs = $this->db->query(
-            sprintf(
-                "SELECT * FROM %s WHERE `store_id` = '%s' AND `code` = '%s' AND `key` = '%s' AND `value` = '%s'",
-                DB_PREFIX . "setting",
-                $store_id,
-                $this->db->escape($code),
-                $this->db->escape($key),
-                $this->db->escape($value)
-            )
-        )->row;
+            return;
+        }
 
         $this->db->query(
             sprintf(
-                "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%'",
+                "UPDATE %s SET `value` = '%s' WHERE `setting_id` = '%s'",
                 DB_PREFIX . "setting",
                 $this->db->escape($time),
-                $this->db->escape($lastTs['setting_id'])
+                (int)$existing['setting_id']
             )
         );
     }
@@ -1486,14 +1679,27 @@ trait SamedayTraitAdminController {
                     'awb_cost' => $awb->getCost()
                 ));
 
-                $shippingSamedayModel->updateShippingMethodAfterPostAwb(
-                    $orderId,
-                    $service,
-                    $postRequestData['sameday_locker_id'],
-                    $postRequestData['sameday_locker_address']
-                );
+                $shippingSamedayModel->updateBulkFeedback([
+                    'awb_number' => (string)$awb->getAwbNumber(),
+                ], $orderId);
 
-                $shippingSamedayModel->updateBulkFeedback($awb, $orderId);
+                $lockerId = isset($postRequestData['sameday_locker_id']) && is_numeric($postRequestData['sameday_locker_id'])
+                    ? (int)$postRequestData['sameday_locker_id']
+                    : null;
+                $lockerAddress = !empty($postRequestData['sameday_locker_address'])
+                    ? (string)$postRequestData['sameday_locker_address']
+                    : null;
+
+                try {
+                    $shippingSamedayModel->updateShippingMethodAfterPostAwb(
+                        $orderId,
+                        is_array($service) ? $service : [],
+                        $lockerId,
+                        $lockerAddress
+                    );
+                } catch (\Throwable $shippingUpdateException) {
+                    // AWB already saved; keep success feedback.
+                }
 
                 // Redirect to order page.
                 $this->response->redirect(
@@ -1644,7 +1850,7 @@ trait SamedayTraitAdminController {
         * Actions
         */
         $data['estimate_cost_href'] = $this->url->link(
-            $this->samedayVersionValidator->buildSamedayMethodPath('estimateCost'),
+            $this->samedayVersionValidator->buildSamedayMethodPath('estimateCost')
         );
         $data['action'] = $this->url->link(
             $this->samedayVersionValidator->buildSamedayMethodPath('addAwb'),
@@ -1718,45 +1924,46 @@ trait SamedayTraitAdminController {
             return;
         }
 
-        $this->request->get['sameday_insured_value'] = 0;
-        $this->request->get['sameday_package_number'] = 1;
-        $this->request->get['sameday_package_weight[]'] = 1;
-        $this->request->get['sameday_client_reference'] = '';
-        $this->request->get['sameday_repayment'] = 100;
-        $this->request->get['sameday_locker_id'] = '100';
+        try {
+            $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+            $model->createBulkAwbTable();
+            $existingAwb = $model->getAwbForOrderId($order_id);
 
-        $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
-        $existingAwb = $model->getAwbForOrderId($order_id);
+            if (!empty($existingAwb['awb_number'])) {
+                $this->sendBulkAwbJson([
+                    'order_id' => $order_id,
+                    'already_exists' => true,
+                    'awb_number' => $existingAwb['awb_number'],
+                    'message' => 'AWB is already generated (' . $existingAwb['awb_number'] . ')',
+                ]);
+                return;
+            }
 
-        if (!empty($existingAwb['awb_number'])) {
+            $model->ensureBulkAwbEntry($order_id);
+            $this->postAwbShort($order_id);
+
+            $bulkRows = $model->getBulkAwbByOrderIds([$order_id]);
+            $json['order_id'] = $order_id;
+            $json['sameday_bulk'] = isset($bulkRows[$order_id])
+                ? $model->formatBulkAwbRow($bulkRows[$order_id])
+                : null;
+
+            $this->sendBulkAwbJson($json);
+        } catch (\Throwable $e) {
             $this->sendBulkAwbJson([
                 'order_id' => $order_id,
-                'already_exists' => true,
-                'awb_number' => $existingAwb['awb_number'],
-                'message' => 'AWB is already generated (' . $existingAwb['awb_number'] . ')',
+                'error' => $e->getMessage(),
             ]);
-            return;
         }
-
-        $model->bulkEntry($order_id);
-        $this->postAwbShort($order_id);
-
-        $bulkRows = $model->getBulkAwbByOrderIds([$order_id]);
-        $json['order_id'] = $order_id;
-        $json['sameday_bulk'] = isset($bulkRows[$order_id])
-            ? $model->formatBulkAwbRow($bulkRows[$order_id])
-            : null;
-
-        $this->sendBulkAwbJson($json);
     }
 
-    private function sendBulkAwbJson(array $json): void
+    private function sendBulkAwbJson(array $json)
     {
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($json));
     }
 
-    public function clearBulkErrors(): void
+    public function clearBulkErrors()
     {
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
         $orderIds = $model->clearBulkAwbWithoutGenerated();
@@ -1985,148 +2192,262 @@ trait SamedayTraitAdminController {
         foreach ($exception->getErrors() as $error) {
             $key = isset($error['key']) ? implode('.', (array)$error['key']) : '';
             foreach ((array)($error['errors'] ?? []) as $message) {
+                if (is_array($message)) {
+                    $message = implode(' ', array_filter($message, 'is_string'));
+                }
+                if (!is_string($message) || $message === '') {
+                    continue;
+                }
                 $errors[] = ($key !== '' ? $key . ': ' : '') . $message;
             }
         }
 
-        return $errors !== [] ? $errors : [$exception->getMessage()];
+        if ($errors !== []) {
+            return $errors;
+        }
+
+        $message = trim((string)$exception->getMessage());
+        if ($message !== '') {
+            return [$message];
+        }
+
+        $body = trim((string)$exception->getRawResponse()->getBody());
+        if ($body !== '') {
+            $json = json_decode($body, true);
+            if (is_array($json)) {
+                if (!empty($json['message']) && is_string($json['message'])) {
+                    return [$json['message']];
+                }
+                if (!empty($json['error']['message']) && is_string($json['error']['message'])) {
+                    return [$json['error']['message']];
+                }
+            }
+
+            return [strlen($body) > 300 ? substr($body, 0, 300) . '...' : $body];
+        }
+
+        return ['Sameday rejected the request'];
+    }
+
+    /**
+     * True when Sameday will not allow remote AWB cancellation (already closed / irreversible).
+     */
+    private function isRemoteAwbDeleteBlocked($message)
+    {
+        $normalized = function_exists('mb_strtolower')
+            ? mb_strtolower($message)
+            : strtolower($message);
+
+        $needles = [
+            'inchis din punct de vedere operational',
+            'închis din punct de vedere operațional',
+            'operationally closed',
+            'closed from an operational',
+            'pentru a-l redeschide',
+            'already closed',
+            'nu poate fi anulat',
+            'cannot be cancelled',
+            'cannot be canceled',
+        ];
+
+        foreach ($needles as $needle) {
+            $needleNormalized = function_exists('mb_strtolower')
+                ? mb_strtolower($needle)
+                : strtolower($needle);
+            $pos = function_exists('mb_strpos')
+                ? mb_strpos($normalized, $needleNormalized)
+                : strpos($normalized, $needleNormalized);
+            if ($needle !== '' && $pos !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove local AWB + bulk feedback rows without calling Sameday.
+     */
+    private function purgeLocalAwbForOrder($orderId, $awbNumber)
+    {
+        $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+        if ($awbNumber !== '') {
+            $model->deleteAwb($awbNumber);
+        }
+        $model->deleteBulkAwbByOrderId($orderId);
     }
 
     public function postAwbShort($order_id){
-
-        $this->load->model('sale/order');
-        $this->load->model('catalog/product');
-        $order = $this->model_sale_order->getOrder($order_id);
-        $orderProducts = ($this->samedayVersionValidator->isOc4())
-            ? $this->model_sale_order->getProducts($order_id)
-            : $this->model_sale_order->getOrderProducts($order_id);
-
-        $pickupPoint = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getDefaultPickupPointId();
-
-        $weight = [];
-        foreach($orderProducts as $orderProduct){
-            $orderData = $this->model_catalog_product->getProduct($orderProduct['product_id']);
-            array_push($weight, $orderData['weight']);
-        }
-        $parcelDimensions = $weight;
-        $address = trim($order['shipping_address_1'] . ' ' . $order['shipping_address_2']);
-        $phone = $order['telephone'];
-        $email = $order['email'];
-        $companyObject = null;
-        if (strlen($order['payment_company'])) {
-            $companyObject = new CompanyEntityObject(
-                $order['payment_company'],
-                '',
-                '',
-                '',
-                ''
-            );
-        }
-        $shippingCode = ($this->samedayVersionValidator->isOc4()) ? $order['shipping_method']['code'] : $order['shipping_code'];
-        $serviceId = explode('.', $shippingCode)[2];
-        $lockerAddress = explode('.', $shippingCode)[4];
-        $awbPaymentType = new AwbPaymentType(AwbPaymentType::CLIENT);
-        $shippingCity = $order['shipping_city'];
-        $shippingZone = $order['shipping_zone'];
-        $name = $order['shipping_firstname'] . ' ' . $order['shipping_lastname'];
-        $shippingPostcode = $order['shipping_postcode'];
-        $repayment = 0;
-        $paymentMethod = ($this->samedayVersionValidator->isOc4()) ?
-            $this->samedayHelper::isCodCode($order['payment_method']['code'], $this->getConfig('sameday_cod')) :
-            $this->samedayHelper::isCodCode($order['payment_code'], $this->getConfig('sameday_cod'));
-        if ($paymentMethod) {
-            $repayment = $this->currency->format(
-                $order['total'],
-                $order['currency_code'],
-                $order['currency_value'],
-                false
-            );
-        }
-
-        $thirdPartyPickUp = null;
-        $serviceTaxes = '';
-        $reference = '';
-        $observation = '';
-        $lockerLastMile = explode('.', $shippingCode)[3];
-        $oohLastMile= '';
-
-        $service = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getServiceSameday(
-            (int)$serviceId,
-            $this->isTesting()
-        );
-
-        $request = new SamedayPostAwbRequest(
-            (int)$pickupPoint,
-            null,
-            new PackageType(PackageType::PARCEL), //[PackageType::PARCEL, PackageType::ENVELOPE, PackageType::LARGE], // must find a way to autodetect
-            [new ParcelDimensionsObject((float)$parcelDimensions)],
-            (int)($serviceId ?? null),
-            $awbPaymentType,
-            new AwbRecipientEntityObject(
-                $shippingCity,
-                $shippingZone,
-                $address,
-                $name,
-                $phone,
-                $email,
-                $companyObject,
-                $shippingPostcode
-            ),
-            0,
-            $repayment,
-            new CodCollectorType(CodCollectorType::CLIENT),
-            $thirdPartyPickUp,
-            [],
-            null,
-            $reference,
-            $observation,
-            '',
-            '',
-            null,
-            $lockerLastMile,
-            null,
-            $oohLastMile,
-            $order['currency_code']
-        );
-
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
         $awb = null;
         $errors = null;
 
         try {
-            $sameday = new SamedayAlias($this->samedayHelper->initClient());
-        } catch (SamedaySDKException $exception) {
-            $errors = [
-                [
-                    'key' => ['SDK Error'],
-                    'errors' => [$exception->getMessage()],
-                ],
-            ];
-            $model->updateBulkFeedback(['errors' => $errors], $order_id);
+            $this->load->model('sale/order');
+            $this->load->model('catalog/product');
+            $order = $this->model_sale_order->getOrder($order_id);
 
-            return [
-                'awb' => null,
-                'errors' => $errors,
-            ];
-        }
+            if (empty($order)) {
+                throw new \RuntimeException('Order not found');
+            }
 
-        try {
+            $orderProducts = ($this->samedayVersionValidator->isOc4())
+                ? $this->model_sale_order->getProducts($order_id)
+                : $this->model_sale_order->getOrderProducts($order_id);
+
+            $pickupPoint = $model->getDefaultPickupPointId();
+            if ($pickupPoint === null) {
+                throw new \RuntimeException('No default Sameday pickup point configured');
+            }
+
+            $totalWeight = 0.0;
+            foreach ($orderProducts as $orderProduct) {
+                $orderData = $this->model_catalog_product->getProduct((int)$orderProduct['product_id']);
+                $productWeight = (float)($orderData['weight'] ?? 0);
+                $quantity = max(1, (int)($orderProduct['quantity'] ?? 1));
+                $totalWeight += $productWeight * $quantity;
+            }
+
+            $parcelDimensions = [
+                new ParcelDimensionsObject(max(0.1, $totalWeight > 0 ? $totalWeight : 1.0)),
+            ];
+
+            $address = trim($order['shipping_address_1'] . ' ' . $order['shipping_address_2']);
+            $phone = $order['telephone'];
+            $email = $order['email'];
+            $companyObject = null;
+            if (strlen((string)($order['payment_company'] ?? ''))) {
+                $companyObject = new CompanyEntityObject(
+                    $order['payment_company'],
+                    '',
+                    '',
+                    '',
+                    ''
+                );
+            }
+
+            $shippingCode = ($this->samedayVersionValidator->isOc4())
+                ? ($order['shipping_method']['code'] ?? '')
+                : ($order['shipping_code'] ?? '');
+            $shippingParts = explode('.', (string)$shippingCode);
+            $serviceId = $shippingParts[2] ?? null;
+            $lockerLastMile = $shippingParts[3] ?? '';
+            $lockerAddress = $shippingParts[4] ?? '';
+
+            if ($serviceId === null || $serviceId === '') {
+                throw new \RuntimeException('Invalid Sameday shipping method on order');
+            }
+
+            $awbPaymentType = new AwbPaymentType(AwbPaymentType::CLIENT);
+            $shippingCity = $order['shipping_city'];
+            $shippingZone = $order['shipping_zone'];
+            $name = $order['shipping_firstname'] . ' ' . $order['shipping_lastname'];
+            $shippingPostcode = $order['shipping_postcode'];
+            $repayment = 0;
+            $paymentMethod = ($this->samedayVersionValidator->isOc4())
+                ? $this->samedayHelper::isCodCode($order['payment_method']['code'] ?? '', $this->getConfig('sameday_cod'))
+                : $this->samedayHelper::isCodCode($order['payment_code'] ?? '', $this->getConfig('sameday_cod'));
+            if ($paymentMethod) {
+                $repayment = $this->currency->format(
+                    $order['total'],
+                    $order['currency_code'],
+                    $order['currency_value'],
+                    false
+                );
+            }
+
+            $thirdPartyPickUp = null;
+            $reference = '';
+            $observation = '';
+            $oohLastMile = '';
+
+            $service = $model->getServiceSameday(
+                (int)$serviceId,
+                $this->isTesting()
+            );
+
+            $request = new SamedayPostAwbRequest(
+                (int)$pickupPoint,
+                null,
+                new PackageType(PackageType::PARCEL),
+                $parcelDimensions,
+                (int)$serviceId,
+                $awbPaymentType,
+                new AwbRecipientEntityObject(
+                    $shippingCity,
+                    $shippingZone,
+                    $address,
+                    $name,
+                    $phone,
+                    $email,
+                    $companyObject,
+                    $shippingPostcode
+                ),
+                0,
+                $repayment,
+                new CodCollectorType(CodCollectorType::CLIENT),
+                $thirdPartyPickUp,
+                [],
+                null,
+                $reference,
+                $observation,
+                '',
+                '',
+                null,
+                $lockerLastMile,
+                null,
+                $oohLastMile,
+                $order['currency_code']
+            );
+
+            try {
+                $sameday = new SamedayAlias($this->samedayHelper->initClient());
+            } catch (SamedaySDKException $exception) {
+                $errors = [
+                    [
+                        'key' => ['SDK Error'],
+                        'errors' => [$exception->getMessage()],
+                    ],
+                ];
+                $model->updateBulkFeedback(['errors' => $errors], $order_id);
+
+                return [
+                    'awb' => null,
+                    'errors' => $errors,
+                ];
+            }
+
             $awb = $sameday->postAwb($request);
             if ($awb !== null && !is_array($awb)) {
-                $model->saveAwb(array(
+                $awbNumber = (string)$awb->getAwbNumber();
+                $model->saveAwb([
                     'order_id' => $order['order_id'],
-                    'awb_number' => $awb->getAwbNumber(),
+                    'awb_number' => $awbNumber,
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' => $awb->getCost()
-                ));
+                ]);
 
-                $model->updateShippingMethodAfterPostAwb(
-                    $order['order_id'],
-                    $service,
-                    $lockerLastMile,
-                    $lockerAddress
-                );
-                $model->updateBulkFeedback($awb, $order_id);
+                // Persist a plain payload so bulk UI can always read awb_number
+                // (serializing SDK response objects is brittle across PHP/autoload).
+                $model->updateBulkFeedback(['awb_number' => $awbNumber], $order_id);
+
+                $lockerId = (is_numeric($lockerLastMile) && (string)$lockerLastMile !== '')
+                    ? (int)$lockerLastMile
+                    : null;
+                $lockerAddressValue = ($lockerAddress !== null && $lockerAddress !== '')
+                    ? (string)$lockerAddress
+                    : null;
+
+                try {
+                    $model->updateShippingMethodAfterPostAwb(
+                        (int)$order['order_id'],
+                        is_array($service) ? $service : [],
+                        $lockerId,
+                        $lockerAddressValue
+                    );
+                } catch (\Throwable $shippingUpdateException) {
+                    // AWB already saved + bulk feedback marked success; do not overwrite.
+                }
             } elseif (is_array($awb) && null !== ($errors = $awb['errors'] ?? null)) {
                 $model->updateBulkFeedback(['errors' => $errors], $order_id);
             }
@@ -2137,15 +2458,15 @@ trait SamedayTraitAdminController {
             $errors = [
                 [
                     'key' => ['SDK Error'],
-                    'errors' => [$e->getMessage()],
+                    'errors' => [$e->getMessage() !== '' ? $e->getMessage() : 'SamedaySDKException'],
                 ],
             ];
             $model->updateBulkFeedback(['errors' => $errors], $order_id);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $errors = [
                 [
                     'key' => ['Generic Error'],
-                    'errors' => [$e->getMessage()],
+                    'errors' => [$e->getMessage() !== '' ? $e->getMessage() : get_class($e)],
                 ],
             ];
             $model->updateBulkFeedback(['errors' => $errors], $order_id);
@@ -2626,11 +2947,14 @@ trait SamedayTraitAdminController {
     }
 
     /**
-     * @return array{order_id: int, success: bool, error: string, awb_number: string}
+     * @param int $orderId
+     * @param bool $forceLocal
+     *
+     * @return array
      *
      * @throws SamedaySDKException
      */
-    private function deleteAwbForOrderId(int $orderId): array
+    private function deleteAwbForOrderId($orderId, $forceLocal = false)
     {
         $awb = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getAwbForOrderId($orderId);
 
@@ -2643,25 +2967,69 @@ trait SamedayTraitAdminController {
             ];
         }
 
-        try {
-            $sameday = new SamedayAlias($this->samedayHelper->initClient());
-            $sameday->deleteAwb(new SamedayDeleteAwbRequest($awb['awb_number']));
-            $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
-            $model->deleteAwb($awb['awb_number']);
-            $model->deleteBulkAwbByOrderId($orderId);
+        $awbNumber = (string)$awb['awb_number'];
+
+        if ($forceLocal) {
+            $this->purgeLocalAwbForOrder($orderId, $awbNumber);
 
             return [
                 'order_id' => $orderId,
                 'success' => true,
                 'error' => '',
-                'awb_number' => $awb['awb_number'],
+                'awb_number' => $awbNumber,
+                'local_only' => true,
+                'message' => 'Local AWB link removed (Sameday was not contacted).',
             ];
-        } catch (\Exception $e) {
+        }
+
+        try {
+            $sameday = new SamedayAlias($this->samedayHelper->initClient());
+            $sameday->deleteAwb(new SamedayDeleteAwbRequest($awbNumber));
+            $this->purgeLocalAwbForOrder($orderId, $awbNumber);
+
+            return [
+                'order_id' => $orderId,
+                'success' => true,
+                'error' => '',
+                'awb_number' => $awbNumber,
+                'message' => 'AWB removed successfully',
+            ];
+        } catch (SamedayBadRequestException $e) {
+            $messages = $this->formatSamedayExceptionErrors($e);
+            $message = implode('; ', array_filter($messages));
+            if ($message === '') {
+                $message = 'Sameday rejected AWB deletion';
+            }
+
+            // Closed / irreversible AWBs cannot be cancelled remotely — free the order locally.
+            if ($this->isRemoteAwbDeleteBlocked($message)) {
+                $this->purgeLocalAwbForOrder($orderId, $awbNumber);
+
+                return [
+                    'order_id' => $orderId,
+                    'success' => true,
+                    'error' => '',
+                    'awb_number' => $awbNumber,
+                    'local_only' => true,
+                    'message' => 'AWB is closed on Sameday and cannot be cancelled remotely. Local AWB link was removed so you can continue with the order.',
+                    'warning' => $message,
+                ];
+            }
+
             return [
                 'order_id' => $orderId,
                 'success' => false,
-                'error' => $e->getMessage(),
-                'awb_number' => $awb['awb_number'],
+                'error' => $message,
+                'awb_number' => $awbNumber,
+            ];
+        } catch (\Throwable $e) {
+            $message = $e->getMessage();
+
+            return [
+                'order_id' => $orderId,
+                'success' => false,
+                'error' => $message !== '' ? $message : get_class($e),
+                'awb_number' => $awbNumber,
             ];
         }
     }
@@ -2675,13 +3043,18 @@ trait SamedayTraitAdminController {
     {
         $orderId = (int)($this->request->get['order_id'] ?? 0);
         $isAjax = !empty($this->request->get['ajax']);
-        $result = $this->deleteAwbForOrderId($orderId);
+        $forceLocal = !empty($this->request->get['force_local']);
+        $result = $this->deleteAwbForOrderId($orderId, $forceLocal);
 
         if ($result['success']) {
             if ($isAjax) {
                 $this->sendBulkAwbJson([
                     'success' => true,
                     'order_id' => $orderId,
+                    'awb_number' => isset($result['awb_number']) ? $result['awb_number'] : '',
+                    'message' => isset($result['message']) ? $result['message'] : 'AWB removed successfully',
+                    'local_only' => !empty($result['local_only']),
+                    'warning' => isset($result['warning']) ? $result['warning'] : '',
                 ]);
                 return;
             }
@@ -2690,6 +3063,7 @@ trait SamedayTraitAdminController {
                 $this->sendBulkAwbJson([
                     'error' => $result['error'],
                     'order_id' => $orderId,
+                    'can_force_local' => true,
                 ]);
                 return;
             }
@@ -2716,7 +3090,7 @@ trait SamedayTraitAdminController {
      *
      * @throws SamedaySDKException
      */
-    public function bulkDeleteAwb(): void
+    public function bulkDeleteAwb()
     {
         $orderId = (int)($this->request->get['order_id'] ?? 0);
 
@@ -2725,14 +3099,17 @@ trait SamedayTraitAdminController {
             return;
         }
 
-        $result = $this->deleteAwbForOrderId($orderId);
+        $forceLocal = !empty($this->request->get['force_local']);
+        $result = $this->deleteAwbForOrderId($orderId, $forceLocal);
 
         if ($result['success']) {
             $this->sendBulkAwbJson([
                 'success' => true,
                 'order_id' => $orderId,
                 'awb_number' => $result['awb_number'],
-                'message' => 'AWB removed successfully',
+                'message' => isset($result['message']) ? $result['message'] : 'AWB removed successfully',
+                'local_only' => !empty($result['local_only']),
+                'warning' => isset($result['warning']) ? $result['warning'] : '',
             ]);
             return;
         }
@@ -2833,23 +3210,37 @@ trait SamedayTraitAdminController {
 
         $username = $this->getConfig('sameday_username');
         $post = $this->{$this->samedayVersionValidator->buildMagicMethod()}->sanitizeInputs($_POST);
-        if ($post[$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_username')] !== $username) {
+        $usernameKey = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_username');
+        $passwordKey = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_password');
+
+        if (!isset($post[$usernameKey])) {
+            $this->error['warning'] = $this->language->get('error_username_password');
+
+            return false;
+        }
+
+        if ($post[$usernameKey] !== $username) {
             // Username changed.
-            $username = $this->request->post[$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_username')];
+            $username = $post[$usernameKey];
             $needLogin = true;
         }
 
         $password = $this->getConfig('sameday_password');
-        $newPassword = $post[$this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_password')];
+        $newPassword = isset($post[$passwordKey]) ? $post[$passwordKey] : '';
         if ('' !== $newPassword) {
             // Password updated.
             $password = $newPassword;
             $needLogin = true;
+        } elseif (($password === '' || $password === null) && $needLogin) {
+            $this->error['warning'] = $this->language->get('error_username_password');
+
+            return false;
         }
 
         if ($needLogin) {
             // Check if login is valid.
             $isLogged = false;
+            $lastLoginError = '';
             $envModes = $this->samedayHelper::getEnvModes();
             foreach ($envModes as $hostCountry => $envModesByHosts) {
                 if ($isLogged === true) {
@@ -2873,6 +3264,7 @@ trait SamedayTraitAdminController {
                             break;
                         }
                     } catch (Exception $exception) {
+                        $lastLoginError = $exception->getMessage();
                         continue;
                     }
                 }
@@ -2880,6 +3272,9 @@ trait SamedayTraitAdminController {
 
             if (!$isLogged) {
                 $this->error['warning'] = $this->language->get('error_username_password');
+                if ($lastLoginError !== '') {
+                    $this->error['warning'] .= ' (' . $lastLoginError . ')';
+                }
 
                 return false;
             }
@@ -2920,7 +3315,13 @@ trait SamedayTraitAdminController {
                 $valueOfKey = $value;
             }
 
-            $entries["sameday_$key"] = $this->request->post[$requestKey] ?? $valueOfKey;
+            $posted = isset($this->request->post[$requestKey]) ? $this->request->post[$requestKey] : null;
+            // Password field is always empty in the HTML form — keep stored value for the client helper.
+            if ($key === 'password' && ($posted === null || $posted === '')) {
+                $entries["sameday_$key"] = $valueOfKey;
+            } else {
+                $entries["sameday_$key"] = ($posted !== null) ? $posted : $valueOfKey;
+            }
         }
 
         return $entries;
@@ -3081,7 +3482,7 @@ trait SamedayTraitAdminController {
         return (strpos(VERSION, '4') === 0);
     }
 
-    public function order_info_before(&$route, array &$data, &$code = null): void
+    public function order_info_before(&$route, array &$data, &$code = null)
     {
         // OC3 injects AWB UI via OCMOD on sale/order + extension/shipping/sameday/info.
         // Calling sale/order/info here would re-enter the order page and exhaust memory.
@@ -3119,7 +3520,7 @@ trait SamedayTraitAdminController {
         ];
     }
 
-    public function order_list_before(&$route, &$data, &$code = null): void
+    public function order_list_before(&$route, &$data, &$code = null)
     {
         $this->populateOrderListViewData($data);
 
@@ -3134,7 +3535,7 @@ trait SamedayTraitAdminController {
     /**
      * @param array $data
      */
-    private function populateOrderListViewData(array &$data): void
+    private function populateOrderListViewData(array &$data)
     {
         $this->load->language($this->samedayVersionValidator->buildModelPath());
         $data['sameday_button_show_awb'] = $this->language->get('text_button_show_awb');
@@ -3261,7 +3662,7 @@ trait SamedayTraitAdminController {
         unset($order);
     }
 
-    public function order_list_after(string &$route, array &$data, string &$output): void
+    public function order_list_after(string &$route, array &$data, string &$output)
     {
         if (!$this->samedayVersionValidator->isOc4()) {
             return;
@@ -3274,7 +3675,7 @@ trait SamedayTraitAdminController {
         );
     }
 
-    public function order_page_after(string &$route, array &$data, string &$output): void
+    public function order_page_after(string &$route, array &$data, string &$output)
     {
         if (!$this->samedayVersionValidator->isOc4()) {
             return;
@@ -3289,7 +3690,7 @@ trait SamedayTraitAdminController {
         }
     }
 
-    public function checkout_scripts_before(string &$route, array &$args): void {
+    public function checkout_scripts_before(string &$route, array &$args) {
         $current_route = $this->request->get['route'] ?? '';
         if (strpos($current_route, 'checkout') !== 0) {
             return;

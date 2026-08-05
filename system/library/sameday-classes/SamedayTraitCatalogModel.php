@@ -26,7 +26,7 @@ trait SamedayTraitCatalogModel {
     private $samedayVersionValidator;
 
     /**
-     * @param mixed $registry
+     * @param $registry
      */
     public function __construct($registry)
     {
@@ -50,7 +50,20 @@ trait SamedayTraitCatalogModel {
         try {
             return $this->getQuoteInternal($address);
         } catch (\Throwable $e) {
-            return [];
+            // Never fail checkout silently — empty [] makes OC skip the method entirely.
+            if ($this->config->get('config_error_log')) {
+                $log = new \Log('sameday_quote.log');
+                $log->write($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            }
+
+            return array(
+                'code'       => 'sameday',
+                'title'      => 'Sameday',
+                'name'       => 'Sameday',
+                'quote'      => array(),
+                'sort_order' => (int) $this->getConfig('sameday_sort_order'),
+                'error'      => 'Sameday shipping temporarily unavailable.',
+            );
         }
     }
 
@@ -60,7 +73,8 @@ trait SamedayTraitCatalogModel {
      */
     private function getQuoteInternal(array $address)
     {
-        if (!$this->config->get('shipping_sameday_status')) {
+        // OC2 uses sameday_status; OC3/OC4 use shipping_sameday_status (via getPrefix).
+        if (!(int)$this->getConfig('sameday_status')) {
             return [];
         }
 
@@ -155,6 +169,7 @@ trait SamedayTraitCatalogModel {
         }
 
         foreach ($availableService as $service) {
+            try {
             if ($service['sameday_code'] === $this->samedayHelper::SAMEDAY_6H_SERVICE
                 && $address['zone'] !== "Bucuresti"
             ) {
@@ -232,7 +247,7 @@ trait SamedayTraitCatalogModel {
                     $this->tax->calculate(
                         $price,
                         $this->getConfig('sameday_tax_class_id'),
-                        $this->getConfig('config_tax')
+                        $this->config->get('config_tax')
                     ),
                     $this->session->data['currency']
                 ),
@@ -250,6 +265,16 @@ trait SamedayTraitCatalogModel {
 
                     $quote_data[$serviceCode]['lockers'] = $this->showLockersList();
                 }
+            }
+            } catch (\Throwable $serviceException) {
+                if ($this->config->get('config_error_log')) {
+                    $log = new \Log('sameday_quote.log');
+                    $log->write(
+                        'Service ' . (isset($service['sameday_code']) ? $service['sameday_code'] : '?')
+                        . ' skipped: ' . $serviceException->getMessage()
+                    );
+                }
+                continue;
             }
         }
 
@@ -414,7 +439,7 @@ trait SamedayTraitCatalogModel {
             sprintf(
                 "SELECT * FROM %s WHERE `testing` = '%s'",
                 DB_PREFIX . "sameday_locker",
-                $this->db->escape($this->getPrefix())
+                $this->db->escape($this->isTesting())
             )
         )->rows;
     }
@@ -695,7 +720,7 @@ trait SamedayTraitCatalogModel {
      * @param int $locker_id
      * @return void
      */
-    public function addOrderLocker(int $order_id, mixed $locker): void
+    public function addOrderLocker(int $order_id, $locker)
     {
         if($order_id == null || $locker == null) {
             return;

@@ -354,9 +354,11 @@
             <label class="col-sm-3 control-label" for="input-pickupPointCounty">{{ text_pickupPointCounty }}</label>
             <div class="col-sm-9">
               <select name="pickupPointCounty" id="input-pickupPointCounty" class="form-control" data-url="{{ url_cities_ajax }}">
+                {% if pp_counties %}
                 {% for county in pp_counties %}
                   <option value="{{ county.id }}">{{ county.name }}</option>
                 {% endfor %}
+                {% endif %}
               </select>
             </div>
           </div>

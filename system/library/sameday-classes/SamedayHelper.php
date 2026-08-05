@@ -224,8 +224,8 @@ class SamedayHelper
 
     /**
      * @param array $samedayConfigs
-     * @param mixed $registry
-     * @param mixed $prefix
+     * @param $registry
+     * @param $prefix
      */
     public function __construct(array $samedayConfigs, $registry, $prefix)
     {

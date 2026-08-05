@@ -5,6 +5,11 @@ class SamedayVersionValidator {
          return explode('.', VERSION)[0];
     }
 
+    public function isOc2(): bool
+    {
+        return $this->getMajorVersion() === 2;
+    }
+
     public function isOc4(): bool{
         if($this->getMajorVersion() === 4){
             return true;
