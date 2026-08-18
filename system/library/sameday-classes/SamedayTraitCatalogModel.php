@@ -197,32 +197,6 @@ trait SamedayTraitCatalogModel {
                 && null !== $estimation = $this->estimateCost($address, $service['sameday_id'])
             ) {
                 $price = $estimation->getCost();
-
-                // Business logic for Bulgaria Currency Rules
-                $storeCurrency = $this->session->data['currency'];
-                $estimatedCurrency = $estimation->getCurrency();
-                if (($storeCurrency !== $estimatedCurrency)) {
-                    if ($storeCurrency === $this->samedayHelper::EURO_CURRENCY) {
-                        $price = $this->samedayHelper::convertBGNtoEUR($price);
-                        $estimatedPrice = $estimation->getCost();
-                    }
-
-                    $bulgarianCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[
-                    $this->samedayHelper::API_HOST_LOCALE_BG
-                    ];
-                    if ($storeCurrency === $bulgarianCurrency) {
-                        $price = $this->samedayHelper::convertEURtoBGN($price);
-                        $estimatedPrice = $estimation->getCost();
-                    }
-
-                    if (isset($estimatedPrice)) {
-                        $quoteTitle .= sprintf(
-                            " (≈ %s %s) ",
-                            $estimatedPrice,
-                            $estimatedCurrency
-                        );
-                    }
-                }
             }
 
             $serviceCode = $service['sameday_code'];
@@ -634,7 +608,8 @@ trait SamedayTraitCatalogModel {
             0,
             $repayment,
             null,
-            array()
+            array(),
+            $this->samedayHelper::getEligibleCurrencyByCountryCode($address['iso_code_2'] ?? null)
         );
 
         $sameday = new Sameday\Sameday($this->samedayHelper->initClient());
