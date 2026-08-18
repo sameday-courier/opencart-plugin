@@ -1787,10 +1787,10 @@ trait SamedayTraitAdminController {
         }
 
         $orderCurrency = $orderInfo['currency_code'];
-        $destCurrency = $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']];
+        $destCurrency = $this->samedayHelper::getEligibleCurrencyByCountryCode($orderInfo['shipping_iso_code_2']);
 
         $repaymentCurrencyAlert = null;
-        if ($orderCurrency !== $destCurrency) {
+        if ($destCurrency !== null && $orderCurrency !== $destCurrency) {
             $repaymentCurrencyAlert = sprintf(
                 "Be aware that the intended currency is %s but the Repayment value is expressed in %s. 
                 Please consider a conversion !!",
@@ -2397,7 +2397,7 @@ trait SamedayTraitAdminController {
                 $lockerLastMile,
                 null,
                 $oohLastMile,
-                $order['currency_code']
+                $this->samedayHelper::getEligibleCurrencyByCountryCode($order['shipping_iso_code_2'])
             );
 
             try {
@@ -2767,7 +2767,7 @@ trait SamedayTraitAdminController {
             $lockerLastMile,
             null,
             $oohLastMile,
-            $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$params['shipping_iso_code_2']]
+            $this->samedayHelper::getEligibleCurrencyByCountryCode($params['shipping_iso_code_2'])
         );
 
         try {
@@ -2890,7 +2890,7 @@ trait SamedayTraitAdminController {
                 $params['sameday_repayment'],
                 null,
                 $serviceTaxes,
-                $this->samedayHelper::SAMEDAY_ELIGIBLE_CURRENCIES[$orderInfo['shipping_iso_code_2']]
+                $this->samedayHelper::getEligibleCurrencyByCountryCode($orderInfo['shipping_iso_code_2'])
             );
 
             $sameday = new SamedayAlias($this->samedayHelper->initClient());

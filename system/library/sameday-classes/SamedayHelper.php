@@ -114,9 +114,8 @@ class SamedayHelper
     const SAMEDAY_ELIGIBLE_CURRENCIES = [
         self::API_HOST_LOCALE_RO => 'RON',
         self::API_HOST_LOCALE_HU => 'HUF',
-        self::API_HOST_LOCALE_BG => 'BGN',
+        self::API_HOST_LOCALE_BG => 'EUR',
     ];
-    const EURO_CURRENCY = "EUR";
 
     const DEFAULT_VALUE_LOCKER_MAX_ITEMS = 5;
 
@@ -307,23 +306,17 @@ class SamedayHelper
     }
 
     /**
-     * @param float $amount
+     * Destination-country currency accepted by Sameday (cross-border aware).
      *
-     * @return string
+     * @param string|null $countryCode ISO 3166-1 alpha-2 (e.g. RO, BG, HU)
+     *
+     * @return string|null
      */
-    public static function convertBGNtoEUR(float $amount): string
+    public static function getEligibleCurrencyByCountryCode($countryCode)
     {
-        return number_format(($amount * 0.511292), 2, '.', '');
-    }
+        $countryCode = strtoupper((string)$countryCode);
 
-    /**
-     * @param float $amount
-     *
-     * @return string
-     */
-    public static function convertEURtoBGN(float $amount): string
-    {
-        return number_format(($amount * 1.95583), 2, '.', '');
+        return self::SAMEDAY_ELIGIBLE_CURRENCIES[$countryCode] ?? null;
     }
 
     public static function getCodValues($registry)
