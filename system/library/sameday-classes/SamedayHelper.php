@@ -319,6 +319,30 @@ class SamedayHelper
         return self::SAMEDAY_ELIGIBLE_CURRENCIES[$countryCode] ?? null;
     }
 
+    /**
+     * Warning when order (repayment) currency differs from destination-country currency.
+     *
+     * @param string|null $orderCurrency
+     * @param string|null $destinationCountryCode ISO 3166-1 alpha-2
+     *
+     * @return string|null
+     */
+    public static function getRepaymentCurrencyAlertMessage($orderCurrency, $destinationCountryCode)
+    {
+        $orderCurrency = strtoupper(trim((string)$orderCurrency));
+        $destCurrency = self::getEligibleCurrencyByCountryCode($destinationCountryCode);
+
+        if ($destCurrency === null || $orderCurrency === '' || $orderCurrency === $destCurrency) {
+            return null;
+        }
+
+        return sprintf(
+            'Be aware that the intended currency is %s but the Repayment value is expressed in %s. Please consider a conversion !!',
+            $destCurrency,
+            $orderCurrency
+        );
+    }
+
     public static function getCodValues($registry)
     {
         $model_setting = $registry->get('model_setting_setting');

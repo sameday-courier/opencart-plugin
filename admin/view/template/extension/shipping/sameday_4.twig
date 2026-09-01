@@ -24,12 +24,22 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">&times;</button>
       </div>
     {% endif %}
-    <div class="card">
+    {% if sameday_authenticated %}
+      <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#tab-configuration" aria-controls="tab-configuration" aria-selected="true">{{ text_edit }}</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#tab-services" aria-controls="tab-services" aria-selected="false">{{ text_services }}</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#tab-pickup-points" aria-controls="tab-pickup-points" aria-selected="false">{{ text_pickup_points }}</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#tab-lockers" aria-controls="tab-lockers" aria-selected="false">{{ text_lockers }}</button></li>
+      </ul>
+      <div class="tab-content">
+    {% endif %}
+    <div class="card{% if sameday_authenticated %} tab-pane fade show active{% endif %}"{% if sameday_authenticated %} id="tab-configuration" role="tabpanel"{% endif %}>
       <div class="card-header">
-        <i class="fa fa-pencil"></i> {{ text_edit }}
+        <i class="fa fa-pencil"></i> {% if sameday_authenticated %}{{ text_edit }}{% else %}{{ entry_username }} / {{ entry_password }}{% endif %}
       </div>
       <div class="card-body">
         <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-custom" class="form-horizontal">
+          {% if not sameday_authenticated %}
           <div class="row mb-3">
             <label class="col-sm-2 col-form-label" for="input-username">{{ entry_username }}</label>
             <div class="col-sm-10">
@@ -42,6 +52,16 @@
               <input type="password" name="shipping_sameday_password" placeholder="{{ entry_password }}" id="input-password" class="form-control" />
             </div>
           </div>
+          {% else %}
+          <div class="row mb-3">
+            <label class="col-sm-2 col-form-label">{{ entry_username }}</label>
+            <div class="col-sm-10">
+              <div class="form-control-plaintext border rounded px-3 py-2 mb-2">{{ sameday_username }}</div>
+              <a href="{{ logout }}" class="btn btn-danger"><i class="fa fa-sign-out"></i> Logout</a>
+            </div>
+          </div>
+          {% endif %}
+          {% if sameday_authenticated %}
           <div class="row mb-3">
             <label class="col-sm-2 col-form-label" for="input-awb-format">{{ entry_awb_format }}</label>
             <div class="col-sm-10">
@@ -150,10 +170,12 @@
               </div>
             </div>
           </div>
+          {% endif %}
         </form>
       </div>
     </div>
-    <div class="card">
+    {% if sameday_authenticated %}
+    <div class="card tab-pane fade" id="tab-services" role="tabpanel">
       <div class="card-header">
         <i class="fa fa-pencil"></i> {{ text_services }}
         <a class="btn btn-primary" style="--bs-btn-padding-y: 5px; --bs-btn-padding-x: 10px; --bs-btn-font-size: .75rem;" href="{{ service_refresh }}" data-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
@@ -198,7 +220,7 @@
         </div>
       </div>
     </div>
-    <div class="card">
+    <div class="card tab-pane fade" id="tab-pickup-points" role="tabpanel">
       <div class="card-header">
         <i class="fa fa-pencil"></i> {{ text_pickup_points }}
         <a class="btn btn-primary" style="--bs-btn-padding-y: 5px; --bs-btn-padding-x: 10px; --bs-btn-font-size: .75rem;" href="{{ pickupPoint_refresh }}" data-bs-toggle="tooltip" title="{{ text_services_refresh }}"><i class="fa fa-refresh"></i></a>
@@ -285,7 +307,7 @@
     </div>
 
     <!-- Lockers -->
-    <div class="card">
+    <div class="card tab-pane fade" id="tab-lockers" role="tabpanel">
       <div class="card-header">
         <i class="fa fa-pencil"></i> {{ text_lockers }}
         <a class="btn btn-primary" style="--bs-btn-padding-y: 5px; --bs-btn-padding-x: 10px; --bs-btn-font-size: .75rem;" href="{{ lockers_refresh }}" data-toggle="tooltip" title="{{ text_lockers_refresh }}"><i class="fa fa-refresh"></i></a>
@@ -327,6 +349,8 @@
         </div>
       </div>
     </div>
+    </div>
+    {% endif %}
 
   </div>
 </div>

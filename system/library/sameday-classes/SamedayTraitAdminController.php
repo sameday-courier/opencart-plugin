@@ -340,7 +340,7 @@ trait SamedayTraitAdminController {
 
             // Add custom sanitization for password
             $passKey = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_password');
-            $password = $post[$passKey];
+            $password = isset($post[$passKey]) ? $post[$passKey] : '';
             if ('' === $password) {
                 $password = $this->getConfig('sameday_password');
                 if ('' === $password || null === $password) {
@@ -353,8 +353,11 @@ trait SamedayTraitAdminController {
             }
             $post[$passKey] = $password;
 
-            // editSetting() wipes the whole code group — keep API token / sync keys.
+            // editSetting() wipes the whole code group — keep keys not present on this POST
+            // (e.g. login form only sends username/password and would otherwise drop status).
             foreach ([
+                'sameday_username',
+                'sameday_password',
                 'sameday_token',
                 'sameday_token_expire_at',
                 'sameday_sync_until_ts',
@@ -362,14 +365,31 @@ trait SamedayTraitAdminController {
                 'sameday_cod',
                 'sameday_awb_format',
                 'sameday_nomenclator_use',
+                'sameday_status',
+                'sameday_tax_class_id',
+                'sameday_geo_zone_id',
+                'sameday_estimated_cost',
+                'sameday_show_lockers_map',
+                'sameday_locker_max_items',
+                'sameday_sort_order',
             ] as $preserveKey) {
                 $fullKey = $settingsModel->getKey($preserveKey);
-                if (!isset($post[$fullKey]) || $post[$fullKey] === '' || $post[$fullKey] === null) {
+                if (!array_key_exists($fullKey, $post)) {
+                    $existing = $this->getConfig($preserveKey);
+                    if ($existing !== null && $existing !== '') {
+                        $post[$fullKey] = $existing;
+                    }
+                } elseif ($post[$fullKey] === '' || $post[$fullKey] === null) {
                     $existing = $this->getConfig($preserveKey);
                     if ($existing !== null && $existing !== '') {
                         $post[$fullKey] = $existing;
                     }
                 }
+            }
+
+            $statusKey = $settingsModel->getKey('sameday_status');
+            if (!array_key_exists($statusKey, $post) || $post[$statusKey] === '' || $post[$statusKey] === null) {
+                $post[$statusKey] = 1;
             }
 
             $this->model_setting_setting->editSetting(
@@ -390,24 +410,6 @@ trait SamedayTraitAdminController {
                 $this->registry,
                 $settingsModel->getPrefix()
             );
-
-            // After credentials are stored, pull remote data if local tables are empty
-            // or a fresh API login just succeeded.
-            $shouldImport = (null !== $this->testing && null !== $this->hostCountry);
-            if (!$shouldImport && $this->getConfig('sameday_username') && $this->getConfig('sameday_password')) {
-                $existingServices = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getServices();
-                $shouldImport = empty($existingServices);
-            }
-
-            if ($shouldImport) {
-                try {
-                    $this->importServices(false);
-                    $this->importPickupPoint(false);
-                    $this->importLockers(false);
-                } catch (Exception $exception) {
-                    $this->session->data['error_warning'] = $exception->getMessage();
-                }
-            }
 
             $this->session->data['error_success'] = $this->language->get('text_success');
 
@@ -529,11 +531,18 @@ trait SamedayTraitAdminController {
 
         $data['statuses'] = $this->getStatuses();
         $data['action'] = $this->url->link($this->samedayVersionValidator->buildModelPath(), $this->addToken(), true);
+        $data['logout'] = $this->url->link(
+            $this->samedayVersionValidator->buildSamedayMethodPath('logout'),
+            $this->addToken(),
+            true
+        );
         $data['cancel'] = $this->url->link(
             $this->getRouteExtension(),
             $this->addToken(array('type' => 'shipping')),
             true
         );
+        $authState = $this->getSamedayAuthenticationState();
+        $data['sameday_authenticated'] = $authState['authenticated'];
         $data['services'] = $this->displayServices();
         $data['import_local_data_actions'] = json_encode($this->samedayHelper::IMPORT_LOCAL_DATA_ACTIONS, true);
         $data['import_local_data_href'] = $this->url->link(
@@ -595,7 +604,7 @@ trait SamedayTraitAdminController {
         // For Add Pickup-Point Form (never leave unset — OC2 tpl foreach fatals otherwise)
         $data['pp_counties'] = [];
         try {
-            if ($this->getConfig('sameday_username') && $this->getConfig('sameday_password')) {
+            if ($data['sameday_authenticated']) {
                 $data['pp_counties'] = $this->getCounties();
             }
         } catch (\Exception $exception) {
@@ -686,6 +695,47 @@ trait SamedayTraitAdminController {
         }
 
         $this->response->setOutput(json_encode(['success' => true]));
+    }
+
+    /**
+     * Clear stored Sameday credentials and redirect back.
+     *
+     * @return void
+     */
+    public function logout()
+    {
+        $this->load->language($this->samedayVersionValidator->buildModelPath());
+
+        if (!$this->validatePermissions()) {
+            $this->session->data['error_warning'] = $this->language->get('error_permission');
+            $this->response->redirect(
+                $this->url->link($this->samedayVersionValidator->buildModelPath(), $this->addToken(), true)
+            );
+
+            return;
+        }
+
+        $settingsModel = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+        $code = $settingsModel->getPrefix() . 'sameday';
+        $settingsModel->addAdditionalSetting(
+            $code,
+            [
+                $settingsModel->getKey('sameday_username') => '',
+                $settingsModel->getKey('sameday_password') => '',
+                $settingsModel->getKey('sameday_token') => '',
+                $settingsModel->getKey('sameday_token_expire_at') => '',
+            ]
+        );
+
+        $this->config->set($settingsModel->getKey('sameday_username'), '');
+        $this->config->set($settingsModel->getKey('sameday_password'), '');
+        $this->config->set($settingsModel->getKey('sameday_token'), '');
+        $this->config->set($settingsModel->getKey('sameday_token_expire_at'), '');
+
+        $this->session->data['error_success'] = $this->language->get('text_success');
+        $this->response->redirect(
+            $this->url->link($this->samedayVersionValidator->buildModelPath(), $this->addToken(), true)
+        );
     }
 
     /**
@@ -1786,22 +1836,12 @@ trait SamedayTraitAdminController {
             }
         }
 
-        $orderCurrency = $orderInfo['currency_code'];
-        $destCurrency = $this->samedayHelper::getEligibleCurrencyByCountryCode($orderInfo['shipping_iso_code_2']);
-
-        $repaymentCurrencyAlert = null;
-        if ($destCurrency !== null && $orderCurrency !== $destCurrency) {
-            $repaymentCurrencyAlert = sprintf(
-                "Be aware that the intended currency is %s but the Repayment value is expressed in %s. 
-                Please consider a conversion !!",
-                $destCurrency,
-                $orderCurrency
-            );
-        }
-
         $data['sameday_repayment'] = $repayment;
         $data['sameday_currency'] = $orderInfo['currency_code'];
-        $data['repaymentCurrencyAlert'] = $repaymentCurrencyAlert;
+        $data['repaymentCurrencyAlert'] = $this->samedayHelper::getRepaymentCurrencyAlertMessage(
+            $orderInfo['currency_code'] ?? '',
+            $orderInfo['shipping_iso_code_2'] ?? ''
+        );
         $data['sameday_client_reference'] = $orderInfo['order_id'];
         $data['pickupPoints'] = $shippingSamedayModel->getPickupPoints($this->getConfig('sameday_testing'));
         $data['services'] = $availableServices;
@@ -2994,6 +3034,19 @@ trait SamedayTraitAdminController {
                 'awb_number' => $awbNumber,
                 'message' => 'AWB removed successfully',
             ];
+        } catch (SamedayNotFoundException $e) {
+            // AWB no longer exists remotely (already deleted / wrong env) — free the order locally.
+            $this->purgeLocalAwbForOrder($orderId, $awbNumber);
+
+            return [
+                'order_id' => $orderId,
+                'success' => true,
+                'error' => '',
+                'awb_number' => $awbNumber,
+                'local_only' => true,
+                'message' => 'AWB was not found on Sameday. Local AWB link was removed so you can continue with the order.',
+                'warning' => $e->getMessage() !== '' ? $e->getMessage() : get_class($e),
+            ];
         } catch (SamedayBadRequestException $e) {
             $messages = $this->formatSamedayExceptionErrors($e);
             $message = implode('; ', array_filter($messages));
@@ -3023,6 +3076,23 @@ trait SamedayTraitAdminController {
                 'awb_number' => $awbNumber,
             ];
         } catch (\Throwable $e) {
+            // Safety net for stale opcache / alternate class loads: treat NotFound like success locally.
+            if ($e instanceof SamedayNotFoundException
+                || substr(get_class($e), -strlen('SamedayNotFoundException')) === 'SamedayNotFoundException'
+            ) {
+                $this->purgeLocalAwbForOrder($orderId, $awbNumber);
+
+                return [
+                    'order_id' => $orderId,
+                    'success' => true,
+                    'error' => '',
+                    'awb_number' => $awbNumber,
+                    'local_only' => true,
+                    'message' => 'AWB was not found on Sameday. Local AWB link was removed so you can continue with the order.',
+                    'warning' => $e->getMessage() !== '' ? $e->getMessage() : get_class($e),
+                ];
+            }
+
             $message = $e->getMessage();
 
             return [
@@ -3214,9 +3284,13 @@ trait SamedayTraitAdminController {
         $passwordKey = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getKey('sameday_password');
 
         if (!isset($post[$usernameKey])) {
-            $this->error['warning'] = $this->language->get('error_username_password');
+            if ($username !== '' && $username !== null) {
+                $post[$usernameKey] = $username;
+            } else {
+                $this->error['warning'] = $this->language->get('error_username_password');
 
-            return false;
+                return false;
+            }
         }
 
         if ($post[$usernameKey] !== $username) {
@@ -3238,49 +3312,70 @@ trait SamedayTraitAdminController {
         }
 
         if ($needLogin) {
-            // Check if login is valid.
-            $isLogged = false;
-            $lastLoginError = '';
-            $envModes = $this->samedayHelper::getEnvModes();
-            foreach ($envModes as $hostCountry => $envModesByHosts) {
-                if ($isLogged === true) {
-                    break;
-                }
-
-                foreach ($envModesByHosts as $key => $apiUrl) {
-                    $sameday = $this->samedayHelper->initClient(
-                        $username,
-                        $password,
-                        $apiUrl
-                    );
-
-                    try {
-                        if ($sameday->login()) {
-                            $isTesting = (int)($this->samedayHelper::API_DEMO === $key);
-                            $this->testing = $isTesting;
-                            $this->hostCountry = $hostCountry;
-                            $isLogged = true;
-
-                            break;
-                        }
-                    } catch (Exception $exception) {
-                        $lastLoginError = $exception->getMessage();
-                        continue;
-                    }
-                }
-            }
-
-            if (!$isLogged) {
+            $authState = $this->getSamedayAuthenticationState($username, $password);
+            if (!$authState['authenticated']) {
                 $this->error['warning'] = $this->language->get('error_username_password');
-                if ($lastLoginError !== '') {
-                    $this->error['warning'] .= ' (' . $lastLoginError . ')';
+                if ($authState['error'] !== '') {
+                    $this->error['warning'] .= ' (' . $authState['error'] . ')';
                 }
 
                 return false;
             }
+
+            $this->testing = $authState['testing'];
+            $this->hostCountry = $authState['host_country'];
         }
 
         return !$this->error;
+    }
+
+    /**
+     * @param string|null $username
+     * @param string|null $password
+     *
+     * @return array{authenticated: bool, host_country: ?string, testing: ?int, error: string}
+     */
+    private function getSamedayAuthenticationState($username = null, $password = null): array
+    {
+        $username = $username !== null ? (string)$username : (string)($this->getConfig('sameday_username') ?? '');
+        $password = $password !== null ? (string)$password : (string)($this->getConfig('sameday_password') ?? '');
+
+        if ($username === '' || $password === '') {
+            return [
+                'authenticated' => false,
+                'host_country' => null,
+                'testing' => null,
+                'error' => '',
+            ];
+        }
+
+        $lastLoginError = '';
+        $envModes = $this->samedayHelper->getEnvModes();
+        foreach ($envModes as $hostCountry => $envModesByHosts) {
+            foreach ($envModesByHosts as $key => $apiUrl) {
+                $sameday = $this->samedayHelper->initClient($username, $password, $apiUrl);
+
+                try {
+                    if ($sameday->login()) {
+                        return [
+                            'authenticated' => true,
+                            'host_country' => $hostCountry,
+                            'testing' => (int)($this->samedayHelper::API_DEMO === $key),
+                            'error' => '',
+                        ];
+                    }
+                } catch (Exception $exception) {
+                    $lastLoginError = $exception->getMessage();
+                }
+            }
+        }
+
+        return [
+            'authenticated' => false,
+            'host_country' => null,
+            'testing' => null,
+            'error' => $lastLoginError,
+        ];
     }
 
     /**
@@ -3598,6 +3693,9 @@ trait SamedayTraitAdminController {
             'UTF-8'
         );
 
+        $data['sameday_bulk_currency_alerts'] = [];
+        $data['sameday_bulk_currency_alerts_json'] = '{}';
+
         if (empty($data['orders']) || !is_array($data['orders'])) {
             return;
         }
@@ -3606,6 +3704,23 @@ trait SamedayTraitAdminController {
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
         $bulkRows = $model->getBulkAwbByOrderIds($orderIds);
         $awbRows = $model->getAwbByOrderIds($orderIds);
+        $currencyInfo = $model->getOrderCurrencyInfoByIds($orderIds);
+
+        $currencyAlerts = [];
+        foreach ($currencyInfo as $orderId => $info) {
+            $alert = $this->samedayHelper::getRepaymentCurrencyAlertMessage(
+                $info['currency_code'] ?? '',
+                $info['shipping_iso_code_2'] ?? ''
+            );
+            if ($alert !== null) {
+                $currencyAlerts[(string)$orderId] = $alert;
+            }
+        }
+        $data['sameday_bulk_currency_alerts'] = $currencyAlerts;
+        $data['sameday_bulk_currency_alerts_json'] = json_encode(
+            $currencyAlerts,
+            JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        );
 
         foreach ($data['orders'] as &$order) {
             $orderId = (int)$order['order_id'];

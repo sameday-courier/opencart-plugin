@@ -24,12 +24,22 @@
             <button type="button" class="close" data-dismiss="alert">&times;</button>
         </div>
         <?php } ?>
-        <div class="panel panel-default">
+        <?php if ($sameday_authenticated) { ?>
+        <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 15px;">
+            <li class="active"><a href="#tab-configuration" aria-controls="tab-configuration" role="tab" data-toggle="tab"><?php echo $text_edit; ?></a></li>
+            <li><a href="#tab-services" aria-controls="tab-services" role="tab" data-toggle="tab"><?php echo $text_services; ?></a></li>
+            <li><a href="#tab-pickup-points" aria-controls="tab-pickup-points" role="tab" data-toggle="tab"><?php echo $text_pickup_points; ?></a></li>
+            <li><a href="#tab-lockers" aria-controls="tab-lockers" role="tab" data-toggle="tab"><?php echo $text_lockers; ?></a></li>
+        </ul>
+        <div class="tab-content">
+        <?php } ?>
+        <div class="panel panel-default<?php echo $sameday_authenticated ? ' tab-pane fade in active' : ''; ?>"<?php echo $sameday_authenticated ? ' id="tab-configuration" role="tabpanel"' : ''; ?>>
             <div class="panel-heading">
-                <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_edit; ?></h3>
+                <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $sameday_authenticated ? $text_edit : $entry_username . ' / ' . $entry_password; ?></h3>
             </div>
             <div class="panel-body">
                 <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data" id="form-custom" class="form-horizontal">
+                    <?php if (!$sameday_authenticated) { ?>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-username"><?php echo $entry_username; ?></label>
                         <div class="col-sm-10">
@@ -42,6 +52,16 @@
                             <input type="password" name="sameday_password" placeholder="<?php echo $entry_password; ?>" id="input-password" class="form-control" />
                         </div>
                     </div>
+                    <?php } else { ?>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label"><?php echo $entry_username; ?></label>
+                        <div class="col-sm-10">
+                            <div class="well well-sm" style="margin-bottom: 10px;"><?php echo $sameday_username; ?></div>
+                            <a href="<?php echo $logout; ?>" class="btn btn-danger"><i class="fa fa-sign-out"></i> Logout</a>
+                        </div>
+                    </div>
+                    <?php } ?>
+                    <?php if ($sameday_authenticated) { ?>
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-tax-class"><?php echo $entry_tax_class; ?></label>
                         <div class="col-sm-10">
@@ -125,10 +145,12 @@
                             </div>
                         </div>
                     </div>
+                    <?php } ?>
                 </form>
             </div>
         </div>
-        <div class="panel panel-default">
+        <?php if ($sameday_authenticated) { ?>
+        <div class="panel panel-default tab-pane fade" id="tab-services" role="tabpanel">
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_services; ?></h3>
                 <a class="btn btn-primary" href="<?php echo $service_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_services_refresh; ?>"><i class="fa fa-refresh"></i></a>
@@ -173,7 +195,7 @@
             </div>
         </div>
 
-        <div class="panel panel-default">
+        <div class="panel panel-default tab-pane fade" id="tab-pickup-points" role="tabpanel">
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_pickup_points; ?></h3>
                 <a class="btn btn-primary" href="<?php echo $pickupPoint_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_pickup_points_refresh; ?>"><i class="fa fa-refresh"></i></a>
@@ -260,7 +282,7 @@
         </div>
 
         <!-- Lockers -->
-        <div class="panel panel-default">
+        <div class="panel panel-default tab-pane fade" id="tab-lockers" role="tabpanel">
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i> <?php echo $text_lockers; ?> </h3>
                 <a class="btn btn-primary" href="<?php echo $lockers_refresh; ?>" data-toggle="tooltip" title="<?php echo $text_lockers_refresh; ?>"><i class="fa fa-refresh"></i></a>
@@ -303,6 +325,8 @@
                 </div>
             </div>
         </div>
+        </div>
+        <?php } ?>
 
     </div>
 </div>
