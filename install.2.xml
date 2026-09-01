@@ -2,7 +2,7 @@
 <modification>
     <name>Samedaycourier Plugin OC v2</name>
     <code>ocmod-editor</code>
-    <version>1.8.2</version>
+    <version>1.8.3</version>
     <author>Sameday Courier</author>
     <link>https://www.sameday.ro/</link>
     <file path="admin/view/template/common/header.tpl">
@@ -227,7 +227,11 @@
     .sameday-bulk-awb-modal .sameday-bulk-log-icon.is-info { color: #d97706; }
     .sameday-bulk-awb-modal .sameday-bulk-awb-pill { background: #f3f4f6; color: #374151; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; margin-left: 12px; }
     .sameday-bulk-awb-modal .sameday-bulk-confirm-list { max-height: 200px; overflow-y: auto; margin-top: 12px; padding-left: 18px; color: #374151; }
+    .sameday-bulk-awb-modal .sameday-bulk-confirm-list .sameday-bulk-currency-warning { color: #dc2626; margin-bottom: 6px; }
     .sameday-bulk-awb-modal .sameday-bulk-confirm-agree { margin-top: 16px; padding: 12px 14px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+    .sameday-bulk-awb-modal .sameday-bulk-currency-agree { margin-top: 12px; padding: 12px 14px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; }
+    .sameday-bulk-awb-modal .sameday-bulk-currency-agree label,
+    .sameday-bulk-awb-modal .sameday-bulk-currency-agree small { color: #dc2626; }
     .sameday-bulk-awb-modal .modal-footer { border-top: 1px solid #f3f4f6; padding: 16px 24px; background: #fafafa; }
     .sameday-bulk-awb-modal .sameday-bulk-btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; border-radius: 8px; padding: 8px 16px; font-weight: 500; }
     .sameday-bulk-awb-modal .sameday-bulk-btn-primary { background: #7c3aed; border: 1px solid #7c3aed; color: #fff; border-radius: 8px; padding: 8px 18px; font-weight: 600; }
@@ -258,6 +262,12 @@
                             <label style="font-weight: normal; margin-bottom: 0;">
                                 <input type="checkbox" id="bulkConfirm">
                                 <small>I agree that the price estimations are subject to change due to bulk generation inaccuracy potential.</small>
+                            </label>
+                        </div>
+                        <div id="bulkCurrencyConfirmWrap" class="sameday-bulk-currency-agree" style="display: none;">
+                            <label style="font-weight: normal; margin-bottom: 0;">
+                                <input type="checkbox" id="bulkCurrencyConfirm">
+                                <small>I confirm that I proceed with manual conversion for those orders.</small>
                             </label>
                         </div>
                     </div>
@@ -400,6 +410,7 @@ $('#button-filter').on('click', function() {
       var showAwbPdfUrlBase = '<?php echo $sameday_show_awb_pdf_url_base; ?>';
       var showAwbHistoryUrlBase = '<?php echo $sameday_show_awb_history_url_base; ?>';
       var samedayButtonShowAwb = <?php echo json_encode($sameday_button_show_awb); ?>;
+      var samedayBulkCurrencyAlerts = <?php echo !empty($sameday_bulk_currency_alerts_json) ? $sameday_bulk_currency_alerts_json : '{}'; ?>;
 
       function getSelectedBulkOrderIds() {
           var ids = [];
@@ -463,19 +474,42 @@ $('#button-filter').on('click', function() {
           $('#bulkAwbProgressPercent').text('0%');
           $('#bulkAwbDownloadReport').prop('disabled', true);
           $('#bulkAwbAction').removeData('bulkResults');
+          $('#bulkConfirm').prop('checked', false);
+          $('#bulkCurrencyConfirm').prop('checked', false);
+          $('#bulkCurrencyConfirmWrap').hide();
+          $('#bulkAwbActionConfirm').prop('disabled', true);
+      }
+
+      function updateBulkAwbConfirmState() {
+          var needsCurrencyConfirm = $('#bulkCurrencyConfirmWrap').is(':visible');
+          var currencyOk = !needsCurrencyConfirm || $('#bulkCurrencyConfirm').is(':checked');
+          var estimateOk = $('#bulkConfirm').is(':checked');
+          $('#bulkAwbActionConfirm').prop('disabled', !(estimateOk && currencyOk));
       }
 
       function prepareBulkAwbModal(orderIds) {
           resetBulkAwbModal();
           var $list = $('#bulkAwbActionOrderList').empty();
+          var hasCurrencyWarning = false;
           orderIds.forEach(function(orderId) {
-              $list.append('<li>Order #' + orderId + '</li>');
+              var alertMsg = (samedayBulkCurrencyAlerts && (samedayBulkCurrencyAlerts[String(orderId)] || samedayBulkCurrencyAlerts[orderId])) || '';
+              if (alertMsg) {
+                  hasCurrencyWarning = true;
+                  $list.append(
+                      '<li class="sameday-bulk-currency-warning">Order #' + orderId +
+                      ' ! ' + $('<div>').text(alertMsg).html() + '</li>'
+                  );
+              } else {
+                  $list.append('<li>Order #' + orderId + '</li>');
+              }
           });
           $('#bulkAwbActionSummary').text(
               'You are about to generate AWB for ' + orderIds.length + ' order(s).'
           );
           $('#bulkConfirm').prop('checked', false);
-          $('#bulkAwbActionConfirm').prop('disabled', true);
+          $('#bulkCurrencyConfirm').prop('checked', false);
+          $('#bulkCurrencyConfirmWrap').toggle(hasCurrencyWarning);
+          updateBulkAwbConfirmState();
           $('#bulkAwbAction').data('orderIds', orderIds);
       }
 
@@ -742,13 +776,17 @@ $('#button-filter').on('click', function() {
           resetBulkAwbModal();
       });
 
-      $('#bulkConfirm').on('change', function() {
-          $('#bulkAwbActionConfirm').prop('disabled', !this.checked);
+      $('#bulkConfirm, #bulkCurrencyConfirm').on('change', function() {
+          updateBulkAwbConfirmState();
       });
 
       $('#bulkAwbActionConfirm').on('click', function() {
           var orderIds = $('#bulkAwbAction').data('orderIds') || [];
+          var needsCurrencyConfirm = $('#bulkCurrencyConfirmWrap').is(':visible');
           if (!orderIds.length || !$('#bulkConfirm').is(':checked')) {
+              return;
+          }
+          if (needsCurrencyConfirm && !$('#bulkCurrencyConfirm').is(':checked')) {
               return;
           }
           runBulkAwbQueue(orderIds);

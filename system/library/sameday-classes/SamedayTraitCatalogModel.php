@@ -141,8 +141,8 @@ trait SamedayTraitCatalogModel {
         // End of weight validation section
 
         $isEstimatedCostEnabled = $this->getConfig('sameday_estimated_cost');
-        $hostCountry = $this->getHostCountry();
-        $destCountry = $address['iso_code_2'];
+        $hostCountry = strtoupper((string)$this->getHostCountry());
+        $destCountry = strtoupper((string)$address['iso_code_2']);
 
         $eligibleServices = $hostCountry === $destCountry
             ? $this->samedayHelper::ELIGIBLE_SAMEDAY_SERVICES

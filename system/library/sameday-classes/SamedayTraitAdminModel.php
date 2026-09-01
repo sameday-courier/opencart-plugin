@@ -681,6 +681,33 @@ trait SamedayTraitAdminModel {
     }
 
     /**
+     * @param int[] $orderIds
+     *
+     * @return array<int, array{order_id: int, currency_code: string, shipping_iso_code_2: string}>
+     */
+    public function getOrderCurrencyInfoByIds(array $orderIds): array
+    {
+        $orderIds = array_values(array_unique(array_filter(array_map('intval', $orderIds))));
+        if ($orderIds === []) {
+            return [];
+        }
+
+        $query = $this->db->query(
+            'SELECT o.order_id, o.currency_code, c.iso_code_2 AS shipping_iso_code_2'
+            . ' FROM `' . DB_PREFIX . 'order` o'
+            . ' LEFT JOIN `' . DB_PREFIX . 'country` c ON (c.country_id = o.shipping_country_id)'
+            . ' WHERE o.order_id IN (' . implode(',', $orderIds) . ')'
+        );
+
+        $rows = [];
+        foreach ($query->rows as $row) {
+            $rows[(int)$row['order_id']] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
      * @param int $orderId
      * @param string $awbParcel
      * @param SummaryObject $summary
