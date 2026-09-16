@@ -24,7 +24,7 @@ trait SamedayTraitAdminModel {
     public function install()
     {
         $this->createAwbTable();
-        $this->ensureSamedayAwbPreviousOrderStatusColumn();
+        $this->createPreviousOrderStatusColumn();
         $this->createServiceTable();
         $this->createPickUpPointTable();
         $this->createPackageTable();
@@ -63,7 +63,7 @@ trait SamedayTraitAdminModel {
      */
     public function saveAwb(array $data)
     {
-        $this->ensureSamedayAwbPreviousOrderStatusColumn();
+        $this->createPreviousOrderStatusColumn();
 
         $previousOrderStatusId = null;
         if (isset($data['previous_order_status_id'])
@@ -924,7 +924,7 @@ trait SamedayTraitAdminModel {
         ';
 
         $this->db->query($query);
-        $this->ensureSamedayAwbPreviousOrderStatusColumn();
+        $this->createPreviousOrderStatusColumn();
     }
 
     /**
@@ -932,7 +932,7 @@ trait SamedayTraitAdminModel {
      *
      * @return void
      */
-    public function ensureSamedayAwbPreviousOrderStatusColumn()
+    public function createPreviousOrderStatusColumn()
     {
         $query = 'SHOW COLUMNS FROM `' . DB_PREFIX . "sameday_awb` LIKE 'previous_order_status_id'";
         try {
