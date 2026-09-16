@@ -372,6 +372,7 @@ trait SamedayTraitAdminController {
                 'sameday_show_lockers_map',
                 'sameday_locker_max_items',
                 'sameday_sort_order',
+                'sameday_awb_order_status_id',
             ] as $preserveKey) {
                 $fullKey = $settingsModel->getKey($preserveKey);
                 if (!array_key_exists($fullKey, $post)) {
@@ -420,6 +421,7 @@ trait SamedayTraitAdminController {
 
         $this->load->model('localisation/tax_class');
         $this->load->model('localisation/geo_zone');
+        $this->load->model('localisation/order_status');
 
         $data = $this->buildLanguage(array(
             'heading_title',
@@ -469,6 +471,9 @@ trait SamedayTraitAdminController {
             'entry_tax_class',
             'entry_geo_zone',
             'entry_status',
+            'entry_awb_order_status',
+            'entry_awb_order_status_help',
+            'text_awb_order_status_none',
             'entry_estimated_cost',
             'entry_show_lockers_map',
             'entry_locker_max_items',
@@ -579,6 +584,7 @@ trait SamedayTraitAdminController {
         );
         $data['tax_classes'] = $this->model_localisation_tax_class->getTaxClasses();
         $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
+        $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
         $data['service_links'] = array_map(
             function ($service) {
                 return $this->url->link(
@@ -618,6 +624,13 @@ trait SamedayTraitAdminController {
         );
 
         $data = array_merge($data, $this->buildRequest());
+
+        // Always provide a visible label for the "no status change" option.
+        $noneLabel = $this->language->get('text_awb_order_status_none');
+        if ($noneLabel === '' || $noneLabel === 'text_awb_order_status_none') {
+            $noneLabel = 'Do not change';
+        }
+        $data['text_awb_order_status_none'] = $noneLabel;
 
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
@@ -1721,13 +1734,20 @@ trait SamedayTraitAdminController {
 
             if (null !== $awb = $postAwb['awb'] ?? null) {
                 $orderId = (int)$orderInfo['order_id'];
+                $previousOrderStatusId = (int)($orderInfo['order_status_id'] ?? 0);
+                $configuredStatusId = (int)$this->getConfig('sameday_awb_order_status_id');
 
-                $shippingSamedayModel->saveAwb(array(
+                $awbPayload = array(
                     'order_id' => $orderId,
                     'awb_number' => $awb->getAwbNumber(),
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' => $awb->getCost()
-                ));
+                );
+                if ($configuredStatusId > 0 && $previousOrderStatusId > 0) {
+                    $awbPayload['previous_order_status_id'] = $previousOrderStatusId;
+                }
+                $shippingSamedayModel->saveAwb($awbPayload);
+                $this->applyConfiguredOrderStatusOnAwbGenerate($orderId, $orderInfo);
 
                 $shippingSamedayModel->updateBulkFeedback([
                     'awb_number' => (string)$awb->getAwbNumber(),
@@ -2310,11 +2330,118 @@ trait SamedayTraitAdminController {
      */
     private function purgeLocalAwbForOrder($orderId, $awbNumber)
     {
+        $orderId = (int)$orderId;
         $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+        $awb = $model->getAwbForOrderId($orderId);
+        $previousOrderStatusId = isset($awb['previous_order_status_id'])
+            ? (int)$awb['previous_order_status_id']
+            : 0;
+
         if ($awbNumber !== '') {
             $model->deleteAwb($awbNumber);
         }
         $model->deleteBulkAwbByOrderId($orderId);
+
+        if ($previousOrderStatusId > 0) {
+            $this->revertOrderStatusAfterAwbRemoval($orderId, $previousOrderStatusId);
+        }
+    }
+
+    /**
+     * Apply configured order status after AWB generation.
+     *
+     * @param int   $orderId
+     * @param array $orderInfo
+     *
+     * @return void
+     */
+    private function applyConfiguredOrderStatusOnAwbGenerate(int $orderId, array $orderInfo = []): void
+    {
+        $configuredStatusId = (int)$this->getConfig('sameday_awb_order_status_id');
+        if ($configuredStatusId <= 0) {
+            return;
+        }
+
+        if ($orderInfo === []) {
+            $this->load->model('sale/order');
+            $orderInfo = $this->model_sale_order->getOrder($orderId) ?: [];
+        }
+
+        $previousStatusId = (int)($orderInfo['order_status_id'] ?? 0);
+        if ($previousStatusId <= 0 || $previousStatusId === $configuredStatusId) {
+            return;
+        }
+
+        $this->writeOrderStatusHistory(
+            $orderId,
+            $configuredStatusId,
+            'Sameday: order status updated after AWB generation'
+        );
+    }
+
+    /**
+     * Restore the order status stored when the AWB was generated.
+     *
+     * @param int $orderId
+     * @param int $previousOrderStatusId
+     *
+     * @return void
+     */
+    private function revertOrderStatusAfterAwbRemoval(int $orderId, int $previousOrderStatusId): void
+    {
+        if ($orderId <= 0 || $previousOrderStatusId <= 0) {
+            return;
+        }
+
+        $this->load->model('sale/order');
+        $orderInfo = $this->model_sale_order->getOrder($orderId) ?: [];
+        $currentStatusId = (int)($orderInfo['order_status_id'] ?? 0);
+
+        if ($currentStatusId === $previousOrderStatusId) {
+            return;
+        }
+
+        $this->writeOrderStatusHistory(
+            $orderId,
+            $previousOrderStatusId,
+            'Sameday: order status restored after AWB removal'
+        );
+    }
+
+    /**
+     * Persist order status + history from admin context (OC2 / OC3 / OC4).
+     * Uses direct SQL so we avoid catalog bootstrap differences and keep notify=false.
+     *
+     * @param int    $orderId
+     * @param int    $orderStatusId
+     * @param string $comment
+     *
+     * @return void
+     */
+    private function writeOrderStatusHistory(int $orderId, int $orderStatusId, string $comment = ''): void
+    {
+        if ($orderId <= 0 || $orderStatusId <= 0) {
+            return;
+        }
+
+        try {
+            $this->db->query(
+                "UPDATE `" . DB_PREFIX . "order` SET"
+                . " order_status_id = '" . (int)$orderStatusId . "',"
+                . " date_modified = NOW()"
+                . " WHERE order_id = '" . (int)$orderId . "'"
+            );
+            $this->db->query(
+                "INSERT INTO `" . DB_PREFIX . "order_history` SET"
+                . " order_id = '" . (int)$orderId . "',"
+                . " order_status_id = '" . (int)$orderStatusId . "',"
+                . " notify = '0',"
+                . " comment = '" . $this->db->escape($comment) . "',"
+                . " date_added = NOW()"
+            );
+        } catch (\Throwable $e) {
+            // Status change must not break AWB generate/delete flows.
+        }
     }
 
     public function postAwbShort($order_id){
@@ -2460,12 +2587,20 @@ trait SamedayTraitAdminController {
             $awb = $sameday->postAwb($request);
             if ($awb !== null && !is_array($awb)) {
                 $awbNumber = (string)$awb->getAwbNumber();
-                $model->saveAwb([
+                $previousOrderStatusId = (int)($order['order_status_id'] ?? 0);
+                $configuredStatusId = (int)$this->getConfig('sameday_awb_order_status_id');
+
+                $awbPayload = [
                     'order_id' => $order['order_id'],
                     'awb_number' => $awbNumber,
                     'parcels' => serialize($awb->getParcels()),
                     'awb_cost' => $awb->getCost()
-                ]);
+                ];
+                if ($configuredStatusId > 0 && $previousOrderStatusId > 0) {
+                    $awbPayload['previous_order_status_id'] = $previousOrderStatusId;
+                }
+                $model->saveAwb($awbPayload);
+                $this->applyConfiguredOrderStatusOnAwbGenerate((int)$order['order_id'], $order);
 
                 // Persist a plain payload so bulk UI can always read awb_number
                 // (serializing SDK response objects is brittle across PHP/autoload).

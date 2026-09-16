@@ -104,6 +104,17 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-awb-order-status"><span data-toggle="tooltip" title="{{ entry_awb_order_status_help }}">{{ entry_awb_order_status }}</span></label>
+            <div class="col-sm-10">
+              <select name="shipping_sameday_awb_order_status_id" id="input-awb-order-status" class="form-control">
+                <option value="0">{% if text_awb_order_status_none %}{{ text_awb_order_status_none }}{% else %}Do not change{% endif %}</option>
+                {% for order_status in order_statuses %}
+                  <option value="{{ order_status.order_status_id }}" {% if order_status.order_status_id == sameday_awb_order_status_id %} selected="selected" {% endif %}>{{ order_status.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
             <label class="col-sm-2 control-label" for="input-status">{{ entry_estimated_cost }}</label>
             <div class="col-sm-10">
               <select name="shipping_sameday_estimated_cost" id="shipping_sameday_estimated_cost" class="form-control">

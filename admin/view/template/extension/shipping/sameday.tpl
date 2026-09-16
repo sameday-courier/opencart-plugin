@@ -94,6 +94,17 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-awb-order-status"><span data-toggle="tooltip" title="<?php echo $entry_awb_order_status_help; ?>"><?php echo $entry_awb_order_status; ?></span></label>
+                        <div class="col-sm-10">
+                            <select name="sameday_awb_order_status_id" id="input-awb-order-status" class="form-control">
+                                <option value="0"><?php echo !empty($text_awb_order_status_none) ? $text_awb_order_status_none : 'Do not change'; ?></option>
+                                <?php foreach ($order_statuses as $order_status) { ?>
+                                <option value="<?php echo $order_status['order_status_id']; ?>" <?php if ($order_status['order_status_id'] == $sameday_awb_order_status_id) { ?> selected="selected" <?php } ?>><?php echo $order_status['name']; ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-status-estimated-cost"><?php echo $entry_estimated_cost; ?></label>
                         <div class="col-sm-10">
                             <select name="sameday_estimated_cost" id="input-status-estimated-cost" class="form-control">

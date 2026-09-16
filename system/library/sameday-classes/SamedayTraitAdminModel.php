@@ -24,6 +24,7 @@ trait SamedayTraitAdminModel {
     public function install()
     {
         $this->createAwbTable();
+        $this->ensureSamedayAwbPreviousOrderStatusColumn();
         $this->createServiceTable();
         $this->createPickUpPointTable();
         $this->createPackageTable();
@@ -62,17 +63,33 @@ trait SamedayTraitAdminModel {
      */
     public function saveAwb(array $data)
     {
+        $this->ensureSamedayAwbPreviousOrderStatusColumn();
+
+        $previousOrderStatusId = null;
+        if (isset($data['previous_order_status_id'])
+            && $data['previous_order_status_id'] !== ''
+            && $data['previous_order_status_id'] !== null
+        ) {
+            $previousOrderStatusId = (int)$data['previous_order_status_id'];
+        }
+
+        $previousSql = ($previousOrderStatusId === null)
+            ? 'NULL'
+            : "'" . (int)$previousOrderStatusId . "'";
+
         $query = '
             INSERT INTO ' . DB_PREFIX . "sameday_awb(
                 order_id,
                 awb_number,
                 parcels,
-                awb_cost
+                awb_cost,
+                previous_order_status_id
             ) VALUES (
                 '{$this->db->escape($data['order_id'])}',
                 '{$this->db->escape($data['awb_number'])}',
                 '{$this->db->escape($data['parcels'])}',
-                '{$this->db->escape($data['awb_cost'])}'
+                '{$this->db->escape($data['awb_cost'])}',
+                {$previousSql}
             )";
 
         $this->db->query($query);
@@ -901,11 +918,36 @@ trait SamedayTraitAdminModel {
                 awb_number VARCHAR(255),
                 parcels TEXT,
                 awb_cost DOUBLE(10, 2),
+                previous_order_status_id INT(11) DEFAULT NULL,
                 PRIMARY KEY (id)
             ) ENGINE=MyISAM DEFAULT COLLATE=utf8_general_ci;
         ';
 
         $this->db->query($query);
+        $this->ensureSamedayAwbPreviousOrderStatusColumn();
+    }
+
+    /**
+     * Store order status before AWB generation so it can be restored on AWB removal.
+     *
+     * @return void
+     */
+    public function ensureSamedayAwbPreviousOrderStatusColumn()
+    {
+        $query = 'SHOW COLUMNS FROM `' . DB_PREFIX . "sameday_awb` LIKE 'previous_order_status_id'";
+        try {
+            $row = $this->db->query($query)->row;
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        if ($row) {
+            return;
+        }
+
+        $this->db->query(
+            'ALTER TABLE `' . DB_PREFIX . 'sameday_awb` ADD `previous_order_status_id` INT(11) DEFAULT NULL'
+        );
     }
 
     /**

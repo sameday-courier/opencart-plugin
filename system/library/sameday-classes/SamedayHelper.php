@@ -131,6 +131,8 @@ class SamedayHelper
         'locker_max_items' => self::DEFAULT_VALUE_LOCKER_MAX_ITEMS,
         'sort_order' => 0,
         'host_country' => null,
+        // 0 = do not change order status on AWB generate/remove
+        'awb_order_status_id' => 0,
     ];
 
     const SAMEDAY_CATALOG_CONFIGS = [
