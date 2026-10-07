@@ -105,10 +105,12 @@
             for (var k in samedayQuotes) {
                 if (samedayQuotes[k].code === code) { q = samedayQuotes[k]; break; }
             }
-            if (!q || !q.destCountry || !q.apiUsername) return;
+            if (!q) return;
 
             var hasLockersList = q.lockers && typeof q.lockers === 'object' && Object.keys(q.lockers).length > 0;
-            if (hasLockersList) return;
+            var isLockerQuote = !!(q.destCountry || q.apiUsername)
+                || /(^|\.)(OOH|LN|PP|XL)(\.|$)/.test(code);
+            if (hasLockersList || !isLockerQuote) return;
 
             var $formCheck = $(this).closest('.form-check');
             if (!$formCheck.length) {

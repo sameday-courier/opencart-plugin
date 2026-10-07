@@ -1527,6 +1527,7 @@ trait SamedayTraitAdminController {
          */
         $this->load->language($this->samedayVersionValidator->buildModelPath());
         $this->document->setTitle($this->language->get('heading_title_add_awb'));
+        $this->loadSelect2Assets();
         $this->load->model('sale/order');
 
         if (!isset($this->request->get['order_id'])
@@ -3696,6 +3697,24 @@ trait SamedayTraitAdminController {
         }
 
         return 'marketplace/extension';
+    }
+
+    /**
+     * Select2 is required by the Add AWB pickup-point dropdown.
+     * OC2/OC3 can also get it via OCMOD on the admin header; OC4 has no OCMOD, so load it here.
+     *
+     * @return void
+     */
+    private function loadSelect2Assets()
+    {
+        if ($this->samedayVersionValidator->isOc4()) {
+            $base = (defined('HTTP_CATALOG') ? HTTP_CATALOG : '/') . 'extension/sameday/admin/view/javascript/select2/';
+        } else {
+            $base = 'view/javascript/select2/';
+        }
+
+        $this->document->addStyle($base . 'select2.css');
+        $this->document->addScript($base . 'select2.js');
     }
 
     /**

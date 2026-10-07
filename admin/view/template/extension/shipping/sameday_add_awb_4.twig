@@ -11,7 +11,7 @@
             <h1>{{ heading_title_add_awb }}</h1>
             <ul class="breadcrumb">
                 {% for breadcrumb in breadcrumbs %}
-                <li class="breadcrumb-item"> <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                    <li class="breadcrumb-item"> <a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
                 {% endfor %}
             </ul>
         </div>
@@ -26,16 +26,16 @@
                     <div class="appendEstimateCost"></div>
                     <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-shipping" class="form-horizontal">
                         {% if awb_errors is not null %}
-                        <div class="alert alert-danger fade in">
-                            <a href="#" class="close" data-dismiss="alert">&times;</a>
-                            <ul>
-                                {% for error in awb_errors %}
-                                <li>
-                                    <strong> {{ error }} </strong>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                            <div class="alert alert-danger fade in">
+                                <a href="#" class="close" data-dismiss="alert">&times;</a>
+                                <ul>
+                                    {% for error in awb_errors %}
+                                        <li>
+                                            <strong> {{ error }} </strong>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         {% endif %}
 
                         <!-- AWB Options //-->
@@ -44,8 +44,8 @@
                         </div>
 
                         <!-- Insured Value //-->
-                        <div class="form-group required">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_insured_value_title }}">{{ entry_insured_value }}</span></label>
+                        <div class="row mb-2 required">
+                            <label class="col-sm-2 align-self-center control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_insured_value_title }}">{{ entry_insured_value }}</span></label>
                             <div class="col-sm-6">
                                 <input type="number" step="any" name="sameday_insured_value" value="0" min="0" class="form-control"/>
                                 {% if error_insured_val is not null %}
@@ -54,8 +54,8 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_packages_number_title }}">{{ entry_packages_number }}</span></label>
+                        <div class="row mb-2">
+                            <label class="col-sm-2 align-self-center control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_packages_number_title }}">{{ entry_packages_number }}</span></label>
                             <div class="col-sm-6">
                                 <div class="input-group">
                                     <input type="text" name="sameday_package_number" class="form-control input-number" id="sameday_package_qty" value="{{ (sameday_package_number != '') ? sameday_package_number : 0 }}" readonly>
@@ -66,7 +66,7 @@
                                 </span>
                                 </div>
                             </div>
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_calculated_weight_title }}">{{ entry_calculated_weight }}</span></label>
+                            <label class="col-sm-2 align-self-center control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_calculated_weight_title }}">{{ entry_calculated_weight }}</span></label>
                             <div class="col-sm-1">
                                 <div class="input-group">
                                     <input type="hidden" id="calculatedWeight" value="{{ calculated_weight }}">
@@ -76,28 +76,28 @@
                         </div>
 
                         <!-- Package Number //-->
-                        <div class="form-group package_dimension_field">
+                        <div class="row mb-2 package_dimension_field">
                             <!-- append element here //-->
                         </div>
 
                         <!-- Observation //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_observation_title }}">{{ entry_observation }}</span></label>
+                        <div class="row mb-2">
+                            <label class="col-sm-2 align-self-center control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_observation_title }}">{{ entry_observation }}</span></label>
                             <div class="col-sm-10">
                                 <input type="text" name="sameday_observation" value="{{ sameday_observation }}" class="form-control"/>
                             </div>
                         </div>
 
                         <!-- Client Reference //-->
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_client_reference_title }}">{{ entry_client_reference}}</span></label>
+                        <div class="row mb-2">
+                            <label class="col-sm-2 align-self-center control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_client_reference_title }}">{{ entry_client_reference}}</span></label>
                             <div class="col-sm-10">
                                 <input type="text" name="sameday_client_reference" value="{{ sameday_client_reference }}" class="form-control" />
                             </div>
                         </div>
 
                         <!-- Repayment //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="sameday_repayment">
                                 <span data-toggle="tooltip" title="{{ entry_repayment_title }}">
                                     {{ entry_repayment }} <strong>({{ sameday_currency }})</strong>
@@ -106,7 +106,7 @@
                             <div class="col-sm-10">
                                 <input type="number" step="any" name="sameday_repayment" id="sameday_repayment" value="{{ sameday_repayment }}" class="form-control"/>
                                 {% if repaymentCurrencyAlert is not null %}
-                                <span>
+                                    <span>
                                         <strong style="font-weight: bolder; color: #9f0101">
                                             {{ repaymentCurrencyAlert }}
                                         </strong>
@@ -116,48 +116,48 @@
                         </div>
 
                         <!-- Package Type //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="input-status-sameday_package_type">
                                 <span data-toggle="tooltip" title="{{ entry_package_type_title }}">{{ entry_package_type }}</span>
                             </label>
                             <div class="col-sm-10">
                                 <select name="sameday_package_type" id="input-status-sameday-package-type" class="form-control">
                                     {% for _packageType in packageTypes %}
-                                    <option value="{{ _packageType['value'] }}" {% if _packageType['value'] == sameday_package_type %} selected="selected" {% endif %} > {{ _packageType['name'] }}</option>
+                                        <option value="{{ _packageType['value'] }}" {% if _packageType['value'] == sameday_package_type %} selected="selected" {% endif %} > {{ _packageType['name'] }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
 
                         <!--  Awb Service //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="input-status-sameday_service">
                                 <span data-toggle="tooltip" title="{{ entry_service_title }}">{{ entry_service }}</span>
                             </label>
                             <div class="col-sm-10">
                                 <select name="sameday_service" id="input-status-sameday_service" class="form-control">
                                     {% for service in services %}
-                                            <option
+                                        <option
                                                 value="{{ service.sameday_id }}" {% if (service.sameday_id == default_service_id)  %}
-                                                selected="selected" {% endif %}
+                                            selected="selected" {% endif %}
                                                 data-service_eligible_to_locker="{{ service.service_eligible_to_locker }}"
                                                 data-service_eligible_to_pdo="{{ service.service_eligible_to_pdo }}"
-                                            > {{ service.sameday_name }}
-                                            </option>
+                                        > {{ service.sameday_name }}
+                                        </option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
 
                         <!-- Locker FirstMile //-->
-                        <div class="form-group" id="showPDO" style="display: {{ showPDO }}">
-                            <label class="col-sm-2 control-label" for="input-status-sameday_locker_first_mile">
+                        <div class="row mb-2" id="showPDO" style="display: {{ showPDO == 'block' ? 'flex' : showPDO }}">
+                            <label class="col-sm-2 align-self-center control-label" for="input-status-sameday_locker_first_mile">
                                 <span data-toggle="tooltip" title="{{ entry_locker_first_mile_title }}">{{ entry_locker_first_mile }} <a href="https://sameday.ro/easybox#lockers-intro">(Show on map)</a></span>
                             </label>
-                            <div class="col-sm-1">
-                                <input type="checkbox" class="form-control" value="{{ pdo_code }}" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
+                            <div class="col-sm-1 align-self-center">
+                                <input type="checkbox" value="{{ pdo_code }}" name="sameday_locker_first_mile" id="input-status-sameday_locker_first_mile">
                             </div>
-                            <div class="col-sm-9">
+                            <div class="col-sm-9 align-self-center">
                                 <div class="custom_tooltip"> Lockers box dimensions
                                     <span class="tooltiptext">
                                         <div class="table-responsive"><table class="table table-bordered table-hover"> <thead> <tr> <td></td><td style="text-align: center;"> L</td><td style="text-align: center;"> l</td><td style="text-align: center;"> h</td></tr></thead> <tbody> <tr> <td>Small (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 10</td></tr><tr> <td>Medium (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 19</td></tr><tr> <td>Large (cm)</td><td style="text-align: center;"> 47</td><td style="text-align: center;"> 44.5</td><td style="text-align: center;"> 39</td></tr></tbody> </table></div>
@@ -167,7 +167,7 @@
                         </div>
 
                         <!--// Show Locker Details -->
-                        <div class="form-group" id="showLockerDetails" style="display: {{ showLockerDetails }}">
+                        <div class="row mb-2" id="showLockerDetails" style="display: {{ showLockerDetails == 'block' ? 'flex' : showLockerDetails }}">
                             <label class="col-sm-2 control-label" for="input-status-sameday-locker_details"><span data-toggle="tooltip" title="{{ entry_locker_details_title }}">{{ entry_locker_details }}</label>
                             <div class="col-sm-10">
                                 <span>
@@ -202,7 +202,7 @@
 
 
                         <!-- Awb Payment //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="input-status-sameday_awb_payment"><span data-toggle="tooltip" title="{{ entry_awb_payment_title }}">{{ entry_awb_payment }}</span></label>
                             <div class="col-sm-10">
                                 <select name="sameday_awb_payment" id="input-status-sameday_awb_payment" class="form-control">
@@ -214,7 +214,7 @@
                         </div>
 
                         <!-- Pickup Point //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="input-status-sameday-pickup_point"><span data-toggle="tooltip" title="{{ entry_pickup_point_title }}">{{ entry_pickup_point }}</span></label>
                             <div class="col-sm-10">
                                 <select name="sameday_pickup_point" id="input-status-sameday-pickup_point" class="form-control">
@@ -226,7 +226,7 @@
                         </div>
 
                         <!-- Third Party Pick-up //-->
-                        <div class="form-group">
+                        <div class="row mb-2">
                             <label class="col-sm-2 control-label" for="input-status-sameday-third_party_pickup"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_title }}">{{ entry_third_party_pickup }}</span></label>
                             <div class="col-sm-10">
                                 <select name="sameday_third_party_pickup" id="input-status-sameday-third_party_pickup" class="form-control">
@@ -243,58 +243,58 @@
                                 <div class="col-sm-10">
                                     <select name="sameday_third_party_pickup_county" id="input-status-sameday_third_party_pickup_county" class="form-control">
                                         {% for county in counties %}
-                                        <option value="{{ county['name'] }}" {% if county['name'] == sameday_third_party_pickup_county %} selected="selected" {% endif %} > {{ county['name'] }}</option>
+                                            <option value="{{ county['name'] }}" {% if county['name'] == sameday_third_party_pickup_county %} selected="selected" {% endif %} > {{ county['name'] }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                             </div>
 
                             <!-- Third Party Pickup City //-->
-                            <div class="form-group">
+                            <div class="row mb-2">
                                 <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_city_title }}">{{ entry_third_party_pickup_city }}</span></label>
                                 <div class="col-sm-10">
                                     <input type="text" name="sameday_third_party_pickup_city" value="{{ sameday_third_party_pickup_city }}" class="form-control"/>
                                     {% if error_third_party_pickup_city is not null %}
-                                    <div class="text-danger">{{ error_third_party_pickup_city }}</div>
+                                        <div class="text-danger">{{ error_third_party_pickup_city }}</div>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <!-- Third Party Pickup Address //-->
-                            <div class="form-group">
+                            <div class="row mb-2">
                                 <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_address_title }}">{{ entry_third_party_pickup_address }}</span></label>
                                 <div class="col-sm-10">
                                     <input type="text" name="sameday_third_party_pickup_address" value="{{ sameday_third_party_pickup_address }}" class="form-control"/>
                                     {% if error_third_party_pickup_address is not null %}
-                                    <div class="text-danger">{{ error_third_party_pickup_address }}</div>
+                                        <div class="text-danger">{{ error_third_party_pickup_address }}</div>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <!-- Third Party Pickup Name //-->
-                            <div class="form-group">
+                            <div class="row mb-2">
                                 <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_name_title }}">{{ entry_third_party_pickup_name }}</span></label>
                                 <div class="col-sm-10">
                                     <input type="text" name="sameday_third_party_pickup_name"  value="{{ sameday_third_party_pickup_name }}" class="form-control"/>
                                     {% if error_third_party_pickup_name is not null %}
-                                    <div class="text-danger">{{ error_third_party_pickup_name }}</div>
+                                        <div class="text-danger">{{ error_third_party_pickup_name }}</div>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <!-- Third Party Pickup Phone //-->
-                            <div class="form-group">
+                            <div class="row mb-2">
                                 <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_pickup_phone_title }}">{{ entry_third_party_pickup_phone }}</span></label>
                                 <div class="col-sm-10">
                                     <input type="text" name="sameday_third_party_pickup_phone" value="{{ sameday_third_party_pickup_phone }}" class="form-control"/>
                                     {% if error_third_party_pickup_phone is not null %}
-                                    <div class="text-danger">{{ error_third_party_pickup_phone }}</div>
+                                        <div class="text-danger">{{ error_third_party_pickup_phone }}</div>
                                     {% endif %}
                                 </div>
                             </div>
 
                             <!-- Third Party Pickup Person Type //-->
-                            <div class="form-group">
+                            <div class="row mb-2">
                                 <label class="col-sm-2 control-label" for="input-status-sameday-third-party-person_type"><span data-toggle="tooltip" title="{{ entry_third_party_person_type_title }}"></span>{{ entry_third_party_person_type }}</label>
                                 <div class="col-sm-10">
                                     <select name="sameday_third_party_person_type" id="input-status-sameday-third-party-person_type" class="form-control">
@@ -308,56 +308,56 @@
                             <div class="thirt_party_pickup_personType" style="display: none">
 
                                 <!-- Third Party Pickup Company Name //-->
-                                <div class="form-group">
+                                <div class="row mb-2">
                                     <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_person_company_title }}">{{ entry_third_party_person_company }}</span></label>
                                     <div class="col-sm-10">
                                         <input type="text" name="sameday_third_party_person_company" value="{{ sameday_third_party_person_company }}" class="form-control"/>
                                         {% if error_third_party_person_company is not null %}
-                                        <div class="text-danger">{{ error_third_party_person_company }}</div>
+                                            <div class="text-danger">{{ error_third_party_person_company }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
 
                                 <!-- Third Party Pickup Company Cui //-->
-                                <div class="form-group">
+                                <div class="row mb-2">
                                     <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_person_cif_title }}">{{ entry_third_party_person_cif }}</span></label>
                                     <div class="col-sm-10">
                                         <input type="text" name="sameday_third_party_person_cif" value="{{ sameday_third_party_person_cif }}" class="form-control"/>
                                         {% if error_third_party_person_cif is not null %}
-                                        <div class="text-danger">{{ error_third_party_person_cif }}</div>
+                                            <div class="text-danger">{{ error_third_party_person_cif }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
 
                                 <!-- Third Party Pickup Company ONRC //-->
-                                <div class="form-group">
+                                <div class="row mb-2">
                                     <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_person_onrc_title }}">{{ entry_third_party_person_onrc }}</span></label>
                                     <div class="col-sm-10">
                                         <input type="text" name="sameday_third_party_person_onrc" value="{{ sameday_third_party_person_onrc }}" class="form-control"/>
                                         {% if error_third_party_person_onrc is not null %}
-                                        <div class="text-danger">{{ error_third_party_person_onrc }}</div>
+                                            <div class="text-danger">{{ error_third_party_person_onrc }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
 
                                 <!-- Third Party Pickup Company Banca //-->
-                                <div class="form-group">
+                                <div class="row mb-2">
                                     <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_person_bank_title }}">{{ entry_third_party_person_bank }}</span></label>
                                     <div class="col-sm-10">
                                         <input type="text" name="sameday_third_party_person_bank" value="{{ sameday_third_party_person_bank }}" class="form-control"/>
                                         {% if error_third_party_person_bank is not null %}
-                                        <div class="text-danger">{{ error_third_party_person_bank }}</div>
+                                            <div class="text-danger">{{ error_third_party_person_bank }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
 
                                 <!-- Third Party Pickup Company Iban //-->
-                                <div class="form-group">
+                                <div class="row mb-2">
                                     <label class="col-sm-2 control-label" for="input-key"><span data-toggle="tooltip" title="{{ entry_third_party_person_iban_title }}"></span>{{ entry_third_party_person_iban }}</label>
                                     <div class="col-sm-10">
                                         <input type="text" name="sameday_third_party_person_iban" value="{{ sameday_third_party_person_iban }}" class="form-control"/>
                                         {% if error_third_party_person_iban is not null %}
-                                        <div class="text-danger">{{ error_third_party_person_iban }}</div>
+                                            <div class="text-danger">{{ error_third_party_person_iban }}</div>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -374,7 +374,9 @@
 
 <script>
     $(document).ready(function() {
-        $('#input-status-sameday-pickup_point').select2();
+        if (typeof $.fn.select2 === 'function') {
+            $('#input-status-sameday-pickup_point').select2({ width: '100%' });
+        }
     });
 </script>
 <script>
@@ -437,9 +439,11 @@
         /* Uncheck Locker FirstMile Element */
         lockerFirstMileElem.checked = false;
 
-        /* Toggle Element */
-        showLockerDetails.style.display = currentService.getAttribute('data-service_eligible_to_locker');
-        showLockerFirstMile.style.display = currentService.getAttribute('data-service_eligible_to_pdo');
+        /* Toggle Element — OC4 needs flex for locker-details / PDO row layout */
+        const lockerEligibleDisplay = currentService.getAttribute('data-service_eligible_to_locker');
+        const pdoEligibleDisplay = currentService.getAttribute('data-service_eligible_to_pdo');
+        showLockerDetails.style.display = (lockerEligibleDisplay === 'block') ? 'flex' : lockerEligibleDisplay;
+        showLockerFirstMile.style.display = (pdoEligibleDisplay === 'block') ? 'flex' : pdoEligibleDisplay;
     });
 
     $(document).on('click', '#estimateCost', function() {
@@ -531,7 +535,7 @@
         entry_width = "{{ entry_width }}";
         entry_length = "{{ entry_length }}";
         entry_height = "{{ entry_height }}";
-        field = "<div class='parcel'><label class=\"col-sm-2 control-label\" for=\"input-length\">"+entry_package_dimension+"</label>\n" +
+        field = "<div class='row parcel'><label class=\"col-sm-2 align-self-center control-label\" for=\"input-length\">"+entry_package_dimension+"</label>\n" +
             "<div class=\"col-sm-10\" style='padding-bottom: 5px;'>\n" +
             "<div class=\"row\">\n" +
             "<div class=\"col-sm-2\">\n" +
@@ -559,22 +563,22 @@
 
     function showPackageDimensionErrors(){
         {% if all_errors is not null %}
-            nrOfparcels = "{{ sameday_package_weight|length }}";
-            $('#sameday_package_qty').val(nrOfparcels);
+        nrOfparcels = "{{ sameday_package_weight|length }}";
+        $('#sameday_package_qty').val(nrOfparcels);
 
-            $('.package_dimension_field').html('');
-            var packagesWeight = '{{ sameday_package_weight|json_encode }}';
-            for (i = 0; i < nrOfparcels; i++) {
-                var weight_value = JSON.parse(packagesWeight)[i];
-                var error_weight_class = 'error_weight_class';
-                field = createField(weight_value, error_weight_class);
-                $('.package_dimension_field').append(field);
-                if (weight_value == '' || weight_value == 0) {
-                    $('.' + error_weight_class).html("{{ error_weight }}");
-                } else {
-                    $('div').removeClass(error_weight_class);
-                }
+        $('.package_dimension_field').html('');
+        var packagesWeight = '{{ sameday_package_weight|json_encode }}';
+        for (i = 0; i < nrOfparcels; i++) {
+            var weight_value = JSON.parse(packagesWeight)[i];
+            var error_weight_class = 'error_weight_class';
+            field = createField(weight_value, error_weight_class);
+            $('.package_dimension_field').append(field);
+            if (weight_value == '' || weight_value == 0) {
+                $('.' + error_weight_class).html("{{ error_weight }}");
+            } else {
+                $('div').removeClass(error_weight_class);
             }
+        }
         {% endif %}
     }
 
