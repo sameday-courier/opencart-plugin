@@ -2,7 +2,7 @@
 
 Shipping extension for **OpenCart 2.3**, **3.x**, and **4.x**. It connects your store to [Sameday](https://www.sameday.ro/) so customers can choose Sameday at checkout, and you can create and manage AWBs from the admin.
 
-**Current version:** 1.8.4
+**Current version:** 1.8.5
 
 ---
 
