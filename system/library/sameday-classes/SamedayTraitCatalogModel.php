@@ -51,10 +51,7 @@ trait SamedayTraitCatalogModel {
             return $this->getQuoteInternal($address);
         } catch (\Throwable $e) {
             // Never fail checkout silently — empty [] makes OC skip the method entirely.
-            if ($this->config->get('config_error_log')) {
-                $log = new \Log('sameday_quote.log');
-                $log->write($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-            }
+            $this->writeQuoteLog($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
 
             return array(
                 'code'       => 'sameday',
@@ -171,11 +168,11 @@ trait SamedayTraitCatalogModel {
         foreach ($availableService as $service) {
             try {
             if ($service['sameday_code'] === $this->samedayHelper::SAMEDAY_6H_SERVICE
-                && $address['zone'] !== "Bucuresti"
+                && !$this->isBucharestZone((string)($address['zone'] ?? ''))
             ) {
                 continue;
             }
-            $quoteTitle = $service['name'];
+            $quoteTitle = $service['name'] ?: ($service['sameday_name'] ?? $service['sameday_code']);
 
             if ($this->samedayHelper->isEligibleToLocker($service['sameday_code'])) {
                 if ('' === $lockerMaxItems = ($this->getConfig('sameday_locker_max_items') ?? '')) {
@@ -189,7 +186,10 @@ trait SamedayTraitCatalogModel {
 
             $price = $service['price'];
 
-            if ($service['price_free'] !== null && $this->cart->getSubtotal() >= $service['price_free']) {
+            $subtotal = method_exists($this->cart, 'getSubTotal')
+                ? $this->cart->getSubTotal()
+                : (method_exists($this->cart, 'getSubtotal') ? $this->cart->getSubtotal() : $this->cart->getTotal());
+            if ($service['price_free'] !== null && $subtotal >= $service['price_free']) {
                 $price = 0;
             }
 
@@ -204,6 +204,8 @@ trait SamedayTraitCatalogModel {
                 $serviceCode = $this->samedayHelper::OOH_SERVICE_CODE;
             }
 
+            $taxClassId = (int)$this->getConfig('sameday_tax_class_id');
+            $currencyCode = (string)($this->session->data['currency'] ?? $this->config->get('config_currency'));
             $quote_data[$serviceCode] = array(
                 'sameday_name' => $service['name'],
                 'code' => sprintf(
@@ -212,42 +214,40 @@ trait SamedayTraitCatalogModel {
                     $serviceCode,
                     $service['sameday_id']
                 ),
-                'name' => $service['name'],
+                'name' => $quoteTitle,
                 'service_id' => $service['sameday_id'],
                 'title' => $quoteTitle,
                 'cost' => $price,
-                'tax_class_id' => $this->getConfig('sameday_tax_class_id'),
+                'tax_class_id' => $taxClassId,
                 'text' => $this->currency->format(
                     $this->tax->calculate(
-                        $price,
-                        $this->getConfig('sameday_tax_class_id'),
-                        $this->config->get('config_tax')
+                        (float)$price,
+                        $taxClassId,
+                        (bool)$this->config->get('config_tax')
                     ),
-                    $this->session->data['currency']
+                    $currencyCode
                 ),
             );
 
             if ($this->samedayHelper->isOohDeliveryOption($service['sameday_code'])) {
-                if (true === $this->isShowLockersMap()) {
+                // OC4 checkout is a JSON modal (no OCMOD locker dropdown). Always expose map fields.
+                if ($this->isShowLockersMap()) {
                     $quote_data[$serviceCode]['lockers'] = '';
-                    $quote_data[$serviceCode]['destCountry'] = $destCountry;
-                    $quote_data[$serviceCode]['destCity'] = $address['city'];
-                    $quote_data[$serviceCode]['destCounty'] = $address['zone'];
-                    $quote_data[$serviceCode]['apiUsername'] = $this->getApiUsername();
                 } else {
                     $this->syncLockers();
-
                     $quote_data[$serviceCode]['lockers'] = $this->showLockersList();
                 }
+                $quote_data[$serviceCode]['destCountry'] = $destCountry;
+                $quote_data[$serviceCode]['destCity'] = $address['city'] ?? '';
+                $quote_data[$serviceCode]['destCounty'] = $address['zone'] ?? '';
+                $quote_data[$serviceCode]['apiUsername'] = $this->getApiUsername();
             }
             } catch (\Throwable $serviceException) {
-                if ($this->config->get('config_error_log')) {
-                    $log = new \Log('sameday_quote.log');
-                    $log->write(
-                        'Service ' . (isset($service['sameday_code']) ? $service['sameday_code'] : '?')
-                        . ' skipped: ' . $serviceException->getMessage()
-                    );
-                }
+                $this->writeQuoteLog(
+                    'Service ' . (isset($service['sameday_code']) ? $service['sameday_code'] : '?')
+                    . ' skipped: ' . $serviceException->getMessage()
+                    . ' in ' . $serviceException->getFile() . ':' . $serviceException->getLine()
+                );
                 continue;
             }
         }
@@ -423,11 +423,41 @@ trait SamedayTraitCatalogModel {
      */
     private function isShowLockersMap(): bool
     {
-        if ($this->getConfig('sameday_show_lockers_map') === '0') {
+        if ($this->samedayVersionValidator->isOc4()) {
             return true;
         }
 
-        return false;
+        $value = $this->getConfig('sameday_show_lockers_map');
+
+        // Admin default is Interactive map (value 0). Unset must not fall through to dropdown.
+        return $value === null || $value === '' || $value === '0' || $value === 0 || $value === false;
+    }
+
+    /**
+     * 6H is Bucharest-only. OC4 stores the zone as "București"; English catalogs use "Bucharest".
+     */
+    private function isBucharestZone(string $zone): bool
+    {
+        $normalized = $this->normalizeRomanianZone($zone);
+
+        return in_array($normalized, ['bucuresti', 'bucharest'], true)
+            || strpos($normalized, 'sector') === 0;
+    }
+
+    /**
+     * @param string $value
+     *
+     * @return string
+     */
+    private function normalizeRomanianZone(string $value): string
+    {
+        $value = mb_strtolower(trim($value), 'UTF-8');
+        $replace = [
+            'ă' => 'a', 'â' => 'a', 'î' => 'i',
+            'ș' => 's', 'ş' => 's', 'ț' => 't', 'ţ' => 't',
+        ];
+
+        return strtr($value, $replace);
     }
 
     /**
@@ -664,6 +694,28 @@ trait SamedayTraitCatalogModel {
         }
 
         return $defaultPickupPoint['sameday_id'];
+    }
+
+    /**
+     * @param string $message
+     *
+     * @return void
+     */
+    private function writeQuoteLog(string $message)
+    {
+        if (!$this->config->get('config_error_log')) {
+            return;
+        }
+
+        try {
+            if (class_exists('\Opencart\System\Library\Log')) {
+                $log = new \Opencart\System\Library\Log('sameday_quote.log');
+            } else {
+                $log = new \Log('sameday_quote.log');
+            }
+            $log->write($message);
+        } catch (\Throwable $ignored) {
+        }
     }
 
     /**

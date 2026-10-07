@@ -372,7 +372,9 @@
 </div>
 <script>
     $(document).ready(function() {
-        $('#input-status-sameday-pickup_point').select2();
+        if (typeof $.fn.select2 === 'function') {
+            $('#input-status-sameday-pickup_point').select2({ width: '100%' });
+        }
     });
 </script>
 <script>
