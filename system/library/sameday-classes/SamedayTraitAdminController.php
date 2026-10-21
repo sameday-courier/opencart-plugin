@@ -1165,7 +1165,6 @@ trait SamedayTraitAdminController {
             }
         }
 
-        // Sync crossborder PUDO (XP) status with XL
         $lockerCrossborderService = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getSamedayServiceByCode(
             $this->samedayHelper::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
             $this->isTesting()
@@ -1379,7 +1378,6 @@ trait SamedayTraitAdminController {
                 }
             }
 
-            // Sync crossborder PUDO (XP) status with XL
             if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE) {
                 $pudoCrossborderService = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getSamedayServiceByCode(
                     $this->samedayHelper::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
@@ -2416,8 +2414,6 @@ trait SamedayTraitAdminController {
     }
 
     /**
-     * Remap LN/XL/PP/XP from map location type (Easybox vs PUDO) before PostAwb.
-     *
      * @param object   $model
      * @param array    $service
      * @param int|null $locationId

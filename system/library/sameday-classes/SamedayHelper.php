@@ -38,7 +38,6 @@ class SamedayHelper
         1 => self::SAMEDAY_PUDO_SERVICE,
     ];
 
-    // Index 0 = domestic, 1 = crossborder (same layout as Woo CarrierConstants).
     const EASYBOX_TYPE_SERVICE = [
         0 => self::LOCKER_NEXT_DAY_SERVICE,
         1 => self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
@@ -323,10 +322,8 @@ class SamedayHelper
     }
 
     /**
-     * Checkout may store LN or XL; a Sameday Point on the map needs PP or XP instead.
-     *
-     * @param string   $orderServiceCode Service code from order / form (LN, XL, PP, XP, …)
-     * @param int|null $locationId       Selected locker / PUDO id from the map
+     * @param string   $orderServiceCode
+     * @param int|null $locationId
      *
      * @return string
      */
