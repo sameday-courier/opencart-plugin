@@ -1156,11 +1156,31 @@ trait SamedayTraitAdminController {
                 $this->isTesting()
             );
 
-            $pudoService['status'] = $lockerNextDayService['status'];
-            $this->{$this->samedayVersionValidator->buildMagicMethod()}->updateServiceStatus(
-                $pudoService['id'],
-                $lockerNextDayService['status']
+            if (!empty($pudoService['id'])) {
+                $pudoService['status'] = $lockerNextDayService['status'];
+                $this->{$this->samedayVersionValidator->buildMagicMethod()}->updateServiceStatus(
+                    $pudoService['id'],
+                    $lockerNextDayService['status']
+                );
+            }
+        }
+
+        // Sync crossborder PUDO (XP) status with XL
+        $lockerCrossborderService = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getSamedayServiceByCode(
+            $this->samedayHelper::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+            $this->isTesting()
+        );
+        if (!empty($lockerCrossborderService['id']) && array_key_exists('status', $lockerCrossborderService)) {
+            $pudoCrossborderService = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getSamedayServiceByCode(
+                $this->samedayHelper::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
+                $this->isTesting()
             );
+            if (!empty($pudoCrossborderService['id'])) {
+                $this->{$this->samedayVersionValidator->buildMagicMethod()}->updateServiceStatus(
+                    $pudoCrossborderService['id'],
+                    $lockerCrossborderService['status']
+                );
+            }
         }
 
         if ($redirectToPage) {
@@ -1354,6 +1374,21 @@ trait SamedayTraitAdminController {
                 if (!empty($pudoService)) {
                     $this->{$this->samedayVersionValidator->buildMagicMethod()}->updateServiceStatus(
                         $pudoService['id'],
+                        $this->request->post['status']
+                    );
+                }
+            }
+
+            // Sync crossborder PUDO (XP) status with XL
+            if ($service['sameday_code'] === $this->samedayHelper::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE) {
+                $pudoCrossborderService = $this->{$this->samedayVersionValidator->buildMagicMethod()}->getSamedayServiceByCode(
+                    $this->samedayHelper::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
+                    $this->isTesting()
+                );
+
+                if (!empty($pudoCrossborderService)) {
+                    $this->{$this->samedayVersionValidator->buildMagicMethod()}->updateServiceStatus(
+                        $pudoCrossborderService['id'],
                         $this->request->post['status']
                     );
                 }
@@ -1672,8 +1707,13 @@ trait SamedayTraitAdminController {
             $showLockerDetails = $this->toggleHtmlElement(false);
             $lockerDetails = '';
             $lockerPluginData = null;
+            $locker = null;
             if (isset($parts[3], $parts[4])) {
                 $lockerDetails = $parts[4];
+                $locker = (object)[
+                    'lockerId' => (int)$parts[3],
+                    'lockerAddress' => $parts[4],
+                ];
                 $lockerPluginData = [
                     'lockerId' => $parts[3],
                     'lockerAddress' => $parts[4],
@@ -1683,25 +1723,39 @@ trait SamedayTraitAdminController {
                 ];
 
                 $showLockerDetails = $this->toggleHtmlElement(true);
+            } else {
+                $storedLocker = $shippingSamedayModel->getLockerByOrderId($orderInfo['order_id']);
+                if (!empty($storedLocker)) {
+                    $locker = json_decode($storedLocker);
+                    if (!empty($locker->lockerId)) {
+                        $lockerDetails = $locker->lockerAddress ?? '';
+                        $lockerPluginData = [
+                            'lockerId' => $locker->lockerId,
+                            'lockerAddress' => $locker->lockerAddress ?? '',
+                            'country' => $orderInfo['shipping_iso_code_2'],
+                            'city' => $orderInfo['shipping_city'] ?? null,
+                            'apiUsername' => $this->getConfig('sameday_username'),
+                        ];
+                        $showLockerDetails = $this->toggleHtmlElement(true);
+                    }
+                }
             }
         }
 
         $showPDO = $this->toggleHtmlElement(false);
 
         if (null !== $locationId = $locker->lockerId ?? null) {
-            if (($this->samedayHelper::OOH_SERVICE_CODE === $parts[1] ?? null)
-                && $this->samedayHelper::SAMEDAY_PUDO_SERVICE === $this->samedayHelper->checkOohLocationType($locationId)
-            ) {
-                $currentService = $shippingSamedayModel->getSamedayServiceByCode(
-                    $this->samedayHelper::SAMEDAY_PUDO_SERVICE,
-                    $this->isTesting()
-                );
+            $currentService = $shippingSamedayModel->getServiceSameday(
+                (int)($data['default_service_id'] ?? null),
+                $this->isTesting()
+            );
+            $currentService = $this->resolveServiceForAwb(
+                $shippingSamedayModel,
+                is_array($currentService) ? $currentService : [],
+                (int)$locationId
+            );
+            if (!empty($currentService['sameday_id'])) {
                 $data['default_service_id'] = $currentService['sameday_id'];
-            } else {
-                $currentService = $shippingSamedayModel->getServiceSameday(
-                    (int)($data['default_service_id'] ?? null),
-                    $this->isTesting()
-                );
             }
         }
 
@@ -1718,6 +1772,19 @@ trait SamedayTraitAdminController {
                 (int)$postRequestData['sameday_service'],
                 $this->isTesting()
             );
+
+            $lockerIdForResolve = isset($postRequestData['sameday_locker_id'])
+                && is_numeric($postRequestData['sameday_locker_id'])
+                ? (int)$postRequestData['sameday_locker_id']
+                : null;
+            $service = $this->resolveServiceForAwb(
+                $shippingSamedayModel,
+                is_array($service) ? $service : [],
+                $lockerIdForResolve
+            );
+            if (!empty($service['sameday_id'])) {
+                $postRequestData['sameday_service'] = $service['sameday_id'];
+            }
 
             $serviceCode = $service['sameday_code'] ?? null;
 
@@ -2349,6 +2416,38 @@ trait SamedayTraitAdminController {
     }
 
     /**
+     * Remap LN/XL/PP/XP from map location type (Easybox vs PUDO) before PostAwb.
+     *
+     * @param object   $model
+     * @param array    $service
+     * @param int|null $locationId
+     *
+     * @return array
+     */
+    private function resolveServiceForAwb($model, array $service, $locationId): array
+    {
+        if ($service === [] || empty($service['sameday_code'])) {
+            return $service;
+        }
+
+        $resolvedCode = $this->samedayHelper->resolveAwbServiceCode(
+            (string)$service['sameday_code'],
+            $locationId
+        );
+
+        if ($resolvedCode === $service['sameday_code']) {
+            return $service;
+        }
+
+        $resolved = $model->getSamedayServiceByCode($resolvedCode);
+        if (!empty($resolved) && !empty($resolved['sameday_id'])) {
+            return $resolved;
+        }
+
+        return $service;
+    }
+
+    /**
      * Apply configured order status after AWB generation.
      *
      * @param int   $orderId
@@ -2499,11 +2598,27 @@ trait SamedayTraitAdminController {
                 : ($order['shipping_code'] ?? '');
             $shippingParts = explode('.', (string)$shippingCode);
             $serviceId = $shippingParts[2] ?? null;
-            $lockerLastMile = $shippingParts[3] ?? '';
+            $lockerLastMileRaw = $shippingParts[3] ?? '';
             $lockerAddress = $shippingParts[4] ?? '';
 
             if ($serviceId === null || $serviceId === '') {
                 throw new \RuntimeException('Invalid Sameday shipping method on order');
+            }
+
+            $locationId = (is_numeric($lockerLastMileRaw) && (string)$lockerLastMileRaw !== '')
+                ? (int)$lockerLastMileRaw
+                : null;
+            if ($locationId === null) {
+                $storedLocker = $model->getLockerByOrderId($order_id);
+                if (!empty($storedLocker)) {
+                    $lockerObj = json_decode($storedLocker);
+                    if (!empty($lockerObj->lockerId) && is_numeric($lockerObj->lockerId)) {
+                        $locationId = (int)$lockerObj->lockerId;
+                        if ($lockerAddress === '' && !empty($lockerObj->lockerAddress)) {
+                            $lockerAddress = (string)$lockerObj->lockerAddress;
+                        }
+                    }
+                }
             }
 
             $awbPaymentType = new AwbPaymentType(AwbPaymentType::CLIENT);
@@ -2527,12 +2642,35 @@ trait SamedayTraitAdminController {
             $thirdPartyPickUp = null;
             $reference = '';
             $observation = '';
-            $oohLastMile = '';
 
             $service = $model->getServiceSameday(
                 (int)$serviceId,
                 $this->isTesting()
             );
+            $service = $this->resolveServiceForAwb(
+                $model,
+                is_array($service) ? $service : [],
+                $locationId
+            );
+            if (!empty($service['sameday_id'])) {
+                $serviceId = $service['sameday_id'];
+            }
+
+            $lockerLastMile = null;
+            $oohLastMile = null;
+            if ($locationId !== null) {
+                if ($this->samedayHelper::LOCKER_NEXT_DAY_SERVICE
+                    === $this->samedayHelper->checkOohLocationType($locationId)
+                ) {
+                    $lockerLastMile = $locationId;
+                }
+
+                if ($this->samedayHelper::SAMEDAY_PUDO_SERVICE
+                    === $this->samedayHelper->checkOohLocationType($locationId)
+                ) {
+                    $oohLastMile = $locationId;
+                }
+            }
 
             $request = new SamedayPostAwbRequest(
                 (int)$pickupPoint,
@@ -2607,9 +2745,7 @@ trait SamedayTraitAdminController {
                 // (serializing SDK response objects is brittle across PHP/autoload).
                 $model->updateBulkFeedback(['awb_number' => $awbNumber], $order_id);
 
-                $lockerId = (is_numeric($lockerLastMile) && (string)$lockerLastMile !== '')
-                    ? (int)$lockerLastMile
-                    : null;
+                $lockerId = $locationId;
                 $lockerAddressValue = ($lockerAddress !== null && $lockerAddress !== '')
                     ? (string)$lockerAddress
                     : null;
@@ -2912,12 +3048,29 @@ trait SamedayTraitAdminController {
             }
         }
 
+        $serviceIdForRequest = (int)($params['sameday_service'] ?? null);
+        if ($serviceIdForRequest > 0) {
+            $model = $this->{$this->samedayVersionValidator->buildMagicMethod()};
+            $serviceForRequest = $model->getServiceSameday($serviceIdForRequest, $this->isTesting());
+            $locationIdForResolve = isset($params['sameday_locker_id']) && is_numeric($params['sameday_locker_id'])
+                ? (int)$params['sameday_locker_id']
+                : null;
+            $serviceForRequest = $this->resolveServiceForAwb(
+                $model,
+                is_array($serviceForRequest) ? $serviceForRequest : [],
+                $locationIdForResolve
+            );
+            if (!empty($serviceForRequest['sameday_id'])) {
+                $serviceIdForRequest = (int)$serviceForRequest['sameday_id'];
+            }
+        }
+
         $request = new SamedayPostAwbRequest(
             (int)($params['sameday_pickup_point'] ?? null),
             null,
             new PackageType($params['sameday_package_type']),
             $parcelDimensions,
-            (int)($params['sameday_service'] ?? null),
+            $serviceIdForRequest,
             new AwbPaymentType($params['sameday_awb_payment']),
             new AwbRecipientEntityObject(
                 $params['shipping_city'],

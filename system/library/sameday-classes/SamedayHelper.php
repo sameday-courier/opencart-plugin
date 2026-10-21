@@ -30,11 +30,23 @@ class SamedayHelper
     const SAMEDAY_PUDO_SERVICE = 'PP';
     const DEFAULT_SAMEDAY_CROSSBORDER_SERVICE = 'XB';
     const LOCKER_NEXT_DAY_CROSSBORDER_SERVICE = 'XL';
+    const SAMEDAY_PUDO_CROSSBORDER_SERVICE = 'XP';
     const OOH_SERVICE_CODE = 'OOH';
     const OOH_CROSSBORDER_SERVICE_CODE = 'OOH_CROSSBORDER';
     const OOH_TYPES = [
         0 => self::LOCKER_NEXT_DAY_SERVICE,
         1 => self::SAMEDAY_PUDO_SERVICE,
+    ];
+
+    // Index 0 = domestic, 1 = crossborder (same layout as Woo CarrierConstants).
+    const EASYBOX_TYPE_SERVICE = [
+        0 => self::LOCKER_NEXT_DAY_SERVICE,
+        1 => self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+    ];
+
+    const PUDO_TYPE_SERVICE = [
+        0 => self::SAMEDAY_PUDO_SERVICE,
+        1 => self::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
     ];
 
     const SAMEDAY_IN_USE_SERVICES = [
@@ -44,6 +56,7 @@ class SamedayHelper
         self::SAMEDAY_PUDO_SERVICE,
         self::DEFAULT_SAMEDAY_CROSSBORDER_SERVICE,
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+        self::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
     ];
 
     const ELIGIBLE_SAMEDAY_SERVICES = [
@@ -60,13 +73,15 @@ class SamedayHelper
     const OOH_SERVICES = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::SAMEDAY_PUDO_SERVICE,
-        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE
+        self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
+        self::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
     ];
 
     const ELIGIBLE_TO_LOCKER = [
         self::LOCKER_NEXT_DAY_SERVICE,
         self::LOCKER_NEXT_DAY_CROSSBORDER_SERVICE,
         self::SAMEDAY_PUDO_SERVICE,
+        self::SAMEDAY_PUDO_CROSSBORDER_SERVICE,
     ];
 
     const OOH_SERVICES_LABELS = [
@@ -305,6 +320,53 @@ class SamedayHelper
         }
 
         return self::OOH_TYPES[0];
+    }
+
+    /**
+     * Checkout may store LN or XL; a Sameday Point on the map needs PP or XP instead.
+     *
+     * @param string   $orderServiceCode Service code from order / form (LN, XL, PP, XP, …)
+     * @param int|null $locationId       Selected locker / PUDO id from the map
+     *
+     * @return string
+     */
+    public function resolveAwbServiceCode(string $orderServiceCode, $locationId = null): string
+    {
+        $serviceKeys = array_flip(self::EASYBOX_TYPE_SERVICE) + array_flip(self::PUDO_TYPE_SERVICE);
+        if (!isset($serviceKeys[$orderServiceCode])) {
+            return $orderServiceCode;
+        }
+
+        if ($locationId === null || $locationId === '' || !is_numeric($locationId)) {
+            return $orderServiceCode;
+        }
+
+        $oohTypeCode = $this->checkOohLocationType((int)$locationId);
+        $targetServices = in_array($oohTypeCode, self::PUDO_TYPE_SERVICE, true)
+            ? self::PUDO_TYPE_SERVICE
+            : self::EASYBOX_TYPE_SERVICE;
+
+        return $targetServices[$serviceKeys[$orderServiceCode]] ?? $orderServiceCode;
+    }
+
+    /**
+     * @param string $samedayCode
+     *
+     * @return bool
+     */
+    public function isEasyboxServiceType(string $samedayCode): bool
+    {
+        return in_array($samedayCode, self::EASYBOX_TYPE_SERVICE, true);
+    }
+
+    /**
+     * @param string $samedayCode
+     *
+     * @return bool
+     */
+    public function isPudoServiceType(string $samedayCode): bool
+    {
+        return in_array($samedayCode, self::PUDO_TYPE_SERVICE, true);
     }
 
     /**
